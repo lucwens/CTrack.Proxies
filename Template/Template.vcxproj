@@ -142,13 +142,26 @@
     <ClCompile Include="..\Libraries\TCP\NetworkError.cpp" />
     <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
-    <ClCompile Include="..\Libraries\TinyXML\tinyxml2.cpp" />
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
+    <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
+    <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
+    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp" />
+    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp" />
+    <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
+    <ClCompile Include="..\Libraries\XML\XML.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\NetworkError.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
-    <ClInclude Include="..\Libraries\TinyXML\tinyxml2.h" />
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
+    <ClInclude Include="..\Libraries\XML\tinystr.h" />
+    <ClInclude Include="..\Libraries\XML\tinyxml.h" />
+    <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h" />
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
+    <ClInclude Include="..\Libraries\XML\XML.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

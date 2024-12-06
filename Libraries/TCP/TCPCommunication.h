@@ -1,6 +1,6 @@
 #pragma once
 
-#include "XML.h"
+#include "../XML/XML.h"
 #include "TCPTelegram.h"
 #include <list>
 #include <afxmt.h>

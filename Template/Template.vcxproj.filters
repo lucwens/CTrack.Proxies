@@ -27,14 +27,35 @@
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
       <Filter>TCP</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\TinyXML\tinyxml2.cpp">
-      <Filter>TinyXML</Filter>
-    </ClCompile>
     <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp">
       <Filter>TCP</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinystr.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxml.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\XML.cpp">
+      <Filter>TinyXML</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -44,7 +65,25 @@
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
       <Filter>TCP</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\TinyXML\tinyxml2.h">
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\tinystr.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\tinyxml.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\XML.h">
       <Filter>TinyXML</Filter>
     </ClInclude>
   </ItemGroup>

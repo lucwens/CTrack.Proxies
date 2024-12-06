@@ -1,9 +1,9 @@
 #pragma once
-#include "stdafx.h"
 #include "tinyxml.h"
 #include <vector>
 #include <map>
 #include <set>
+#include <memory>
 
 //
 // this function finds recursively the first TiXmlElement that matches TagName
