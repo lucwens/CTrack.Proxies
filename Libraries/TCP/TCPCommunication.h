@@ -1,128 +1,75 @@
 #pragma once
 
-#include "../TinyXML/tinyxml2.h"
-
-#include <string>
+#include "XML.h"
+#include "TCPTelegram.h"
 #include <list>
+#include <afxmt.h>
 #include <memory>
 #include <map>
 #include <vector>
-#include <set>
 #include <deque>
-#include <mutex>
-#include <winsock2.h>
+#include <set>
+#include <atomic>
+#include <thread>
+#include <functional>
+#include <assert.h>
 
-#ifdef __CLR_VER
-#include <cliext/vector>
-#include <cliext/deque>
-#endif
+using namespace std;
 
-#pragma comment(lib, "wsock32.lib")
+#define DEFAULT_TCP_PORT 40000
+#define DEFAULT_TCP_HOST ("localhost")
+
+void InterruptSet(bool bValue = true);
+//------------------------------------------------------------------------------------------------------------------
+/*
+Ping : check if a destination can be reached
+*/
+//------------------------------------------------------------------------------------------------------------------
+
+bool Ping(const char *ipAddress, CStringA &FeedBack, DWORD iTimeout = 1000);
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
-TCPGram data packet represents the telegram. The typical use is that you derive from CTCPGram and provided a constructor for
-each type of data you want to send, the constructor is responsible for converting your data to the binary telegram
+Resolve Ip strings like "127.0.0.1", "\\mycomputer", "www.test.com" to an IP address
 */
 //--------------------------------------------------------------------------------------------------------------------------------------
+bool ResolveIP4_Address(LPCSTR HostName, CStringA &IP_Number); // returns true on succes
 
-// in the CTCPGram the next bytes are used
-constexpr unsigned char TCPGRAM_INDEX_SIZE(0);
-constexpr unsigned char TCPGRAM_INDEX_CODE(4);
-constexpr unsigned char TCPGRAM_INDEX_PAYLOAD(5);
-constexpr unsigned char TCPGRAM_HEADER_SIZE(5);
+typedef std::function<void()> StateResponder;   // function for state entry/run/exit
+typedef std::function<void()> CommandResponder; // function for CNode responders
+typedef std::function<void(int)>
+    ConnectResponder; // function when the number of connections changed, new number of connections is passed as integer to function
 
-// Codes for tcpgrams
-constexpr unsigned char TCPGRAM_CODE_INVALID(0);   // array of doubles
-constexpr unsigned char TCPGRAM_CODE_DOUBLES(1);   // array of doubles
-constexpr unsigned char TCPGRAM_CODE_COMMAND(2);   // CNode command
-constexpr unsigned char TCPGRAM_CODE_STATUS(3);    // CNode status
-constexpr unsigned char TCPGRAM_CODE_STRING(4);    // text string, includes 0-terminator
-constexpr unsigned char TCPGRAM_CODE_INTERRUPT(5); // interrupt send by client, when received in the TCP communication thread
-constexpr unsigned char TCPGRAM_CODE_WARNING(6);   // contains a warning
+//------------------------------------------------------------------------------------------------------------------
+/*
+The communication class permits to send messages to and from between engine and UI.
+This class supports:
+- TCP server
+- TCP client
+- UDP
 
-constexpr int ALL_DESTINATIONS(0);
+Messages are fed via two FIFO buffers, one for reading, one for writing.
+The actual socket communication is done via a dedicated thread.
 
-unsigned long GetSize(char *pBuffer);
-void          SetSize(char *pBuffer, unsigned long iSize);
-int           GetCode(char *pBuffer);
-void          SetCode(char *pBuffer, int iCode);
 
-class CTCPGram
-{
-    friend class CSocket;
+The TCP server supports multiple clients.
+Send packages will be send to all clients from the SendBuffer.
+Received packages are all assembled in the ReceiveiBuffer in order of complete reception, so when the
+last byte is in, the packet is shifted into the receivebuffer and becomes available to the main program.
 
-  public: // make movable only
-    CTCPGram(CTCPGram &&rTCPGram)
-    {
-        m_pData                = std::move(rTCPGram.m_pData);
-        m_PackageSize          = rTCPGram.m_PackageSize;
-        rTCPGram.m_PackageSize = 0;
-    };
-    CTCPGram &operator=(CTCPGram &&rTCPGram)
-    {
-        m_pData                = std::move(rTCPGram.m_pData);
-        m_PackageSize          = rTCPGram.m_PackageSize;
-        rTCPGram.m_PackageSize = 0;
-        return *this;
-    }
-    CTCPGram(CTCPGram &rTCPGram)            = delete;
-    CTCPGram &operator=(CTCPGram &rTCPGram) = delete;
+This class also supports large packets, that is for TCP, not UDP of course. For UDP the maximum allowed telegram
+size is checked, and this maximum size is checked on every transmission.
+For reception, each socket has its own assembly buffer, where every reception with receive is stored, appended to
+an internal buffer. When the buffer is bigger than the individual telegram (determined by the telegram that is in the
+header), then the telegram is transferred to the ReceiveBuffer and becoming available to the main program.
 
-  public:                                      // various
-    CTCPGram(char *pFromReadBuffer = nullptr); // constructor used by read routine
-    CTCPGram(double *pDoubles, int NumDoubles);
-    CTCPGram(std::vector<double> &arDoubles);
-#ifdef __CLR_VER
-    CTCPGram(cliext::vector<double> ^ arDoubles);
-    CTCPGram(cliext::deque<double> ^ queDoubles);
-#endif
-#ifdef _MFC_VER
-    CTCPGram(std::string &rString, unsigned char Code = TCPGRAM_CODE_STRING);
-#endif
-    CTCPGram(char *pBytes, unsigned long NumBytes);
-    CTCPGram(tinyxml2::XMLElement *rCommand, unsigned char Code = TCPGRAM_CODE_COMMAND);
-    virtual ~CTCPGram()
-    {
-        Clear();
-    }
+For sending a similar mechanism is used: the telegrams in the sendbuffer can be send in pieces. Only when all pieces
+of the telegram have been send over all sockets, the telegram is removed from the sendbuffer.
+This means that all sockets will only start getting parts of the next message when the current message is transmitted
+completely.
 
-  public:
-    void SetDestination(SOCKET iDestination)
-    {
-        m_Destination = iDestination;
-    };
-    SOCKET GetDestination()
-    {
-        return m_Destination;
-    };
-    void SetSource(SOCKET iSource)
-    {
-        m_Source = iSource;
-    };
-    SOCKET GetSource()
-    {
-        return m_Source;
-    };
-    void        CopyFrom(std::unique_ptr<CTCPGram> &);
-    std::string GetDescription();
-
-  public:
-    virtual unsigned char                         GetCode();
-    virtual unsigned long                         GetSize();
-    virtual std::unique_ptr<tinyxml2::XMLElement> GetXML(); // returned pointer must be deleted by receiving code
-    virtual unsigned long                         GetNumDoubles();
-    virtual bool                                  GetDoubles(double *pVector,
-                                                             int     iNumDoubles); // pDoubles should be pre-allocated with iNumDouble doubles, false is returned if the sizes don't match
-    virtual bool                                  GetString(std::string &rString);
-    virtual void                                  Clear();
-
-  public:
-    unsigned long         m_PackageSize = 0;
-    std::unique_ptr<char> m_pData;       // not using a struct with a pointer to char for the data here, because we need a continuous block of data
-    SOCKET                m_Destination; // if 0 then all client sockets will get this telegram
-    SOCKET                m_Source;      // socket from where this tcpgram came
-};
+*/
+//------------------------------------------------------------------------------------------------------------------
 
 enum E_COMMUNICATION_Mode
 {
@@ -131,10 +78,17 @@ enum E_COMMUNICATION_Mode
     TCP_CLIENT
 };
 
+//------------------------------------------------------------------------------------------------------------------
+/*
+CSocket represents a single network connection and is responsible for extracting telegrams with ReadExtractTelegram
+The default extraction is based on the 4-byte size at the start of CTCPGram, if the telegrams are seperated in
+a different way(e.g. delimiter at the end), then the function ReadExtractTelegram needs to be overriden
+*/
+//------------------------------------------------------------------------------------------------------------------
 class CSocket // throws CExceptionSocket
 {
   public:
-    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, LPCTSTR iUDPSendToAddress);
+    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, LPCSTR iUDPSendToAddress);
     virtual ~CSocket();
     SOCKET GetSocket()
     {
@@ -187,7 +141,7 @@ CCommunicationInterface : class holding parameters, common parent for CCommunica
 This class also contains lists for incoming and outgoing telegrams and a list for newcomers. Newcomers are new client
 sockets that connect to a server socket. The newcomer list allows to send a welcome message or take other actions when a
 new client connects to a server.
-All data members have thread safe acces (m_Lock)
+All data members have thread safe access (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
 class CCommunicationInterface
@@ -203,11 +157,11 @@ class CCommunicationInterface
     unsigned short       GetPort();
     unsigned short       GetPortUDP();
     bool                 GetUDPBroadcast();
-    std::string          GetHostName();
+    CStringA             GetHostName();
     bool                 IsServer();
     bool                 ErrorOccurred();
-    virtual std::string  GetError();
-    virtual void         SetError(LPCTSTR iErrorString);
+    virtual CStringA     GetError();
+    virtual void         SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage);
 
   public:                           // CCommunicationParameters
     virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
@@ -221,34 +175,36 @@ class CCommunicationInterface
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
         std::unique_ptr<CTCPGram> &); // thrd: pops the oldest package from the start of the list, the returned CTCPGram needs to be destroyed afterwards
-    virtual bool GetReceivePackage(
-        std::unique_ptr<CTCPGram> &); // Object: pops the oldest package from the start of the list, the returned CTCPGram needs to be destroyed afterwards
-    virtual bool GetLastReceivePackage(std::unique_ptr<CTCPGram> &); // only last, most recent package, others are deleted
-    virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);       // Object: pushes a new send package to the end of the list
-    virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &);    // thrd: pushes a new received package to the end of the list
+    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &,
+                                   unsigned char Code = TCPGRAM_CODE_DONT_USE); // Object: pops the oldest package from the start of the list, the returned
+                                                                                // CTCPGram needs to be destroyed afterwards
+    virtual bool GetLastReceivePackage(std::unique_ptr<CTCPGram> &);            // only last, most recent package, others are deleted
+    virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);                  // Object: pushes a new send package to the end of the list
+    virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &);               // thrd: pushes a new received package to the end of the list
     virtual void ClearBuffers();
     virtual void RemoveOldReceiveTelegrams(int iNumberToKeep); // removes old packages, keeps iNumberToKeep
   protected:                                                   // sockets and states
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     unsigned short       m_Port              = 50000; // default 50000
     unsigned short       m_PortUDP           = 50002; // default 50000
-    std::string          m_HostName;                  // hostname, like "ctech-tower", "127.0.0.1" "localhost" "www.ctechmetrology.com"
+    CStringA             m_HostName;                  // hostname, like "ctech-tower", "127.0.0.1" "localhost" "www.ctechmetrology.com"
     bool                 m_bUDPBroadCast = true;      // if false, m_IP4Address is used to send to
     bool                 m_bMakeBlocking = false;     // makes the socket blocking
     bool                 m_bEnableNagle  = false;     // enables Nagle grouping of blocks
     float                m_TimeOut       = 0.5;       // time-out in seconds, only when blocking is activated
   protected:                                          // error handling
-    bool        m_bErrorOccurred = false;             // set to true when an error occurred, further information in m_ErrorString
-    std::string m_ErrorString;                        // error that caused our communication to stops
-  protected:                                          // buffers
+    bool              m_bErrorOccurred = false;       // set to true when an error occurred, further information in m_ErrorString
+    CStringA          m_ErrorString;                  // error that caused our communication to stops
+    CStringA          m_ErrorSourceFile;
+    int               m_ErrorSourceLine;
+    std::atomic<bool> m_bInitialized = false;
+
+  protected: // buffers
     std::list<std::unique_ptr<CTCPGram>> m_arSendBuffer;
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
-    std::mutex           m_Lock;        // critical section to be used with CSingleLock to protect data
-#ifdef CTRACK_UI
-    std::unique_ptr<CDCommunicationPage> m_pPropertyPage;
-#endif
+    CCriticalSection     m_Lock;        // critical section to be used with CSingleLock to protect data
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -267,26 +223,56 @@ class CCommunicationObject : public CCommunicationInterface
     virtual ~CCommunicationObject();
 
   public: // open close state
-    bool IsOpen();
-    void Open();
-    void Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iPortUDP = 0, const std::string iIpAddress = "127.0.0.1");
-    void Close();
+    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, LPCSTR iIpAddress = ("127.0.0.1"));
+    virtual void Close();
+
+  public: // from statemanager
+    virtual void SetError(LPCSTR iFileName, int iLineNumber, LPCTSTR iMessage)
+    {
+        ;
+    };
+    virtual void SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage)
+    {
+        ;
+    };
+    bool IsConnected()
+    {
+        return m_TCPNumConnections > 0;
+    };
+    CStringA GetHost()
+    {
+        return GetHostName();
+    };
+    void         CheckConnections();
+    virtual void TCPReceiveRespond();
+    void         Run();
+    void         IdleRun();
 
   public: // to be used in CNode derivations
-    void XML_ReadWrite(tinyxml2::XMLElement *&, bool Read /* XML_WRITE XML_READ */);
+    void XML_ReadWrite(TiXmlElement *&, bool Read /* XML_WRITE XML_READ */);
     void CopyFrom(CCommunicationObject *);
 
   public: // CCommunicationParameters
     int  GetNumConnections() override;
     void PushSendPackage(std::unique_ptr<CTCPGram> &) override;
 
-  public: // own overrideables functions
+  public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
-                                  LPCTSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
+                                  LPCSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
+    void             SetThreadName(LPCSTR iName)
+    {
+        m_ThreadName = iName;
+    };
+
   protected:
-    std::unique_ptr<CCommunicationThread> m_pCommunicationThread;
-    bool                                  m_bOpened = false;
-    std::mutex m_LockThreadRunning; // critical section owned by CCommunicationThread during its life, used to check when the thread has finished
+    std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
+    CCriticalSection m_LockThreadRunning; // critical section owned by CCommunicationThread during its life, used to check when the thread has finished
+    CStringA         m_ThreadName;
+
+  protected: // added from statemanager
+    int              m_TCPNumConnections{0};
+    ConnectResponder m_TCPConnectChange;
+    bool             m_bTCPServer{true};
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -302,8 +288,7 @@ class CCommunicationThread : public CCommunicationInterface
 
   public:
     CCommunicationThread();
-    void StartThread();
-    void EndThread();
+    virtual ~CCommunicationThread();
     void CommunicationObjectAdd(CCommunicationObject &);
     void CommunicationObjectRemove(CCommunicationObject &);
     int  CommunicationObjectGetNum();
@@ -312,24 +297,35 @@ class CCommunicationThread : public CCommunicationInterface
     void AddNewComer(CSocket *) override;
     int  GetNumConnections() override;
     void PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
-    void SetError(LPCTSTR iErrorString) override;
+    void SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage) override;
 
   protected:
     void SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool bAddToNewComerList, bool UDPBroadcast,
-                   LPCTSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
-    CSocket *SocketFirst();              // first in list, or NULL
-    CSocket *SocketNext();               // next, can only be called after SocketFirst
-    CSocket *SocketDeleteCurrent();      // deletes current socket and return pointer to next socket
-    void     SocketDeleteAll();          // deletes all sockets
-    void     SocketResetSend();          // resets the write pointers of all sockets
-  public:                                // network status
+                   LPCSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
+    CSocket *SocketFirst();             // first in list, or NULL
+    CSocket *SocketNext();              // next, can only be called after SocketFirst
+    CSocket *SocketDeleteCurrent();     // deletes current socket and return pointer to next socket
+    void     SocketDeleteAll();         // deletes all sockets
+    void     SocketResetSend();         // resets the write pointers of all sockets
+  public:                               // thread management
+    void ThreadFunction();
+    void StartThread();
+    void EndThread();
     void SetQuit(bool ibQuit = true);
     bool GetQuit();
+    void SetThreadName(LPCSTR iName)
+    {
+        m_ThreadName = iName;
+    };
 
-  protected: // mainly for use when acting as a server socket
-    std::list<CSocket *>::iterator   m_IterCurrentSocket;
-    std::list<CSocket *>             m_arSockets; // array of connected sockets
-    std::thread                      m_pExecuteThread;
-    std::atomic<bool>                m_bQuit = false; // set to true to end the communication thread
+  protected: // thread members
+    std::thread       m_Thread;
+    std::atomic<bool> m_bQuit       = false; // set to true to end the communication thread
+    std::atomic<bool> m_bIntialized = false; // set to true to end the communication thread
+  protected:                                 // mainly for use when acting as a server socket
+    std::list<CSocket *>::iterator m_IterCurrentSocket;
+    std::list<CSocket *>           m_arSockets; // array of connected sockets
+  protected:                                    // list of CCommunicationObjects that make use of this thread
     std::set<CCommunicationObject *> m_setCommunicationObject;
+    CStringA                         m_ThreadName;
 };
