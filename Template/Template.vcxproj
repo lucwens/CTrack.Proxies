@@ -139,7 +139,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Template.cpp" />
+    <ClCompile Include="..\Libraries\TCP\NetworkError.cpp" />
+    <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp" />
+    <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
+    <ClCompile Include="..\Libraries\TinyXML\tinyxml2.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Libraries\TCP\NetworkError.h" />
+    <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
+    <ClInclude Include="..\Libraries\TinyXML\tinyxml2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

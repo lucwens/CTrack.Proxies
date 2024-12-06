@@ -13,10 +13,39 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="TCP">
+      <UniqueIdentifier>{8b7851d4-f3c3-49e1-9225-8c7463b8b0ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TinyXML">
+      <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Template.cpp">
+    <ClCompile Include="..\Libraries\TCP\NetworkError.cpp">
+      <Filter>TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
+      <Filter>TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TinyXML\tinyxml2.cpp">
+      <Filter>TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp">
+      <Filter>TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Libraries\TCP\NetworkError.h">
+      <Filter>TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
+      <Filter>TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TinyXML\tinyxml2.h">
+      <Filter>TinyXML</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
