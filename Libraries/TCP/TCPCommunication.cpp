@@ -3,6 +3,7 @@
 #include "../xml/TinyXML_AttributeValues.h"
 #include "../Utility/os.h"
 #include "../Utility/Print.h"
+#include "../Utility/ErrorHandling.h"
 
 #include <ws2tcpip.h>
 #include <locale>
@@ -18,8 +19,6 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
-#define THROW_ERROR(a)           std::cerr << a << std::endl
-#define THROW_SOCKET_ERROR(a, b) std::cerr << a << " : " << b << std::endl
 
 #define RECEIVEBUFFERLENGTH      65535
 #define MAX_DEBUG_TELEGRAMS      500
@@ -201,7 +200,7 @@ void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
 
 bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     if (!m_arSendBuffer.empty())
     {
         ReturnTCPGram = std::move(m_arSendBuffer.front());
@@ -213,7 +212,7 @@ bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTC
 
 void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     while (m_arReceiveBuffer.size() > iNumberToKeep)
     {
         m_arReceiveBuffer.pop_front();
@@ -222,7 +221,7 @@ void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 
 bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char Code)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -252,7 +251,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
 
 bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -267,13 +266,13 @@ bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &R
 
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_arSendBuffer.emplace_back(std::move(rTCPGram));
 }
 
 void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -282,32 +281,32 @@ void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCP
 
 void CCommunicationInterface::ClearBuffers()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_arSendBuffer.clear();
     m_arReceiveBuffer.clear();
 }
 
 bool CCommunicationInterface::IsServer()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return (m_CommunicationMode == TCP_SERVER);
 }
 
 bool CCommunicationInterface::ErrorOccurred()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_bErrorOccurred;
 }
 
 std::string CCommunicationInterface::GetError()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_ErrorString;
 }
 
 void CCommunicationInterface::SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_bErrorOccurred  = true;
     m_ErrorString     = iMessage;
     m_ErrorSourceFile = iFileName;
@@ -316,49 +315,49 @@ void CCommunicationInterface::SetError(const std::string iFileName, int iLineNum
 
 unsigned short CCommunicationInterface::GetPort()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_Port;
 }
 
 unsigned short CCommunicationInterface::GetPortUDP()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_PortUDP;
 }
 
 bool CCommunicationInterface::GetUDPBroadcast()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_bUDPBroadCast;
 }
 
 std::string CCommunicationInterface::GetHostName()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_HostName;
 }
 
 E_COMMUNICATION_Mode CCommunicationInterface::GetCommunicationMode()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_CommunicationMode;
 }
 
 void CCommunicationInterface::SetCommunicationMode(E_COMMUNICATION_Mode iMode)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_CommunicationMode = iMode;
 }
 
 void CCommunicationInterface::AddNewComer(CSocket *iSocket)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_arNewComers.push_back(iSocket);
 }
 
 CSocket *CCommunicationInterface::GetNewComer()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     CSocket                    *ReturnSocket = nullptr;
     auto                        iter         = m_arNewComers.begin();
     if (iter != m_arNewComers.end())
@@ -855,7 +854,7 @@ CCommunicationThread::CCommunicationThread()
     m_CommunicationMode = TCP_SERVER;
     m_Port              = DEFAULT_TCP_PORT;
     m_HostName          = DEFAULT_TCP_HOST;
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_IterCurrentSocket = m_arSockets.begin();
 }
 
@@ -875,7 +874,7 @@ bool CCommunicationThread::GetQuit()
 
 void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommunicationObject)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_setCommunicationObject.insert(&rCommunicationObject);
     m_Port    = rCommunicationObject.GetPort();
     m_PortUDP = rCommunicationObject.GetPortUDP();
@@ -884,7 +883,7 @@ void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommuni
 void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rCommunicationObject)
 {
     {
-        std::lock_guard<std::mutex> Lock(m_Lock);
+        std::lock_guard<std::mutex> Lock(m_Mutex);
         m_setCommunicationObject.erase(&rCommunicationObject);
     }
     if (CommunicationObjectGetNum() == 0)
@@ -895,14 +894,14 @@ void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rComm
 
 size_t CCommunicationThread::CommunicationObjectGetNum()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_setCommunicationObject.size();
 }
 
 void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
                                      bool bAddToNewComerList, bool UDPBroadcast, const std::string UDPSendPort)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     // a communication thread can have multiple ccommunicationObjects, which may have different SocketCreate methods, here we just take the first
     auto                        iter = m_setCommunicationObject.begin();
     if (iter != m_setCommunicationObject.end())
@@ -918,7 +917,7 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
 
 CSocket *CCommunicationThread::SocketFirst()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_IterCurrentSocket = m_arSockets.begin();
     if (m_IterCurrentSocket != m_arSockets.end())
         return (*m_IterCurrentSocket);
@@ -928,7 +927,7 @@ CSocket *CCommunicationThread::SocketFirst()
 
 CSocket *CCommunicationThread::SocketNext()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     m_IterCurrentSocket++;
     if (m_IterCurrentSocket != m_arSockets.end())
         return (*m_IterCurrentSocket);
@@ -938,7 +937,7 @@ CSocket *CCommunicationThread::SocketNext()
 
 CSocket *CCommunicationThread::SocketDeleteCurrent()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     if (m_IterCurrentSocket != m_arSockets.end())
     {
         delete *m_IterCurrentSocket;
@@ -953,7 +952,7 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
 
 void CCommunicationThread::SocketDeleteAll()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     for (auto &arSocket : m_arSockets)
         delete arSocket;
     m_arSockets.clear();
@@ -961,14 +960,14 @@ void CCommunicationThread::SocketDeleteAll()
 
 void CCommunicationThread::SocketResetSend()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     for (auto &arSocket : m_arSockets)
         arSocket->WriteSendReset();
 }
 
 void CCommunicationThread::AddNewComer(CSocket *iSocket)
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     //
     // do not store locally, copy all to CCommunicationObjects
     for (auto iter : m_setCommunicationObject)
@@ -977,14 +976,14 @@ void CCommunicationThread::AddNewComer(CSocket *iSocket)
 
 int CCommunicationThread::GetNumConnections()
 {
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_arSockets.size();
 }
 
 void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
     // copy incoming telegrams to all CCommunicationObjects
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     for (auto iter : m_setCommunicationObject)
     {
         std::unique_ptr<CTCPGram> CopyTCPGram = std::make_unique<CTCPGram>();
@@ -996,7 +995,7 @@ void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGra
 void CCommunicationThread::SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
 {
     // copy error to all CCommunicationObjects
-    std::lock_guard<std::mutex> Lock(m_Lock);
+    std::lock_guard<std::mutex> Lock(m_Mutex);
     for (auto iter : m_setCommunicationObject)
         iter->SetError(iFileName, iLineNumber, iMessage);
 }

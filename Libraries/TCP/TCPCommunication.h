@@ -81,11 +81,11 @@ enum E_COMMUNICATION_Mode
 //------------------------------------------------------------------------------------------------------------------
 /*
 CSocket represents a single network connection and is responsible for extracting telegrams with ReadExtractTelegram
-The default extraction is based on the 4-byte size at the start of CTCPGram, if the telegrams are seperated in
-a different way(e.g. delimiter at the end), then the function ReadExtractTelegram needs to be overriden
+The default extraction is based on the 4-byte size at the start of CTCPGram, if the telegrams are separated in
+a different way(e.g. delimiter at the end), then the function ReadExtractTelegram needs to be overridden
 */
 //------------------------------------------------------------------------------------------------------------------
-class CSocket // throws CExceptionSocket
+class CSocket
 {
   public:
     CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string iUDPSendToAddress);
@@ -204,7 +204,7 @@ class CCommunicationInterface
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
-    std::mutex           m_Lock;        // critical section to be used with CSingleLock to protect data
+    std::mutex           m_Mutex;       // critical section to be used with CSingleLock to protect data
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -259,10 +259,6 @@ class CCommunicationObject : public CCommunicationInterface
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
                                   const std::string UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
-    void             SetThreadName(const std::string iName)
-    {
-        m_ThreadName = iName;
-    };
 
   protected:
     std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
@@ -313,19 +309,13 @@ class CCommunicationThread : public CCommunicationInterface
     void EndThread();
     void SetQuit(bool ibQuit = true);
     bool GetQuit();
-    void SetThreadName(const std::string iName)
-    {
-        m_ThreadName = iName;
-    };
 
   protected: // thread members
-    std::thread       m_Thread;
-    std::atomic<bool> m_bQuit       = false; // set to true to end the communication thread
-    std::atomic<bool> m_bIntialized = false; // set to true to end the communication thread
-  protected:                                 // mainly for use when acting as a server socket
-    std::list<CSocket *>::iterator m_IterCurrentSocket;
-    std::list<CSocket *>           m_arSockets; // array of connected sockets
-  protected:                                    // list of CCommunicationObjects that make use of this thread
+    std::thread                      m_Thread;
+    std::atomic<bool>                m_bQuit       = false;
+    std::atomic<bool>                m_bIntialized = false;
+    std::list<CSocket *>::iterator   m_IterCurrentSocket;
+    std::list<CSocket *>             m_arSockets;
     std::set<CCommunicationObject *> m_setCommunicationObject;
     std::string                      m_ThreadName;
 };

@@ -19,7 +19,7 @@ std::string XWSA_GetErrorString(int nErrorCode)
     return strErrorString;
 }
 
-std::string XWSA_GetShortDescription(int nErrorCode, TCHAR *lpszBuf, int nBufSize)
+std::string XWSA_GetShortDescription(int nErrorCode)
 {
     char buffer[101];
     sprintf_s(buffer, sizeof(buffer) / sizeof(char), "No short description for network error %d", nErrorCode);
@@ -33,7 +33,7 @@ std::string XWSA_GetShortDescription(int nErrorCode, TCHAR *lpszBuf, int nBufSiz
     return strErrorString;
 }
 
-std::string XWSA_GetLongDescription(int nErrorCode, TCHAR *lpszBuf, int nBufSize)
+std::string XWSA_GetLongDescription(int nErrorCode)
 {
     char buffer[101];
     sprintf_s(buffer, sizeof(buffer) / sizeof(char), "No long description for network error %d", nErrorCode);
