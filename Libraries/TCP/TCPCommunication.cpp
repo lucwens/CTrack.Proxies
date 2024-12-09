@@ -1,16 +1,13 @@
 #include "TCPCommunication.h"
-#include "../xml/TinyXML_Extra.h"
 #include "../xml/TinyXML_AttributeValues.h"
 #include "../Utility/os.h"
 #include "../Utility/Print.h"
 #include "../Utility/ErrorHandling.h"
 
 #include <ws2tcpip.h>
-#include <locale>
 #include <iostream>
 #include <format>
 #include <string>
-#include <vector>
 
 // #include <Ws2tcpip.h>
 // #include <Icmpapi.h>
@@ -19,9 +16,8 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
-
-#define RECEIVEBUFFERLENGTH      65535
-#define MAX_DEBUG_TELEGRAMS      500
+#define RECEIVEBUFFERLENGTH 65535
+#define MAX_DEBUG_TELEGRAMS 500
 char ReceiveBuffer[RECEIVEBUFFERLENGTH];
 
 std::atomic<bool> Interrupted{false};

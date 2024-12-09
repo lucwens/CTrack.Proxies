@@ -2,11 +2,9 @@
 
 #include "../XML/TinyXML_Extra.h"
 #include <deque>
-#include <winsock2.h> 
-#include <ws2tcpip.h>
+#include <winsock2.h>
 #include <memory>
 #include <string>
-
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -98,7 +96,8 @@ struct CycleItem6D
     // unsigned long status;
 };
 
-// a scan line is an array of N ScanPoint3D, each point contains a x,y,z position, an intensity and a quality number, refer to "API Developer's Reference Manual.chm" of NMAPI for more information
+// a scan line is an array of N ScanPoint3D, each point contains a x,y,z position, an intensity and a quality number, refer to "API Developer's Reference
+// Manual.chm" of NMAPI for more information
 struct ScanPoint3D
 {
     double        position[3]; // x,y,z of point on the scan line
@@ -111,8 +110,9 @@ struct ScanPoint3D
 
 // these functions encode/decode a scanline into a buffer of bytes for sending/receiving a TCP telegram
 unsigned long CalcBufferSize(unsigned long NScanPoints) noexcept;
-void          EncodeScanToBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &ButtonState, CycleItem6D &Pose, std::deque<ScanPoint3D> &ScanPoints) noexcept;
-unsigned long DecodeScanFromBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &ButtonState, CycleItem6D &Pose, std::deque<ScanPoint3D> &ScanPoints) noexcept;
+void EncodeScanToBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &ButtonState, CycleItem6D &Pose, std::deque<ScanPoint3D> &ScanPoints) noexcept;
+unsigned long DecodeScanFromBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &ButtonState, CycleItem6D &Pose,
+                                   std::deque<ScanPoint3D> &ScanPoints) noexcept;
 
 // class CTCPGram can contain status,commands, linescan data
 class CTCPGram
@@ -158,7 +158,7 @@ class CTCPGram
     void CopyFrom(std::unique_ptr<CTCPGram> &);
 
   public:
-    virtual void                          EncodeText(const std::string& iText, unsigned char Code);
+    virtual void                          EncodeText(const std::string &iText, unsigned char Code);
     virtual unsigned char                 GetCode();
     virtual unsigned long                 GetSize();
     const char                           *GetText();

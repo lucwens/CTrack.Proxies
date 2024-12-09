@@ -1,17 +1,12 @@
 #pragma once
 
-#include "../XML/XML.h"
 #include "TCPTelegram.h"
 #include <list>
 #include <memory>
-#include <map>
-#include <vector>
-#include <deque>
 #include <set>
 #include <atomic>
 #include <thread>
 #include <functional>
-#include <assert.h>
 #include <mutex>
 
 using namespace std;

@@ -4,7 +4,7 @@
 
 std::string CXML::CreateText()
 {
-    std::string      ReturnString;
+    std::string   ReturnString;
     TiXmlElement *pXML = NULL;
     if (XML_ReadWrite(pXML, XML_WRITE))
     {
@@ -22,7 +22,7 @@ std::string CXML::PrintDebugTextString()
     return CreateText();
 }
 
-bool CXML::Load(const std::string& FileName)
+bool CXML::Load(const std::string &FileName)
 {
     TiXmlDocument Doc;
     FILE         *File = nullptr;
@@ -49,7 +49,7 @@ bool CXML::Load(const std::string& FileName)
     return true;
 }
 
-bool CXML::Save(const std::string& FileName)
+bool CXML::Save(const std::string &FileName)
 {
     TiXmlDocument Doc(FileName.c_str());
     FILE         *File  = nullptr;

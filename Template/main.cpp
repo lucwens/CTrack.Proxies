@@ -1,8 +1,8 @@
 // Template.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/errorHandling.h"
+#include "../Libraries/Utility/Print.h"
 #include <iostream>
 
 int main()

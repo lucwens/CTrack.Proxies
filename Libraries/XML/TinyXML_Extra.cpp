@@ -1,7 +1,6 @@
 #include "TinyXML_Extra.h"
 #include <map>
 #include <iostream>
-#include <sstream>
 
 std::string XML_To_String(TiXmlElement *pXML)
 {

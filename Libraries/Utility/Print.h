@@ -1,10 +1,10 @@
 #pragma once
 
-#include <iostream>
-#include <string>
 #include <format>
-#include <windows.h>
+#include <iostream>
 #include <mutex>
+#include <string>
+#include <windows.h>
 
 // Global mutex for thread-safe printing
 extern std::mutex printMutex;

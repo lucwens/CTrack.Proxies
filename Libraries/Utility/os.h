@@ -1,8 +1,6 @@
 #pragma once
 
 #include <string>
-#include <locale>
-#include <codecvt>
 
 // Convert std::string to std::wstring
 std::wstring StringToWString(const std::string &str);

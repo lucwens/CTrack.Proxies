@@ -1,5 +1,4 @@
 #include "os.h"
-#include <locale>
 #include <codecvt>
 #include <Windows.h>
 
