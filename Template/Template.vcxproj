@@ -88,6 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -116,6 +118,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +133,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,6 +146,8 @@
     <ClCompile Include="..\Libraries\TCP\NetworkError.cpp" />
     <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
+    <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Utility\os.cpp" />
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
     <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
     <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
@@ -155,6 +161,9 @@
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\NetworkError.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
+    <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
+    <ClInclude Include="..\Libraries\Utility\os.h" />
+    <ClInclude Include="..\Libraries\Utility\Print.h" />
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
     <ClInclude Include="..\Libraries\XML\tinystr.h" />
     <ClInclude Include="..\Libraries\XML\tinyxml.h" />

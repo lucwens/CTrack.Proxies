@@ -1,26 +1,30 @@
-
 #include "TinyXML_AttributeValues.h"
 #include "MinMax.h"
 #include "TinyXML_Base64.h"
+#include <algorithm>
+#include <iostream>
+#include <string>
 
 bool GetSetAttributeTime(TiXmlElement *pXML, const char *AttributeName, time_t &value, bool Read)
 {
     char ValueString[1001];
     if (!Read)
 #ifdef _USE_32BIT_TIME_T
-        sprintf(ValueString, "%ld", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%ld", value);
 #else
-        sprintf(ValueString, "%lld", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%lld", value);
 #endif
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
+    {
 #ifdef _USE_32BIT_TIME_T
-        sscanf(ValueString, "%ld", &value);
+        sscanf_s(ValueString, "%ld", &value);
 #else
-        sscanf(ValueString, "%lld", &value);
+        sscanf_s(ValueString, "%lld", &value);
 #endif
+    }
 
     return Success;
 }
@@ -33,9 +37,8 @@ bool GetSetAttributeBinary(TiXmlElement *pXML, const char *AttributeName, std::u
         const char *pAttribute = pXML->Attribute(AttributeName);
         if (pAttribute)
         {
-            int len   = strlen(pAttribute);
-            XMLBuffer = pAttribute;
-            // Length = XMLBuffer.size();
+            size_t len = strlen(pAttribute);
+            XMLBuffer  = pAttribute;
             if (Length > 0)
             {
                 pBinaryBuffer.reset(new char[Length]);
@@ -51,8 +54,7 @@ bool GetSetAttributeBinary(TiXmlElement *pXML, const char *AttributeName, std::u
             return false;
         base64::encode(pBinaryBuffer.get(), pBinaryBuffer.get() + Length, back_inserter(XMLBuffer));
         pXML->SetAttribute(AttributeName, XMLBuffer.c_str());
-        int len = strlen(XMLBuffer.c_str());
-        len     = XMLBuffer.size();
+        size_t len = XMLBuffer.size();
 
         return true;
     }
@@ -66,7 +68,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, char *value,
         {
             value[0] = '\0';
             if (strlen(pXML->Attribute(AttributeName)))
-                strncpy(value, pXML->Attribute(AttributeName), MaxStringLength - 1);
+                strncpy_s(value, MaxStringLength, pXML->Attribute(AttributeName), _TRUNCATE);
             value[MaxStringLength - 1] = '\0';
         }
         else
@@ -82,7 +84,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, char *value,
     }
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, CStringA &rvalue, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::string &rvalue, bool Read)
 {
     if (Read)
     {
@@ -98,7 +100,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, CStringA &rv
     {
         if (!pXML)
             return false;
-        pXML->SetAttribute(AttributeName, rvalue);
+        pXML->SetAttribute(AttributeName, rvalue.c_str());
         return true;
     }
 }
@@ -108,7 +110,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, int &value, 
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%d", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%d", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
@@ -123,12 +125,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, unsigned sho
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%u", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%hu", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
-        value = atoi(ValueString);
+        value = static_cast<unsigned short>(atoi(ValueString));
 
     return Success;
 }
@@ -138,12 +140,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, unsigned int
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%d", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%u", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
-        value = atoi(ValueString);
+        value = static_cast<unsigned int>(atoi(ValueString));
 
     return Success;
 }
@@ -153,12 +155,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, unsigned cha
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%hu", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%hhu", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
-        value = atoi(ValueString);
+        value = static_cast<unsigned char>(atoi(ValueString));
 
     return Success;
 }
@@ -168,7 +170,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, long &value,
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%ld", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%ld", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
@@ -183,7 +185,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, unsigned lon
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%ld", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%lu", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
@@ -198,12 +200,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, float &value
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%f", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%f", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
-        value = atof(ValueString);
+        value = static_cast<float>(atof(ValueString));
 
     return Success;
 }
@@ -213,7 +215,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, double &valu
     char ValueString[1001];
 
     if (!Read)
-        sprintf(ValueString, "%f", value);
+        sprintf_s(ValueString, sizeof(ValueString), "%f", value);
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
@@ -230,24 +232,24 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, bool &value,
     if (!Read)
     {
         if (value)
-            strcpy(ValueString, "true");
+            strcpy_s(ValueString, sizeof(ValueString), "true");
         else
-            strcpy(ValueString, "false");
+            strcpy_s(ValueString, sizeof(ValueString), "false");
     }
 
     bool Success = GetSetAttribute(pXML, AttributeName, ValueString, 1001, Read);
 
     if (Read && Success)
-        value = (stricmp(ValueString, "true") == 0);
+        value = (_stricmp(ValueString, "true") == 0);
 
     return Success;
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<CStringA> &rvalue, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<std::string> &rvalue, bool Read)
 {
     if (Read)
     {
-        CStringA      StringValue;
+        std::string   StringValue;
         TiXmlElement *pNode = (TiXmlElement *)FindNode(pXML, AttributeName);
         if (!pNode)
             return false;
@@ -271,14 +273,14 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<CSt
         TiXmlElement *pNode = CreateElement(pXML, AttributeName);
         if (pNode)
         {
-            CStringA                     StringValue;
-            TiXmlElement                *pXML_Element = NULL;
-            std::set<CStringA>::iterator set_iterator = rvalue.begin();
+            std::string                     StringValue;
+            TiXmlElement                   *pXML_Element = NULL;
+            std::set<std::string>::iterator set_iterator = rvalue.begin();
 
             while (set_iterator != rvalue.end())
             {
                 pXML_Element     = new TiXmlElement("VALUE");
-                TiXmlText *ptext = new TiXmlText((*set_iterator));
+                TiXmlText *ptext = new TiXmlText((*set_iterator).c_str());
                 pXML_Element->LinkEndChild(ptext);
                 pNode->LinkEndChild(pXML_Element);
                 set_iterator++;
@@ -289,9 +291,9 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<CSt
     }
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<CStringA> &rvalue, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<std::string> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         StringArray2Text(rvalue, Text);
 
@@ -305,7 +307,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
 
 bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<int> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         IntArray2Text(rvalue, Text);
 
@@ -317,9 +319,9 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
     return Success;
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<CStringA, int> &rvalue, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<std::string, int> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         IntMap2Text(rvalue, Text);
 
@@ -331,9 +333,9 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<CSt
     return Success;
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<CStringA, double> &rvalue, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<std::string, double> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         StringDoubleMap2Text(rvalue, Text);
 
@@ -347,7 +349,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<CSt
 
 bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<long, double> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         LongDoubleMap2Text(rvalue, Text);
 
@@ -361,7 +363,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<lon
 
 bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<double> &rArray, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
     {
         DoubleArray2Text(rArray, Text);
@@ -378,7 +380,7 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
 
 bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<int> &rvalue, bool Read)
 {
-    CStringA Text;
+    std::string Text;
     if (!Read)
         IntSet2Text(rvalue, Text);
 

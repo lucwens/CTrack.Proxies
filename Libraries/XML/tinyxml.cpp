@@ -933,10 +933,16 @@ bool TiXmlDocument::LoadFile(const char *_filename, TiXmlEncoding encoding)
     // like a bug in the Microsoft STL implementation.
     // Add an extra string to avoid the crash.
     TIXML_STRING filename(_filename);
-    value      = filename;
+    value = filename;
 
     // reading in binary mode so that tinyxml can normalize the EOL
-    FILE *file = fopen(value.c_str(), "rb");
+    FILE   *file;
+    errno_t err = fopen_s(&file, value.c_str(), "rb");
+    if (err != 0)
+    {
+        SetError(TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN);
+        return false;
+    }
 
     if (file)
     {
@@ -944,11 +950,7 @@ bool TiXmlDocument::LoadFile(const char *_filename, TiXmlEncoding encoding)
         fclose(file);
         return result;
     }
-    else
-    {
-        SetError(TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN);
-        return false;
-    }
+    return false;
 }
 
 bool TiXmlDocument::LoadFile(FILE *file, TiXmlEncoding encoding)
@@ -1080,10 +1082,9 @@ bool TiXmlDocument::LoadFile(FILE *file, TiXmlEncoding encoding)
 
 bool TiXmlDocument::SaveFile(const char *filename) const
 {
-
-    // The old c stuff lives on...
-    FILE *fp = fopen(filename, "w");
-    if (fp)
+    FILE   *fp;
+    errno_t err = fopen_s(&fp, filename, "w");
+    if (err == 0 && fp)
     {
         bool result = SaveFile(fp);
         fclose(fp);
@@ -1243,14 +1244,14 @@ void TiXmlAttribute::Print(FILE *cfile,
 
 int TiXmlAttribute::QueryIntValue(int *ival) const
 {
-    if (sscanf(value.c_str(), "%d", ival) == 1)
+    if (sscanf_s(value.c_str(), "%d", ival) == 1)
         return TIXML_SUCCESS;
     return TIXML_WRONG_TYPE;
 }
 
 int TiXmlAttribute::QueryDoubleValue(double *dval) const
 {
-    if (sscanf(value.c_str(), "%lf", dval) == 1)
+    if (sscanf_s(value.c_str(), "%lf", dval) == 1)
         return TIXML_SUCCESS;
     return TIXML_WRONG_TYPE;
 }
@@ -1383,7 +1384,8 @@ TiXmlDeclaration::TiXmlDeclaration(const char *_version, const char *_encoding, 
 }
 
 #ifdef TIXML_USE_STL
-TiXmlDeclaration::TiXmlDeclaration(const std::string &_version, const std::string &_encoding, const std::string &_standalone) : TiXmlNode(TiXmlNode::DECLARATION)
+TiXmlDeclaration::TiXmlDeclaration(const std::string &_version, const std::string &_encoding, const std::string &_standalone)
+    : TiXmlNode(TiXmlNode::DECLARATION)
 {
     version    = _version;
     encoding   = _encoding;

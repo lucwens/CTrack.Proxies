@@ -3,7 +3,6 @@
 #include "../XML/XML.h"
 #include "TCPTelegram.h"
 #include <list>
-#include <afxmt.h>
 #include <memory>
 #include <map>
 #include <vector>
@@ -13,6 +12,7 @@
 #include <thread>
 #include <functional>
 #include <assert.h>
+#include <mutex>
 
 using namespace std;
 
@@ -26,14 +26,14 @@ Ping : check if a destination can be reached
 */
 //------------------------------------------------------------------------------------------------------------------
 
-bool Ping(const char *ipAddress, CStringA &FeedBack, DWORD iTimeout = 1000);
+bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout = 1000);
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
 Resolve Ip strings like "127.0.0.1", "\\mycomputer", "www.test.com" to an IP address
 */
 //--------------------------------------------------------------------------------------------------------------------------------------
-bool ResolveIP4_Address(LPCSTR HostName, CStringA &IP_Number); // returns true on succes
+bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number); // returns true on succes
 
 typedef std::function<void()> StateResponder;   // function for state entry/run/exit
 typedef std::function<void()> CommandResponder; // function for CNode responders
@@ -88,7 +88,7 @@ a different way(e.g. delimiter at the end), then the function ReadExtractTelegra
 class CSocket // throws CExceptionSocket
 {
   public:
-    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, LPCSTR iUDPSendToAddress);
+    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string iUDPSendToAddress);
     virtual ~CSocket();
     SOCKET GetSocket()
     {
@@ -157,11 +157,11 @@ class CCommunicationInterface
     unsigned short       GetPort();
     unsigned short       GetPortUDP();
     bool                 GetUDPBroadcast();
-    CStringA             GetHostName();
+    std::string          GetHostName();
     bool                 IsServer();
     bool                 ErrorOccurred();
-    virtual CStringA     GetError();
-    virtual void         SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage);
+    virtual std::string  GetError();
+    virtual void         SetError(const std::string iFileName, int iLineNumber, const std::string iMessage);
 
   public:                           // CCommunicationParameters
     virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
@@ -187,15 +187,15 @@ class CCommunicationInterface
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     unsigned short       m_Port              = 50000; // default 50000
     unsigned short       m_PortUDP           = 50002; // default 50000
-    CStringA             m_HostName;                  // hostname, like "ctech-tower", "127.0.0.1" "localhost" "www.ctechmetrology.com"
+    std::string          m_HostName;                  // hostname, like "ctech-tower", "127.0.0.1" "localhost" "www.ctechmetrology.com"
     bool                 m_bUDPBroadCast = true;      // if false, m_IP4Address is used to send to
     bool                 m_bMakeBlocking = false;     // makes the socket blocking
     bool                 m_bEnableNagle  = false;     // enables Nagle grouping of blocks
     float                m_TimeOut       = 0.5;       // time-out in seconds, only when blocking is activated
   protected:                                          // error handling
     bool              m_bErrorOccurred = false;       // set to true when an error occurred, further information in m_ErrorString
-    CStringA          m_ErrorString;                  // error that caused our communication to stops
-    CStringA          m_ErrorSourceFile;
+    std::string       m_ErrorString;                  // error that caused our communication to stops
+    std::string       m_ErrorSourceFile;
     int               m_ErrorSourceLine;
     std::atomic<bool> m_bInitialized = false;
 
@@ -204,7 +204,7 @@ class CCommunicationInterface
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
-    CCriticalSection     m_Lock;        // critical section to be used with CSingleLock to protect data
+    std::mutex           m_Lock;        // critical section to be used with CSingleLock to protect data
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -223,15 +223,15 @@ class CCommunicationObject : public CCommunicationInterface
     virtual ~CCommunicationObject();
 
   public: // open close state
-    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, LPCSTR iIpAddress = ("127.0.0.1"));
+    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string iIpAddress = ("127.0.0.1"));
     virtual void Close();
 
   public: // from statemanager
-    virtual void SetError(LPCSTR iFileName, int iLineNumber, LPCTSTR iMessage)
+    virtual void SetError(const std::string iFileName, int iLineNumber, LPCTSTR iMessage)
     {
         ;
     };
-    virtual void SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage)
+    virtual void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
     {
         ;
     };
@@ -239,7 +239,7 @@ class CCommunicationObject : public CCommunicationInterface
     {
         return m_TCPNumConnections > 0;
     };
-    CStringA GetHost()
+    std::string GetHost()
     {
         return GetHostName();
     };
@@ -258,16 +258,16 @@ class CCommunicationObject : public CCommunicationInterface
 
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
-                                  LPCSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
-    void             SetThreadName(LPCSTR iName)
+                                  const std::string UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
+    void             SetThreadName(const std::string iName)
     {
         m_ThreadName = iName;
     };
 
   protected:
     std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
-    CCriticalSection m_LockThreadRunning; // critical section owned by CCommunicationThread during its life, used to check when the thread has finished
-    CStringA         m_ThreadName;
+    std::mutex  m_LockThreadRunning; // critical section owned by CCommunicationThread during its life, used to check when the thread has finished
+    std::string m_ThreadName;
 
   protected: // added from statemanager
     int              m_TCPNumConnections{0};
@@ -289,31 +289,31 @@ class CCommunicationThread : public CCommunicationInterface
   public:
     CCommunicationThread();
     virtual ~CCommunicationThread();
-    void CommunicationObjectAdd(CCommunicationObject &);
-    void CommunicationObjectRemove(CCommunicationObject &);
-    int  CommunicationObjectGetNum();
+    void   CommunicationObjectAdd(CCommunicationObject &);
+    void   CommunicationObjectRemove(CCommunicationObject &);
+    size_t CommunicationObjectGetNum();
 
   public: // CCommunicationParameters
     void AddNewComer(CSocket *) override;
     int  GetNumConnections() override;
     void PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
-    void SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage) override;
+    void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) override;
 
   protected:
     void SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool bAddToNewComerList, bool UDPBroadcast,
-                   LPCSTR UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
-    CSocket *SocketFirst();             // first in list, or NULL
-    CSocket *SocketNext();              // next, can only be called after SocketFirst
-    CSocket *SocketDeleteCurrent();     // deletes current socket and return pointer to next socket
-    void     SocketDeleteAll();         // deletes all sockets
-    void     SocketResetSend();         // resets the write pointers of all sockets
-  public:                               // thread management
+                   const std::string UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
+    CSocket *SocketFirst();                        // first in list, or NULL
+    CSocket *SocketNext();                         // next, can only be called after SocketFirst
+    CSocket *SocketDeleteCurrent();                // deletes current socket and return pointer to next socket
+    void     SocketDeleteAll();                    // deletes all sockets
+    void     SocketResetSend();                    // resets the write pointers of all sockets
+  public:                                          // thread management
     void ThreadFunction();
     void StartThread();
     void EndThread();
     void SetQuit(bool ibQuit = true);
     bool GetQuit();
-    void SetThreadName(LPCSTR iName)
+    void SetThreadName(const std::string iName)
     {
         m_ThreadName = iName;
     };
@@ -327,5 +327,5 @@ class CCommunicationThread : public CCommunicationInterface
     std::list<CSocket *>           m_arSockets; // array of connected sockets
   protected:                                    // list of CCommunicationObjects that make use of this thread
     std::set<CCommunicationObject *> m_setCommunicationObject;
-    CStringA                         m_ThreadName;
+    std::string                      m_ThreadName;
 };

@@ -19,6 +19,9 @@
     <Filter Include="TinyXML">
       <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{6be3e0a0-de50-4e07-bddb-7b624a68d314}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\NetworkError.cpp">
@@ -57,6 +60,12 @@
     <ClCompile Include="..\Libraries\XML\XML.cpp">
       <Filter>TinyXML</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\os.cpp">
+      <Filter>Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp">
+      <Filter>TCP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\NetworkError.h">
@@ -85,6 +94,15 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\XML.h">
       <Filter>TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\os.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Print.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
+      <Filter>TCP</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

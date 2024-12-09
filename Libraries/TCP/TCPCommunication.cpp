@@ -1,14 +1,28 @@
 #include "TCPCommunication.h"
-#include "TinyXML_Extra.h"
-#include "ErrorHandler.h"
-#include "TinyXML_AttributeValues.h"
-#include <Ws2tcpip.h>
-#include <Icmpapi.h>
-#include <algorithm>
-#pragma comment(lib, "Iphlpapi.lib")
+#include "../xml/TinyXML_Extra.h"
+#include "../xml/TinyXML_AttributeValues.h"
+#include "../Utility/os.h"
+#include "../Utility/Print.h"
 
-#define RECEIVEBUFFERLENGTH 65535
-#define MAX_DEBUG_TELEGRAMS 500
+#include <ws2tcpip.h>
+#include <locale>
+#include <iostream>
+#include <format>
+#include <string>
+#include <vector>
+
+// #include <Ws2tcpip.h>
+// #include <Icmpapi.h>
+// #include <algorithm>
+
+#pragma comment(lib, "Iphlpapi.lib")
+#pragma comment(lib, "Ws2_32.lib")
+
+#define THROW_ERROR(a)           std::cerr << a << std::endl
+#define THROW_SOCKET_ERROR(a, b) std::cerr << a << " : " << b << std::endl
+
+#define RECEIVEBUFFERLENGTH      65535
+#define MAX_DEBUG_TELEGRAMS      500
 char ReceiveBuffer[RECEIVEBUFFERLENGTH];
 
 std::atomic<bool> Interrupted{false};
@@ -22,161 +36,117 @@ void InterruptSet(bool bValue)
 Supporting routines for the communication thread
 */
 //------------------------------------------------------------------------------------------------------------------
-void ThreadSetName(std::thread &rThread, LPCSTR iThreadName)
-{
-    CStringW WideNameString(iThreadName);
-    HRESULT  r = ::SetThreadDescription(rThread.native_handle(), WideNameString);
-}
 
-bool Ping(const char *HostName, CStringA &FeedBack, DWORD iTimeout)
-{
-    HANDLE           hIcmpFile    = INVALID_HANDLE_VALUE;
-    unsigned long    ipaddr       = INADDR_NONE;
-    char             SendData[32] = "Data Buffer";
-    LPVOID           ReplyBuffer  = nullptr;
-    DWORD            ReplySize    = 0;
-    PICMP_ECHO_REPLY pEchoReply   = nullptr;
-    CStringA         IP_Number;
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iostream>
 
-    if (!ResolveIP4_Address(HostName, IP_Number))
+#pragma comment(lib, "Ws2_32.lib")
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
+#include <iostream>
+
+#pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "Iphlpapi.lib")
+
+#include <ws2tcpip.h>
+
+// ...
+
+bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
+{
+    HANDLE         hIcmpFile;
+    unsigned long  ipaddr      = INADDR_NONE;
+    DWORD          dwRetVal    = 0;
+    char           SendData[]  = "Data Buffer";
+    LPVOID         ReplyBuffer = nullptr;
+    DWORD          ReplySize   = 0;
+    struct in_addr addr;
+
+    if (InetPtonA(AF_INET, ipAddress, &addr) != 1)
     {
-        FeedBack.Format(("Ping failed : %s could not be resolved"), HostName);
+        FeedBack = "Invalid IP address";
         return false;
     }
-
-    ipaddr = inet_addr(IP_Number);
-    if (ipaddr == INADDR_NONE)
-        return false;
+    ipaddr    = addr.s_addr;
 
     hIcmpFile = IcmpCreateFile();
     if (hIcmpFile == INVALID_HANDLE_VALUE)
     {
-        FeedBack.Format("IcmpCreatefile returned error: %ld", GetLastError());
+        FeedBack = "Unable to open handle.";
         return false;
     }
 
     ReplySize   = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
-    ReplyBuffer = new char[ReplySize];
-    if (ReplyBuffer == NULL)
+    ReplyBuffer = (VOID *)malloc(ReplySize);
+    if (ReplyBuffer == nullptr)
     {
-        FeedBack.Format("Unable to allocate memory", GetLastError());
+        FeedBack = "Unable to allocate memory";
         return false;
     }
 
-    bool bReturn           = false;
-    auto LambdaGetFeedback = [&](int Code)
-    {
-        switch (Code)
-        {
-            case IP_SUCCESS:
-            {
-                FeedBack.Format(("Ping to %s [%s] successfull with response time of %ld ms."), HostName, IP_Number, pEchoReply->RoundTripTime);
-                bReturn = true;
-            };
-            break;
-            case IP_REQ_TIMED_OUT:
-                FeedBack.Format(("Ping to %s failed: The request timed out."), HostName);
-                ;
-                break;
-            case IP_DEST_NET_UNREACHABLE:
-                FeedBack.Format(("Ping to %s failed: The destination network was unreachable."), HostName);
-                ;
-                break;
-            case IP_DEST_HOST_UNREACHABLE:
-                FeedBack.Format(("Ping to %s failed: The destination host was unreachable."), HostName);
-                ;
-                break;
-            case IP_DEST_PROT_UNREACHABLE:
-                FeedBack.Format(("Ping to %s failed: The destination protocol was unreachable."), HostName);
-                ;
-                break;
-            case IP_DEST_PORT_UNREACHABLE:
-                FeedBack.Format(("Ping to %s failed: The destination port was unreachable."), HostName);
-                ;
-                break;
-            case IP_TTL_EXPIRED_TRANSIT:
-                FeedBack.Format(("Ping to %s failed: The time to live (TTL) expired in transit."), HostName);
-                ;
-                break;
-            case IP_TTL_EXPIRED_REASSEM:
-                FeedBack.Format(("Ping to %s failed: The time to live expired during fragment reassembly."), HostName);
-                ;
-                break;
-            case IP_BAD_DESTINATION:
-                FeedBack.Format(("Ping to %s failed: A bad destination."), HostName);
-                ;
-                break;
-            default:
-                FeedBack.Format(("Ping to %s failed with error %d."), HostName, pEchoReply->Status);
-                break;
-        }
-    };
-
-    DWORD dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), NULL, ReplyBuffer, ReplySize, iTimeout /*msec timeout*/);
+    dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), nullptr, ReplyBuffer, ReplySize, iTimeout);
     if (dwRetVal != 0)
     {
-        pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
-        if (pEchoReply->Status == IP_SUCCESS)
-        {
-            FeedBack.Format(("Ping to %s [%s] successfull with response time of %ld ms."), HostName, IP_Number, pEchoReply->RoundTripTime);
-            bReturn = true;
-        }
-        else
-            LambdaGetFeedback(pEchoReply->Status);
+        PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+        struct in_addr   ReplyAddr;
+        ReplyAddr.S_un.S_addr = pEchoReply->Address;
+
+        char ipStr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &ReplyAddr, ipStr, INET_ADDRSTRLEN);
+        FeedBack = "Received " + std::to_string(pEchoReply->DataSize) + " bytes from " + std::string(ipStr) +
+                   ": icmp_seq=" + std::to_string(pEchoReply->RoundTripTime) + " ms";
+
+        free(ReplyBuffer);
+        return true;
     }
     else
-        LambdaGetFeedback(GetLastError());
-
-    if (hIcmpFile != INVALID_HANDLE_VALUE)
-        IcmpCloseHandle(hIcmpFile);
-
-    if (ReplyBuffer != nullptr)
-        delete[] ReplyBuffer;
-    return bReturn;
+    {
+        FeedBack = "Ping failed: " + std::to_string(GetLastError());
+        free(ReplyBuffer);
+        return false;
+    }
 }
 
-bool ResolveIP4_Address(LPCSTR HostName, CStringA &IP_Number)
+bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number)
 {
-    // local host spotted, return true
-    IP_Number = HostName;
-    if (IP_Number.CompareNoCase(("127.0.0.1")) == 0)
-        return true;
-
-    // ip of xxx.xxx.xxx.xxx or xxx.xxx.xxx.xxx.xxx.xxx spotted
-    int IPNumbers[6];
-    int NumScanned = sscanf(HostName, "%d.%d.%d.%d.%d.%d", &IPNumbers[0], &IPNumbers[1], &IPNumbers[2], &IPNumbers[3], &IPNumbers[4], &IPNumbers[5]);
-    if (NumScanned == 4)
+    WSADATA wsaData;
+    int     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0)
     {
-        IP_Number = HostName;
-        return true;
+        std::cerr << "WSAStartup failed: " << result << std::endl;
+        return false;
     }
 
-    // something like "MyComputer" or "www.test.com" spotted
-    addrinfo *res = nullptr;
-    addrinfo  hints;
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family         = AF_INET;     // we only look for IP4 addresses here, otherwise specify AF_UNSPEC;
-    hints.ai_socktype       = SOCK_STREAM; // only TCP supported, other options SOCK_DGRAM SOCK_RAW
-    hints.ai_protocol       = IPPROTO_TCP; //
+    addrinfo hints       = {};
+    hints.ai_family      = AF_INET; // IPv4
+    hints.ai_socktype    = SOCK_STREAM;
+    hints.ai_protocol    = IPPROTO_TCP;
 
-    int Result              = getaddrinfo(HostName, nullptr, /*&hints*/ nullptr, &res);
-
-    struct addrinfo    *ptr = nullptr;
-    struct sockaddr_in *sockaddr_ipv4;
-    int                 i       = 1;
-    int                 iRetval = 0;
-    bool                bFound  = false;
-    for (ptr = res; ptr != nullptr; ptr = ptr->ai_next)
+    addrinfo *resultList = nullptr;
+    result               = getaddrinfo(HostName.c_str(), nullptr, &hints, &resultList);
+    if (result != 0)
     {
-        if (ptr->ai_family == AF_INET)
-        {
-            sockaddr_ipv4 = (struct sockaddr_in *)ptr->ai_addr;
-            IP_Number     = inet_ntoa(sockaddr_ipv4->sin_addr);
-            bFound        = true;
-        }
+        std::cerr << "getaddrinfo failed: " << result << std::endl;
+        WSACleanup();
+        return false;
     }
-    freeaddrinfo(res);
-    return bFound;
+
+    for (addrinfo *ptr = resultList; ptr != nullptr; ptr = ptr->ai_next)
+    {
+        sockaddr_in *sockaddr_ipv4 = reinterpret_cast<sockaddr_in *>(ptr->ai_addr);
+        char         ipStr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &sockaddr_ipv4->sin_addr, ipStr, sizeof(ipStr));
+        IP_Number = ipStr;
+        break; // Only take the first result
+    }
+
+    freeaddrinfo(resultList);
+    WSACleanup();
+    return true;
 }
 
 void DataAvailable(SOCKET connection, bool &bDataAvail, bool &bNetWorkError, long FAR &errval)
@@ -231,7 +201,7 @@ void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
 
 bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     if (!m_arSendBuffer.empty())
     {
         ReturnTCPGram = std::move(m_arSendBuffer.front());
@@ -243,7 +213,7 @@ bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTC
 
 void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     while (m_arReceiveBuffer.size() > iNumberToKeep)
     {
         m_arReceiveBuffer.pop_front();
@@ -252,14 +222,14 @@ void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 
 bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char Code)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
     if (!m_arReceiveBuffer.empty())
     {
         // iterate from front to back, check for valid code
-        auto &Iter = m_arReceiveBuffer.begin();
+        auto Iter = m_arReceiveBuffer.begin();
         while (Iter != m_arReceiveBuffer.end())
         {
             bool bValidCode = true;
@@ -282,7 +252,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
 
 bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -297,13 +267,13 @@ bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &R
 
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_arSendBuffer.emplace_back(std::move(rTCPGram));
 }
 
 void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -312,32 +282,32 @@ void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCP
 
 void CCommunicationInterface::ClearBuffers()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_arSendBuffer.clear();
     m_arReceiveBuffer.clear();
 }
 
 bool CCommunicationInterface::IsServer()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return (m_CommunicationMode == TCP_SERVER);
 }
 
 bool CCommunicationInterface::ErrorOccurred()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_bErrorOccurred;
 }
 
-CStringA CCommunicationInterface::GetError()
+std::string CCommunicationInterface::GetError()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_ErrorString;
 }
 
-void CCommunicationInterface::SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage)
+void CCommunicationInterface::SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_bErrorOccurred  = true;
     m_ErrorString     = iMessage;
     m_ErrorSourceFile = iFileName;
@@ -346,51 +316,51 @@ void CCommunicationInterface::SetError(LPCSTR iFileName, int iLineNumber, LPCSTR
 
 unsigned short CCommunicationInterface::GetPort()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_Port;
 }
 
 unsigned short CCommunicationInterface::GetPortUDP()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_PortUDP;
 }
 
 bool CCommunicationInterface::GetUDPBroadcast()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_bUDPBroadCast;
 }
 
-CStringA CCommunicationInterface::GetHostName()
+std::string CCommunicationInterface::GetHostName()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_HostName;
 }
 
 E_COMMUNICATION_Mode CCommunicationInterface::GetCommunicationMode()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_CommunicationMode;
 }
 
 void CCommunicationInterface::SetCommunicationMode(E_COMMUNICATION_Mode iMode)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_CommunicationMode = iMode;
 }
 
 void CCommunicationInterface::AddNewComer(CSocket *iSocket)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_arNewComers.push_back(iSocket);
 }
 
 CSocket *CCommunicationInterface::GetNewComer()
 {
-    CSingleLock Lock(&m_Lock, true);
-    CSocket    *ReturnSocket = nullptr;
-    auto        iter         = m_arNewComers.begin();
+    std::lock_guard<std::mutex> Lock(m_Lock);
+    CSocket                    *ReturnSocket = nullptr;
+    auto                        iter         = m_arNewComers.begin();
     if (iter != m_arNewComers.end())
     {
         ReturnSocket = *iter;
@@ -451,7 +421,7 @@ void CCommunicationObject::CopyFrom(CCommunicationObject *ipNode)
         CCommunicationInterface::CopyFrom(pCommunicationParameters);
 }
 
-void CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iPortUDP, LPCSTR iIpAddress)
+void CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iPortUDP, const std::string iIpAddress)
 {
     // start the communication thread
     m_CommunicationMode = iTcpMode;
@@ -518,14 +488,14 @@ void CCommunicationObject::TCPReceiveRespond()
                 // 				CommandExecute(pNode);
                 // 			}
                 // 			else
-                cout << "Failed converting the node from XML" << endl;
+                std::cout << "Failed converting the node from XML" << std::endl;
             };
             break;
             case TCPGRAM_CODE_STATUS: // state changing is only allowed by the server, so normally we do not receive states here
             {
                 std::unique_ptr<TiXmlElement> XML = Telegram->GetXML();
                 assert(XML.get() != NULL);
-                // 			CStringA StateName = StripName(XML->Value());
+                // 			std::string StateName = StripName(XML->Value());
                 // 			StateUpdate(StateName, XML);
                 // 			if (m_bTCPServer) // reflect our state change immediate if we are server, probably a client is resetting an error state
                 // 				TCPSendStatus(true);
@@ -567,7 +537,7 @@ void CCommunicationObject::IdleRun()
 }
 
 CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
-                                            bool UDPBroadcast, LPCSTR UDPSendAddress)
+                                            bool UDPBroadcast, const std::string UDPSendAddress)
 {
     return new CSocket(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendAddress);
 }
@@ -593,7 +563,7 @@ CSocket class
 //------------------------------------------------------------------------------------------------------------------
 
 CSocket::CSocket(SOCKET iSocket, E_COMMUNICATION_Mode iCommunicationMode, SOCKADDR_IN *ipSockAddress, int UDBroadCastPort, bool iUDPBroadcast,
-                 LPCSTR iUDPSendToAddress)
+                 const std::string iUDPSendToAddress)
 {
     m_Socket                 = iSocket;
     m_CommunicationMode      = iCommunicationMode;
@@ -609,7 +579,7 @@ CSocket::CSocket(SOCKET iSocket, E_COMMUNICATION_Mode iCommunicationMode, SOCKAD
     if (iUDPBroadcast)
         m_UDPBroadCastAddr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
     else
-        m_UDPBroadCastAddr.sin_addr.s_addr = inet_addr(iUDPSendToAddress);
+        inet_pton(AF_INET, iUDPSendToAddress.c_str(), &(m_UDPBroadCastAddr.sin_addr.s_addr));
 
     m_UDPBroadCastAddr.sin_family = AF_INET;                // Address format is IPv4
     m_UDPBroadCastAddr.sin_port   = htons(UDBroadCastPort); // Convert from little to big endian
@@ -811,9 +781,8 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         {
             if (rTCPGram->m_PackageSize > m_MaxUDPMessageSize)
             {
-                CStringA ErrorMessage;
-                ErrorMessage.Format(("Error sending data over UDP : the package size (%d) is bigger than allowed (%d)"), rTCPGram->m_PackageSize,
-                                    m_MaxUDPMessageSize);
+                std::string ErrorMessage =
+                    std::format("Error sending data over UDP : the package size {} is bigger than allowed {}", rTCPGram->m_PackageSize, m_MaxUDPMessageSize);
                 THROW_ERROR(ErrorMessage);
             }
             int rVal = ::sendto(m_Socket, rTCPGram->m_pData.get(), rTCPGram->m_PackageSize, 0, (SOCKADDR *)&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
@@ -886,38 +855,27 @@ CCommunicationThread::CCommunicationThread()
     m_CommunicationMode = TCP_SERVER;
     m_Port              = DEFAULT_TCP_PORT;
     m_HostName          = DEFAULT_TCP_HOST;
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_IterCurrentSocket = m_arSockets.begin();
 }
 
 CCommunicationThread::~CCommunicationThread()
 {
-#ifdef _DEBUG
-    DebugPrint("Deleting communication thread for port : ", m_Port);
-#endif
 }
 
 void CCommunicationThread::SetQuit(bool ibQuit)
 {
-#ifdef _DEBUG
-    if (ibQuit)
-        DebugPrint("Setting quit for port : ", m_Port);
-#endif
     m_bQuit = ibQuit;
 }
 
 bool CCommunicationThread::GetQuit()
 {
-#ifdef _DEBUG
-    if (m_bQuit)
-        DebugPrint("Positive quit for port : ", m_Port);
-#endif
     return m_bQuit;
 }
 
 void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommunicationObject)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_setCommunicationObject.insert(&rCommunicationObject);
     m_Port    = rCommunicationObject.GetPort();
     m_PortUDP = rCommunicationObject.GetPortUDP();
@@ -925,27 +883,28 @@ void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommuni
 
 void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rCommunicationObject)
 {
-    CSingleLock Lock(&m_Lock, true);
-    m_setCommunicationObject.erase(&rCommunicationObject);
+    {
+        std::lock_guard<std::mutex> Lock(m_Lock);
+        m_setCommunicationObject.erase(&rCommunicationObject);
+    }
     if (CommunicationObjectGetNum() == 0)
     {
-        Lock.Unlock();
         EndThread();
     }
 }
 
-int CCommunicationThread::CommunicationObjectGetNum()
+size_t CCommunicationThread::CommunicationObjectGetNum()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_setCommunicationObject.size();
 }
 
 void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
-                                     bool bAddToNewComerList, bool UDPBroadcast, LPCSTR UDPSendPort)
+                                     bool bAddToNewComerList, bool UDPBroadcast, const std::string UDPSendPort)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     // a communication thread can have multiple ccommunicationObjects, which may have different SocketCreate methods, here we just take the first
-    auto        iter = m_setCommunicationObject.begin();
+    auto                        iter = m_setCommunicationObject.begin();
     if (iter != m_setCommunicationObject.end())
     {
         CSocket *pNewSocket = (*iter)->SocketCreate(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendPort);
@@ -959,7 +918,7 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
 
 CSocket *CCommunicationThread::SocketFirst()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_IterCurrentSocket = m_arSockets.begin();
     if (m_IterCurrentSocket != m_arSockets.end())
         return (*m_IterCurrentSocket);
@@ -969,7 +928,7 @@ CSocket *CCommunicationThread::SocketFirst()
 
 CSocket *CCommunicationThread::SocketNext()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     m_IterCurrentSocket++;
     if (m_IterCurrentSocket != m_arSockets.end())
         return (*m_IterCurrentSocket);
@@ -979,7 +938,7 @@ CSocket *CCommunicationThread::SocketNext()
 
 CSocket *CCommunicationThread::SocketDeleteCurrent()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     if (m_IterCurrentSocket != m_arSockets.end())
     {
         delete *m_IterCurrentSocket;
@@ -994,7 +953,7 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
 
 void CCommunicationThread::SocketDeleteAll()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     for (auto &arSocket : m_arSockets)
         delete arSocket;
     m_arSockets.clear();
@@ -1002,14 +961,14 @@ void CCommunicationThread::SocketDeleteAll()
 
 void CCommunicationThread::SocketResetSend()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     for (auto &arSocket : m_arSockets)
         arSocket->WriteSendReset();
 }
 
 void CCommunicationThread::AddNewComer(CSocket *iSocket)
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     //
     // do not store locally, copy all to CCommunicationObjects
     for (auto iter : m_setCommunicationObject)
@@ -1018,14 +977,14 @@ void CCommunicationThread::AddNewComer(CSocket *iSocket)
 
 int CCommunicationThread::GetNumConnections()
 {
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     return m_arSockets.size();
 }
 
 void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
     // copy incoming telegrams to all CCommunicationObjects
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     for (auto iter : m_setCommunicationObject)
     {
         std::unique_ptr<CTCPGram> CopyTCPGram = std::make_unique<CTCPGram>();
@@ -1034,10 +993,10 @@ void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGra
     }
 }
 
-void CCommunicationThread::SetError(LPCSTR iFileName, int iLineNumber, LPCSTR iMessage)
+void CCommunicationThread::SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
 {
     // copy error to all CCommunicationObjects
-    CSingleLock Lock(&m_Lock, true);
+    std::lock_guard<std::mutex> Lock(m_Lock);
     for (auto iter : m_setCommunicationObject)
         iter->SetError(iFileName, iLineNumber, iMessage);
 }
@@ -1047,10 +1006,6 @@ void CCommunicationThread::StartThread()
     if (!m_Thread.joinable())
     {
         m_Thread = std::thread(&CCommunicationThread::ThreadFunction, this);
-        CStringA ThreadName(("CCommunicationThread"));
-        if (!m_ThreadName.IsEmpty())
-            ThreadName.Format(("CommThread_ %s"), m_ThreadName);
-        ThreadSetName(m_Thread, ThreadName);
     }
 }
 
@@ -1077,6 +1032,8 @@ void CCommunicationThread::ThreadFunction()
     try
     {
         SetQuit(false);
+        std::string ThreadName(("CCommunicationThread"));
+        SetThreadName(ThreadName);
 
         //--------------------------------------------------------------------------------------------------------
         // Initialize socket library
@@ -1089,16 +1046,15 @@ void CCommunicationThread::ThreadFunction()
         //--------------------------------------------------------------------------------------------------------
         // Resolve IP4 address (no need for IP6)
         //--------------------------------------------------------------------------------------------------------
-        CStringA       IP4;
-        CStringA       HostName      = GetHostName();
+        std::string    IP4;
+        std::string    HostName      = GetHostName();
         unsigned short PortNumber    = GetPort();
         unsigned short PortNumberUDP = GetPortUDP();
         bool           bUDPBroadcast = GetUDPBroadcast();
 
         if (!ResolveIP4_Address(HostName, IP4))
         {
-            CStringA ErrorMessage;
-            ErrorMessage.Format(("The host %s could not be resolved"), HostName);
+            std::string ErrorMessage = std::format("The host {} could not be resolved", HostName);
             THROW_ERROR(ErrorMessage);
         }
 
@@ -1111,15 +1067,14 @@ void CCommunicationThread::ThreadFunction()
             {
 
                 ZeroMemory(&sincontrol, sizeof(sincontrol));
-                sincontrol.sin_family      = PF_INET;
-                sincontrol.sin_port        = htons(PortNumber);
-                sincontrol.sin_addr.s_addr = inet_addr(IP4);
-                MainSocket                 = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+                sincontrol.sin_family = PF_INET;
+                sincontrol.sin_port   = htons(PortNumber);
+                inet_pton(AF_INET, IP4.c_str(), &(sincontrol.sin_addr.s_addr));
+                MainSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
                 if (MainSocket == INVALID_SOCKET)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The creation of the socket (host : %s port:%d) failed."), HostName, PortNumber);
+                    int         LastError    = WSAGetLastError();
+                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 };
                 std::cout << "TCP client on port " << PortNumber << std::endl;
@@ -1134,9 +1089,9 @@ void CCommunicationThread::ThreadFunction()
                 MainSocket                 = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
                 if (MainSocket == INVALID_SOCKET)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The creation of the socket (host : %s port:%d) failed. Lasterror was %d."), HostName, PortNumber, LastError);
+                    int         LastError = WSAGetLastError();
+                    std::string ErrorMessage =
+                        std::format("The creation of the socket (host : {} port:{}) failed. Lasterror was {}.", HostName, PortNumber, LastError);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
@@ -1146,38 +1101,31 @@ void CCommunicationThread::ThreadFunction()
                 int rVal   = ioctlsocket(MainSocket, FIONBIO, argList);
                 if (rVal == SOCKET_ERROR)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The creation of the socket (host : %s port:%d) failed."), HostName, PortNumber);
+                    int         LastError    = WSAGetLastError();
+                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
                 // bind the socket
                 if (::bind(MainSocket, (LPSOCKADDR)&sincontrol, sizeof(sincontrol)) == SOCKET_ERROR)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The binding of the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use."),
-                                        HostName, PortNumber, LastError);
-                    DebugPrint(ErrorMessage);
-                    CString wErrorMessage(ErrorMessage);
-                    AfxMessageBox(wErrorMessage, MB_ICONERROR);
+                    int         LastError = WSAGetLastError();
+                    std::string ErrorMessage =
+                        std::format("The binding of the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.", HostName,
+                                    PortNumber, LastError);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
                 //
                 // start listening
                 if (::listen(MainSocket, 1 /*backlog amount permitted*/) == SOCKET_ERROR)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The listen command on the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use."),
-                                        HostName, PortNumber, LastError);
+                    int         LastError = WSAGetLastError();
+                    std::string ErrorMessage =
+                        std::format("The listen command on the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.",
+                                    HostName, PortNumber, LastError);
                     std::cout << ErrorMessage << std::endl;
-                    CString wErrorMessage(ErrorMessage);
-                    AfxMessageBox(wErrorMessage, MB_ICONERROR);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
-                DebugPrint("TCP server listening on port ", PortNumber);
             };
             break;
             case UDP: // udp is connectionless, so it cannot be disconnected, so no need to check this in the big loop
@@ -1189,22 +1137,19 @@ void CCommunicationThread::ThreadFunction()
                 MainSocket                 = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
                 if (MainSocket == INVALID_SOCKET)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The creation of the socket (host : %s port:%d) failed."), HostName, PortNumberUDP);
+                    int         LastError    = WSAGetLastError();
+                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumberUDP);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
                 // bind the socket
                 if (::bind(MainSocket, (LPSOCKADDR)&sincontrol, sizeof(sincontrol)) == SOCKET_ERROR)
                 {
-                    int      LastError = WSAGetLastError();
-                    CStringA ErrorMessage;
-                    ErrorMessage.Format(("The binding of the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use."),
-                                        HostName, PortNumberUDP, LastError);
+                    int         LastError = WSAGetLastError();
+                    std::string ErrorMessage =
+                        std::format("The binding of the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.", HostName,
+                                    PortNumberUDP, LastError);
                     std::cout << ErrorMessage << std::endl;
-                    CString wErrorMessage(ErrorMessage);
-                    AfxMessageBox(wErrorMessage, MB_ICONERROR);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
                 SocketAdd(MainSocket, UDP, &sincontrol, PortNumber, false, bUDPBroadcast, HostName);
@@ -1214,21 +1159,18 @@ void CCommunicationThread::ThreadFunction()
             break;
         }
 
-            //--------------------------------------------------------------------------------------------------------
-            // BIG LOOP
-            //--------------------------------------------------------------------------------------------------------
-            /*
-            BIG Loop
-            - Check connection state
-            - Server:
-            - Check data-available on listen socket, if true
-            -
-            - Send data
-            - Receive data
-            */
-#ifdef _DEBUG
-        DebugPrint("Starting thread for port : ", PortNumber);
-#endif
+        //--------------------------------------------------------------------------------------------------------
+        // BIG LOOP
+        //--------------------------------------------------------------------------------------------------------
+        /*
+        BIG Loop
+        - Check connection state
+        - Server:
+        - Check data-available on listen socket, if true
+        -
+        - Send data
+        - Receive data
+        */
         while (true)
         {
             if (GetQuit())
@@ -1252,7 +1194,6 @@ void CCommunicationThread::ThreadFunction()
                         {
                             // callback for freshly connected sockets : send the configuration if the engine is running
                             SocketAdd(ClientSocket, TCP_SERVER, &sincontrol, 0, true, false, (""));
-                            DebugPrint("TCP server accepting client on port ", PortNumber);
                         }
                     }
                 };
@@ -1266,19 +1207,18 @@ void CCommunicationThread::ThreadFunction()
                             MainSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
                             if (MainSocket == INVALID_SOCKET)
                             {
-                                int      LastError = WSAGetLastError();
-                                CStringA ErrorMessage;
-                                ErrorMessage.Format(("The creation of the socket (host : %s port:%d) failed."), HostName, PortNumber);
+                                int         LastError    = WSAGetLastError();
+                                std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
                                 THROW_SOCKET_ERROR(ErrorMessage, LastError);
                             }
                             ZeroMemory(&sincontrol, sizeof(sincontrol));
-                            sincontrol.sin_family      = PF_INET;
-                            sincontrol.sin_port        = htons(PortNumber);
-                            sincontrol.sin_addr.s_addr = inet_addr(IP4);
+                            sincontrol.sin_family = PF_INET;
+                            sincontrol.sin_port   = htons(PortNumber);
+                            inet_pton(AF_INET, IP4.c_str(), &(sincontrol.sin_addr.s_addr));
                         }
                         if (connect(MainSocket, (LPSOCKADDR)&sincontrol, sizeof(sincontrol)) != SOCKET_ERROR)
                         {
-                            DebugPrint("TCP client connected to ", HostName, " on port ", PortNumber);
+                            PrintInfo("TCP client connected to ", HostName, " on port ", PortNumber);
                             SocketAdd(MainSocket, TCP_CLIENT, &sincontrol, 0, false, false, (""));
                         }
                         else
@@ -1322,7 +1262,7 @@ void CCommunicationThread::ThreadFunction()
                             pCurrentSocket = SocketDeleteCurrent();
                             if (CommunicationMode == TCP_CLIENT)
                             {
-                                DebugPrint("TCP client disconnected from ", HostName, " on port ", PortNumber);
+                                PrintWarning("TCP client disconnected from ", HostName, " on port ", PortNumber);
                                 MainSocket = INVALID_SOCKET;
                             }
                         }
@@ -1358,27 +1298,23 @@ void CCommunicationThread::ThreadFunction()
                     pCurrentSocket = SocketDeleteCurrent();
                     if (CommunicationMode == TCP_CLIENT)
                     {
-                        DebugPrint("TCP client disconnected from ", HostName, " on port ", PortNumber);
+                        PrintWarning("TCP client disconnected from ", HostName, " on port ", PortNumber);
                         MainSocket = INVALID_SOCKET;
                     }
                 }
             }
         }
 #ifdef _DEBUG
-        DebugPrint("Closing thread for port : ", PortNumber);
+        PrintInfo("Closing thread for port : ", PortNumber);
 #endif
     }
-    catch (CExceptionSocket &e)
+    catch (const std::exception &e)
     {
-        SetError(__FILE__, __LINE__, e.GetMessage());
+        SetError(__FILE__, __LINE__, e.what());
     }
-    catch (CException *e)
+    catch (...)
     {
-        TCHAR ErrorMessage[2001];
-        e->GetErrorMessage(ErrorMessage, 2000);
-        CStringA ErrorString(ErrorMessage);
-        SetError(__FILE__, __LINE__, ErrorString);
-        e->Delete();
+        SetError(__FILE__, __LINE__, "An unknown error occurred");
     }
 
     //

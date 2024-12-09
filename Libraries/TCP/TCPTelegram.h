@@ -2,6 +2,11 @@
 
 #include "../XML/TinyXML_Extra.h"
 #include <deque>
+#include <winsock2.h> 
+#include <ws2tcpip.h>
+#include <memory>
+#include <string>
+
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -55,7 +60,7 @@ Packing and unpacking commands to/from XML
 // creation of command XML
 std::unique_ptr<TiXmlElement> CreateCommandDetect();
 std::unique_ptr<TiXmlElement> CreateCommandEdit();
-std::unique_ptr<TiXmlElement> CreateCommandConnect(CStringA &iLocalizerName, CStringA &iScannerName);
+std::unique_ptr<TiXmlElement> CreateCommandConnect(std::string &iLocalizerName, std::string &iScannerName);
 std::unique_ptr<TiXmlElement> CreateCommandScanStart();
 std::unique_ptr<TiXmlElement> CreateCommandScanStop();
 std::unique_ptr<TiXmlElement> CreateCommandDisconnect();
@@ -63,7 +68,7 @@ std::unique_ptr<TiXmlElement> CreateCommandExit();
 std::unique_ptr<TiXmlElement> CreateCommandTestBigPacket(unsigned long NumLongs = 80000);
 
 // decoding command XML's
-bool          DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, CStringA &Command, std::map<CStringA, CStringA> &rParameters);
+bool          DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, std::string &Command, std::map<std::string, std::string> &rParameters);
 unsigned long GetSize(char *pBuffer);
 void          SetSize(char *pBuffer, unsigned long iSize);
 int           GetCode(char *pBuffer);
@@ -153,7 +158,7 @@ class CTCPGram
     void CopyFrom(std::unique_ptr<CTCPGram> &);
 
   public:
-    virtual void                          EncodeText(LPCSTR iText, unsigned char Code);
+    virtual void                          EncodeText(const std::string& iText, unsigned char Code);
     virtual unsigned char                 GetCode();
     virtual unsigned long                 GetSize();
     const char                           *GetText();

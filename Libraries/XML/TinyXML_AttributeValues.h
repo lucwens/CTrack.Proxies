@@ -27,14 +27,14 @@ bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, unsigne
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, float &value, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, double &value, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, bool &value, bool Read);
-bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::set<CStringA> &rvalue, bool Read);
-bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<CStringA> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::set<std::string> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<std::string> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<int> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<double> &rvalue, bool Read);
-bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<CStringA, int> &rvalue, bool Read);
-bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<CStringA, double> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, int> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, double> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<long, double> &rvalue, bool Read);
-bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, CStringA &value, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::string &value, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::set<int> &rvalue, bool Read);
 
 bool GetSetAttributeTime(TiXmlElement *pSettings, const char *AttributeName, time_t &value, bool Read);

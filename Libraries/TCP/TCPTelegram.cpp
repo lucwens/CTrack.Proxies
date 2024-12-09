@@ -1,8 +1,6 @@
 
-#include "stdafx.h"
 #include "TCPTelegram.h"
-#include "TinyXML_AttributeValues.h"
-#include "ErrorHandler.h"
+#include "../XML/TinyXML_AttributeValues.h"
 
 unsigned long CalcBufferSize(unsigned long NScanPoints) noexcept
 {
@@ -86,7 +84,7 @@ unsigned long DecodeScanFromBuffer(/*input*/ char *pBuffer, size_t BufferSize,
 
 std::unique_ptr<TiXmlElement> CreateCommandDetect()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_DETECT);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_DETECT);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
@@ -94,17 +92,17 @@ std::unique_ptr<TiXmlElement> CreateCommandDetect()
 
 std::unique_ptr<TiXmlElement> CreateCommandEdit()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_EDIT);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_EDIT);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
 }
 
-bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, CStringA &Command, std::map<CStringA, CStringA> &rParameters);
+bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, std::string &Command, std::map<std::string, std::string> &rParameters);
 
-std::unique_ptr<TiXmlElement> CreateCommandConnect(CStringA &iLocalizerName, CStringA &iScannerName)
+std::unique_ptr<TiXmlElement> CreateCommandConnect(std::string &iLocalizerName, std::string &iScannerName)
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_CONNECT);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_CONNECT);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND_CONNECT_LOCALIZER, iLocalizerName, false);
@@ -114,7 +112,7 @@ std::unique_ptr<TiXmlElement> CreateCommandConnect(CStringA &iLocalizerName, CSt
 
 std::unique_ptr<TiXmlElement> CreateCommandScanStart()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_SCAN_START);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_SCAN_START);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
@@ -122,7 +120,7 @@ std::unique_ptr<TiXmlElement> CreateCommandScanStart()
 
 std::unique_ptr<TiXmlElement> CreateCommandScanStop()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_SCAN_STOP);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_SCAN_STOP);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
@@ -130,7 +128,7 @@ std::unique_ptr<TiXmlElement> CreateCommandScanStop()
 
 std::unique_ptr<TiXmlElement> CreateCommandDisconnect()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_DISCONNECT);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_DISCONNECT);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
@@ -138,7 +136,7 @@ std::unique_ptr<TiXmlElement> CreateCommandDisconnect()
 
 std::unique_ptr<TiXmlElement> CreateCommandExit()
 {
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_EXIT);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_EXIT);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     return ReturnXML;
@@ -147,14 +145,14 @@ std::unique_ptr<TiXmlElement> CreateCommandExit()
 std::unique_ptr<TiXmlElement> CreateCommandTestBigPacket(unsigned long NumLongs)
 {
     unsigned long                 PacketSize = NumLongs; // send packet with PacketSize number of unsigned long numbers
-    CStringA                      Command(TCP_XML_ATTRIB_COMMAND_TEST_BIG);
+    std::string                      Command(TCP_XML_ATTRIB_COMMAND_TEST_BIG);
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TCP_XML_TAG_COMMAND);
     GetSetAttribute(ReturnXML.get(), TCP_XML_ATTRIB_COMMAND, Command, false);
     GetSetAttribute(ReturnXML.get(), "size", PacketSize, false);
     return ReturnXML;
 }
 
-bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, CStringA &Command, std::map<CStringA, CStringA> &rParameters)
+bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, std::string &Command, std::map<std::string, std::string> &rParameters)
 {
     TiXmlElement *pXMLCommand = FindRecursed(pXML.get(), TCP_XML_TAG_COMMAND);
     if (pXMLCommand)
@@ -162,8 +160,8 @@ bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, CStringA &Command, std::
         TiXmlAttribute *pAttribute = pXMLCommand->FirstAttribute();
         while (pAttribute)
         {
-            CStringA AttribName     = pAttribute->Name();
-            CStringA AttribValue    = pAttribute->Value();
+            std::string AttribName     = pAttribute->Name();
+            std::string AttribValue    = pAttribute->Value();
             rParameters[AttribName] = AttribValue;
             pAttribute              = pAttribute->Next();
         }
@@ -230,28 +228,28 @@ CTCPGram::CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code)
     memcpy(&(m_pData.get()[TCPGRAM_INDEX_PAYLOAD]), pBytes, NumBytes);
 }
 
-void CTCPGram::EncodeText(LPCSTR iText, unsigned char Code)
+void CTCPGram::EncodeText(const std::string& iText, unsigned char Code)
 {
     m_Destination = ALL_DESTINATIONS;
-    m_PackageSize = TCPGRAM_HEADER_SIZE + sizeof(char) * (strlen(iText) + 1);
+    m_PackageSize = TCPGRAM_HEADER_SIZE + sizeof(char) * (iText.size() + 1);
     m_pData.reset(new char[m_PackageSize]);
     SetCode(m_pData.get(), Code);
     SetSize(m_pData.get(), m_PackageSize);
 
     // transfer xml string
     m_pData.get()[TCPGRAM_INDEX_PAYLOAD] = ('\0');
-    strcat(&m_pData.get()[TCPGRAM_INDEX_PAYLOAD], (LPCSTR)iText);
+    strcat_s(&m_pData.get()[TCPGRAM_INDEX_PAYLOAD],m_PackageSize ,iText.c_str());
 }
 
 CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 {
-    CStringA XMLText = XML_To_String(&rCommand);
+    std::string XMLText = XML_To_String(&rCommand);
     EncodeText(XMLText, Code);
 }
 
 CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
 {
-    CStringA XMLText;
+    std::string XMLText;
     if (rCommand)
         XMLText = XML_To_String((rCommand.get()));
     EncodeText(XMLText, Code);
@@ -300,7 +298,7 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
         TiXmlDocument doc;
         if (strlen(pXMLString) != 0)
             if (!doc.Parse(pXMLString))
-                THROW_ERROR(("TCP Error : the XML contents could not be decoded"));
+                throw std::exception("TCP Error : the XML contents could not be decoded");
         TiXmlElement *pXML = doc.FirstChildElement();
         RemoveElement(pXML); // remove from doc, otherwise doc's destructor will kill our XML
         ReturnXML.reset(pXML);
