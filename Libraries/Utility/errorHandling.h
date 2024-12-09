@@ -2,6 +2,7 @@
 
 #include "os.h"
 #include "print.h"
+#include "NetworkError.h"
 
 #include <string>
 #include <exception>
@@ -19,7 +20,7 @@ class DetailedException : public std::exception
         return msg_.c_str();
     }
 
-  private:
+  protected:
     std::string msg_;
 
     static std::string FormatMessage(const std::string &message, const char *file, int line)
@@ -33,14 +34,12 @@ class DetailedException : public std::exception
 class DetailedSocketException : public DetailedException
 {
   public:
-    DetailedSocketException(const std::string &message, int NetworkError ,const char *file, int line) : DetailedException(message, file, line)
+    DetailedSocketException(const std::string &message, int NetworkError, const char *file, int line) : DetailedException(message, file, line)
     {
-        //workError_ = NetworkError;
+        std::string NetworkErrorMessage = XWSA_GetLongDescription(NetworkError);
+        msg_ += " (Network Error: " + NetworkErrorMessage + ")";
     }
 };
 
-#define THROW_DETAILED_EXCEPTION(msg) throw DetailedException((msg), __FILE__, __LINE__)
-
-
-#define THROW_ERROR(a)                throw DetailedException(a, __FILE__, __LINE__)
-#define THROW_SOCKET_ERROR(a, b)      throw DetailedSocketException(a,b, __FILE__, __LINE__)
+#define THROW_ERROR(msg)                   throw DetailedException((msg), __FILE__, __LINE__)
+#define THROW_SOCKET_ERROR(msg, errorcode) throw DetailedSocketException((msg), errorcode, __FILE__, __LINE__)

@@ -143,11 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Libraries\TCP\NetworkError.cpp" />
-    <ClCompile Include="..\Libraries\TCP\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
+    <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\Utility\os.cpp" />
+    <ClCompile Include="..\Libraries\Utility\Print.cpp" />
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
     <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
     <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
@@ -159,9 +160,11 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Libraries\TCP\NetworkError.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
+    <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
+    <ClInclude Include="..\Libraries\Utility\NetworkError.h" />
+    <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h" />
     <ClInclude Include="..\Libraries\Utility\os.h" />
     <ClInclude Include="..\Libraries\Utility\Print.h" />
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
