@@ -7,26 +7,29 @@
 
 const char *getIndent(unsigned int numIndents)
 {
-    static const char        *pINDENT = "                                      + ";
-    static const unsigned int LENGTH  = strlen(pINDENT);
-    unsigned int              n       = numIndents * NUM_INDENTS_PER_SPACE;
+    static const char  *pINDENT = "                                      + ";
+    static const size_t LENGTH  = strlen(pINDENT);
+    unsigned int        n       = numIndents * NUM_INDENTS_PER_SPACE;
     if (n > LENGTH)
-        n = LENGTH;
+        n = static_cast<unsigned int>(LENGTH);
 
     return &pINDENT[LENGTH - n];
 }
+
 
 // same as getIndent but no "+" at the end
 const char *getIndentAlt(unsigned int numIndents)
 {
-    static const char        *pINDENT = "                                        ";
-    static const unsigned int LENGTH  = strlen(pINDENT);
-    unsigned int              n       = numIndents * NUM_INDENTS_PER_SPACE;
+    static const char  *pINDENT = "                                        ";
+    static const size_t LENGTH  = strlen(pINDENT);
+    unsigned int        n       = numIndents * NUM_INDENTS_PER_SPACE;
     if (n > LENGTH)
-        n = LENGTH;
+        n = static_cast<unsigned int>(LENGTH);
 
     return &pINDENT[LENGTH - n];
 }
+
+
 
 int dump_attribs_to_stdout(TiXmlElement *pElement, unsigned int indent)
 {

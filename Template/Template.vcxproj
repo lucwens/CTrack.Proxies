@@ -161,7 +161,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
+    <ClInclude Include="..\Libraries\Driver\Driver.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />

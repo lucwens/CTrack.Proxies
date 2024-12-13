@@ -131,7 +131,7 @@
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\Driver\IDriver.h">
+    <ClInclude Include="..\Libraries\Driver\Driver.h">
       <Filter>Libraries\Driver</Filter>
     </ClInclude>
   </ItemGroup>
