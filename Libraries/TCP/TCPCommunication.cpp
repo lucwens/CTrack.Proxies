@@ -448,7 +448,7 @@ void CCommunicationObject::Close()
 
 void CCommunicationObject::CheckConnections()
 {
-    int NewNumConnections = GetNumConnections();
+    size_t NewNumConnections = GetNumConnections();
     if (NewNumConnections != m_TCPNumConnections)
     {
         CSocket *pNewSocket = GetNewComer(); // newcomers are only produced on server sockets
@@ -537,7 +537,7 @@ CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode
     return new CSocket(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendAddress);
 }
 
-int CCommunicationObject::GetNumConnections()
+size_t CCommunicationObject::GetNumConnections()
 {
     if (m_pCommunicationThread)
         return 1;
@@ -970,7 +970,7 @@ void CCommunicationThread::AddNewComer(CSocket *iSocket)
         iter->AddNewComer(iSocket);
 }
 
-int CCommunicationThread::GetNumConnections()
+size_t CCommunicationThread::GetNumConnections()
 {
     std::lock_guard<std::mutex> Lock(m_Mutex);
     return m_arSockets.size();

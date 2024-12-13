@@ -22,7 +22,7 @@ const unsigned char HEADER_SIZE(4);
 
 // Codes for tcpgrams
 const unsigned char TCPGRAM_CODE_INVALID(0);          // invalid return
-const unsigned char TCPGRAM_CODE_DATA(1);             // array of doubles
+const unsigned char TCPGRAM_CODE_DOUBLES(1);          // array of doubles
 const unsigned char TCPGRAM_CODE_COMMAND(2);          // xml containing command
 const unsigned char TCPGRAM_CODE_STATUS(3);           // xml containing status
 const unsigned char TCPGRAM_CODE_TEST_BIG(4);         // xml containing status
@@ -137,10 +137,12 @@ class CTCPGram
     CTCPGram &operator=(CTCPGram &rTCPGram) = delete;
 
   public:                                      // various
-    CTCPGram(char *pFromReadBuffer = nullptr); // constructor used by read routine
-    CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code);
-    CTCPGram(std::unique_ptr<TiXmlElement> &ipNode, unsigned char Code);
-    CTCPGram(TiXmlElement &rCommand, unsigned char Code);
+    explicit CTCPGram(char *pFromReadBuffer = nullptr) ; // constructor used by read routine
+    explicit CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code) ;
+    explicit CTCPGram(TiXmlElement &rCommand, unsigned char Code) ;
+    explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code) ;
+    explicit CTCPGram(std::vector<double> &arDoubles) ;
+
     virtual ~CTCPGram()
     {
         Clear();

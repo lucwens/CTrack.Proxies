@@ -149,6 +149,7 @@
     <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\Utility\os.cpp" />
     <ClCompile Include="..\Libraries\Utility\Print.cpp" />
+    <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp" />
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
     <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
     <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
@@ -160,6 +161,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
@@ -167,6 +169,7 @@
     <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h" />
     <ClInclude Include="..\Libraries\Utility\os.h" />
     <ClInclude Include="..\Libraries\Utility\Print.h" />
+    <ClInclude Include="..\Libraries\Utility\StringUtilities.h" />
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
     <ClInclude Include="..\Libraries\XML\tinystr.h" />
     <ClInclude Include="..\Libraries\XML\tinyxml.h" />
@@ -174,6 +177,7 @@
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
+    <ClInclude Include="Header.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

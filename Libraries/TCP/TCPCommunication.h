@@ -32,7 +32,7 @@ bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number); // 
 
 typedef std::function<void()> StateResponder;   // function for state entry/run/exit
 typedef std::function<void()> CommandResponder; // function for CNode responders
-typedef std::function<void(int)>
+typedef std::function<void(size_t)>
     ConnectResponder; // function when the number of connections changed, new number of connections is passed as integer to function
 
 //------------------------------------------------------------------------------------------------------------------
@@ -162,7 +162,7 @@ class CCommunicationInterface
     virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
                                     // available
     virtual void     AddNewComer(CSocket *);
-    virtual int      GetNumConnections()
+    virtual size_t   GetNumConnections()
     {
         return 0;
     };
@@ -248,8 +248,8 @@ class CCommunicationObject : public CCommunicationInterface
     void CopyFrom(CCommunicationObject *);
 
   public: // CCommunicationParameters
-    int  GetNumConnections() override;
-    void PushSendPackage(std::unique_ptr<CTCPGram> &) override;
+    size_t GetNumConnections() override;
+    void   PushSendPackage(std::unique_ptr<CTCPGram> &) override;
 
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
@@ -261,7 +261,7 @@ class CCommunicationObject : public CCommunicationInterface
     std::string m_ThreadName;
 
   protected: // added from statemanager
-    int              m_TCPNumConnections{0};
+    size_t           m_TCPNumConnections{0};
     ConnectResponder m_TCPConnectChange;
     bool             m_bTCPServer{true};
 };
@@ -285,10 +285,10 @@ class CCommunicationThread : public CCommunicationInterface
     size_t CommunicationObjectGetNum();
 
   public: // CCommunicationParameters
-    void AddNewComer(CSocket *) override;
-    int  GetNumConnections() override;
-    void PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
-    void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) override;
+    void   AddNewComer(CSocket *) override;
+    size_t GetNumConnections() override;
+    void   PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
+    void   SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) override;
 
   protected:
     void SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool bAddToNewComerList, bool UDPBroadcast,

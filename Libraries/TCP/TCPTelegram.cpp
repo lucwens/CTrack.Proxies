@@ -31,7 +31,7 @@ void EncodeScanToBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &
     pBufferPos += sizeof(CycleItem6D);
 
     // get num of scan points
-    unsigned long N = ScanPoints.size();
+    unsigned long N = static_cast<unsigned long>(ScanPoints.size());
     memcpy(pBufferPos, &N, sizeof(unsigned long));
     pBufferPos += sizeof(unsigned long);
 
@@ -231,7 +231,7 @@ CTCPGram::CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code)
 void CTCPGram::EncodeText(const std::string &iText, unsigned char Code)
 {
     m_Destination = ALL_DESTINATIONS;
-    m_PackageSize = TCPGRAM_HEADER_SIZE + sizeof(char) * (iText.size() + 1);
+    m_PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(char) * (iText.size() + 1));
     m_pData.reset(new char[m_PackageSize]);
     SetCode(m_pData.get(), Code);
     SetSize(m_pData.get(), m_PackageSize);
@@ -245,6 +245,20 @@ CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 {
     std::string XMLText = XML_To_String(&rCommand);
     EncodeText(XMLText, Code);
+}
+
+CTCPGram::CTCPGram(std::vector<double> &arDoubles)
+{
+    m_Destination  = ALL_DESTINATIONS;
+    size_t NumDoubles = arDoubles.size();
+    m_PackageSize  = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(double) * NumDoubles);
+    m_pData.reset(new char[m_PackageSize]);
+    SetCode(m_pData.get(), TCPGRAM_CODE_DOUBLES);
+    SetSize(m_pData.get(), m_PackageSize);
+
+    double *pDouble = (double *)&(m_pData.get()[TCPGRAM_INDEX_PAYLOAD]);
+    for (int c = 0; c < NumDoubles; c++)
+        pDouble[c] = arDoubles[c];
 }
 
 CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
