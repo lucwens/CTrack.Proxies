@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_SHUTDOWN)
                 {
-                    std::unique_ptr<TiXmlElement> Response = driver->Stop();
+                    std::unique_ptr<TiXmlElement> Response = driver->ShutDown();
                     std::unique_ptr<CTCPGram>     TCPGRam  = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
                     TCPServer.PushSendPackage(TCPGRam);
                 }

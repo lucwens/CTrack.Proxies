@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Libraries\Driver\Driver.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />

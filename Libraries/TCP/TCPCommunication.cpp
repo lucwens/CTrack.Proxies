@@ -9,10 +9,6 @@
 #include <format>
 #include <string>
 
-// #include <Ws2tcpip.h>
-// #include <Icmpapi.h>
-// #include <algorithm>
-
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -208,7 +204,6 @@ bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTC
 
 void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 {
-    std::lock_guard<std::mutex> Lock(m_Mutex);
     while (m_arReceiveBuffer.size() > iNumberToKeep)
     {
         m_arReceiveBuffer.pop_front();

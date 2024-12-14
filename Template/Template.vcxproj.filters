@@ -19,17 +19,17 @@
     <Filter Include="Libraries\TCP">
       <UniqueIdentifier>{8b7851d4-f3c3-49e1-9225-8c7463b8b0ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libraries\TinyXML">
-      <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Libraries\TinyXML\Additional">
-      <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Libraries\Utility">
       <UniqueIdentifier>{6be3e0a0-de50-4e07-bddb-7b624a68d314}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\Driver">
       <UniqueIdentifier>{5307f8f1-df4a-41a6-9785-b09b4e33b014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML">
+      <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML\Additional">
+      <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,19 +40,19 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\tinystr.cpp">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\tinyxml.cpp">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\os.cpp">
       <Filter>Libraries\Utility</Filter>
@@ -61,13 +61,13 @@
       <Filter>Libraries\TCP</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\XML.cpp">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp">
       <Filter>Libraries\Utility</Filter>
@@ -81,19 +81,22 @@
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Driver\Driver.cpp">
+      <Filter>Libraries\Driver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
       <Filter>Libraries\TCP</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\tinystr.h">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\tinyxml.h">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
-      <Filter>Libraries\TinyXML</Filter>
+      <Filter>Libraries\XML</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\os.h">
       <Filter>Libraries\Utility</Filter>
@@ -105,16 +108,16 @@
       <Filter>Libraries\TCP</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\XML.h">
-      <Filter>Libraries\TinyXML\Additional</Filter>
+      <Filter>Libraries\XML\Additional</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\errorHandling.h">
       <Filter>Libraries\Utility</Filter>
