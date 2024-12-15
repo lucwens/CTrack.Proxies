@@ -11,17 +11,18 @@
 TiXmlElement                 *FindRecursed(TiXmlElement *pRoot, const char *TagName);
 TiXmlText                    *GetTextPointer(TiXmlElement *pElement);
 const char                   *GetText(TiXmlElement *pElement);
-void                          SetText(TiXmlElement *pElement, const char *newtext);
-TiXmlNode                    *FindNode(TiXmlNode *pParentNode, const char *Path);
-TiXmlNode                    *CreateNode(TiXmlNode *pParentNode, const char *Path);
-TiXmlElement                 *FindElement(TiXmlNode *pParentNode, const char *Path);
-TiXmlElement                 *CreateElement(TiXmlNode *pParentNode, const char *Path);
-std::unique_ptr<TiXmlElement> LoadXmlFile(const std::string filename);
+void                          SetText(TiXmlElement *pElement, const std::string &newtext);
+TiXmlNode                    *FindNode(TiXmlNode *pParentNode, const std::string &Path);
+TiXmlNode                    *CreateNode(TiXmlNode *pParentNode, const std::string &Path);
+TiXmlElement                 *FindElement(TiXmlNode *pParentNode, const std::string &Path);
+TiXmlElement                 *CreateElement(TiXmlNode *pParentNode, const std::string &Path);
+std::unique_ptr<TiXmlElement> LoadXmlFile(const std::string &filename);
 
-std::string   XML_To_String(TiXmlElement *pElement);
-TiXmlElement *String_To_XML(const std::string &XMLText, TiXmlDocument &doc);
+std::string   XMLToString(TiXmlElement *pElement);
+std::string   XMLToString(std::unique_ptr<TiXmlElement> &element);
+TiXmlElement *StringToXML(const std::string &XMLText, TiXmlDocument &doc);
 
-bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, char *Value, const char *File, int Line);
+bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, std::string &Value, const char *File, int Line);
 bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, long &Value, const char *File, int Line);
 bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, int &Value, const char *File, int Line);
 bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, unsigned char &Value, const char *File, int Line);
@@ -35,8 +36,8 @@ int Text2IntSet(std::set<int> &IntSet, const std::string &Text);
 int DoubleArray2Text(std::vector<double> &rArray, std::string &Text);
 int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text);
 
-int StringArray2Text(std::vector<std::string> &IntArray, std::string &Text);
-int Text2StringArray(std::vector<std::string> &IntArray, const std::string &Text);
+int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text);
+int Text2StringArray(std::vector<std::string> &StringArray, const std::string &Text);
 
 int IntMap2Text(std::map<int, int> &IntMap, std::string &Text);
 int Text2IntMap(std::map<int, int> &IntMap, const std::string &Text);
@@ -51,7 +52,7 @@ int LongDoubleMap2Text(std::map<long, double> &FloatMap, std::string &Text);
 int Text2LongDoubleMap(std::map<long, double> &FloatMap, const std::string &Text);
 
 int VecIntMap2Text(std::map<std::string, std::vector<int>> &VecIntMap, std::string &Text);
-int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, std::string &Text);
+int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std::string &Text);
 
 TiXmlElement *RemoveElement(TiXmlElement *removeThis);
-void          DeleteNodes(TiXmlNode *pMainXML, const char *Path);
+void          DeleteNodes(TiXmlNode *pMainXML, const std::string &Path);

@@ -425,7 +425,7 @@ void CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
         // when a communication object wants to open the communication channels, CCommunicationManager checks if there is already a thread running on the same
         // port, if yes then the communication object is added to the list of communication objects belonging to that port, if no, then we create a new thread
 
-        m_pCommunicationThread.reset(new CCommunicationThread);
+        m_pCommunicationThread = std::make_shared<CCommunicationThread>();
         m_pCommunicationThread->CommunicationObjectAdd(*this);
         m_pCommunicationThread->StartThread();
     };
@@ -559,8 +559,6 @@ CSocket::CSocket(SOCKET iSocket, E_COMMUNICATION_Mode iCommunicationMode, SOCKAD
     m_CommunicationMode      = iCommunicationMode;
     m_pSockAddress           = ipSockAddress;
     m_CurrentTelegramSize    = 0;
-    m_pAccumulationBuffer    = nullptr;
-    m_AccumulationBufferSize = 0;
 
     m_TotalBytesWritten      = 0;
     m_MaxUDPMessageSize      = 0;
@@ -597,9 +595,6 @@ CSocket::CSocket(SOCKET iSocket, E_COMMUNICATION_Mode iCommunicationMode, SOCKAD
 
 CSocket::~CSocket()
 {
-    if (m_pAccumulationBuffer)
-        delete[] m_pAccumulationBuffer;
-    m_pAccumulationBuffer = nullptr;
     shutdown(m_Socket, SD_BOTH);
     closesocket(m_Socket);
 }
@@ -688,7 +683,7 @@ bool CSocket::DataAvailable()
     return false;
 }
 
-void CSocket::ReadFeedBuffer() // NumReceived
+void CSocket::ReadFeedBuffer()
 {
     // check for data availability
     bool     bDataAvail(false), bNetWorkError(false);
@@ -710,27 +705,30 @@ void CSocket::ReadFeedBuffer() // NumReceived
             THROW_SOCKET_ERROR(("An error occurred trying to read data from the network"), LastError);
     }
     else
-        AppendBack(m_pAccumulationBuffer, m_AccumulationBufferSize, ReceiveBuffer, rNumReceived);
+    {
+        std::vector<std::uint8_t> appendBuffer(ReceiveBuffer, ReceiveBuffer + rNumReceived);
+        AppendBack(m_AccumulationBuffer, appendBuffer);
+    }
 }
 
 bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    if (m_AccumulationBufferSize == 0)
+    if (m_AccumulationBuffer.empty())
         return false; // nothing in the buffer
 
-    if (m_CurrentTelegramSize == 0 && m_pAccumulationBuffer != nullptr && m_AccumulationBufferSize >= TCPGRAM_HEADER_SIZE) // start of a new telegram
-        m_CurrentTelegramSize = GetSize(m_pAccumulationBuffer);
+    if (m_CurrentTelegramSize == 0 && m_AccumulationBuffer.size() >= TCPGRAM_HEADER_SIZE) // start of a new telegram
+        m_CurrentTelegramSize = GetSize(m_AccumulationBuffer);
 
-    if (m_AccumulationBufferSize >= m_CurrentTelegramSize) // new telegram ready
+    if (m_AccumulationBuffer.size() >= m_CurrentTelegramSize) // new telegram ready
     {
-        ReturnTCPGram.reset(new CTCPGram(RemoveFront(
-            m_pAccumulationBuffer, m_AccumulationBufferSize,
-            m_CurrentTelegramSize))); // remove front returns the split of buffer which is then coupled directly with the telegram, who will finally destroy it
+        std::vector<std::uint8_t> telegramData = RemoveFront(m_AccumulationBuffer, m_CurrentTelegramSize);
+        ReturnTCPGram.reset(new CTCPGram(telegramData));
         m_CurrentTelegramSize = 0;
         return true;
     }
     return false;
 }
+
 
 void CSocket::WriteSendReset()
 {
@@ -747,11 +745,11 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         case TCP_SERVER:
         {
             // try to send as much as possible
-            int NumBytesWritten = send(m_Socket, rTCPGram->m_pData.get(), rTCPGram->m_PackageSize, 0);
+            int NumBytesWritten = send(m_Socket, reinterpret_cast<const char*>(rTCPGram->m_Data.data()), static_cast<int>( rTCPGram->m_Data.size()), 0);
             if (NumBytesWritten != SOCKET_ERROR)
             {
                 m_TotalBytesWritten += NumBytesWritten;
-                bool bFinished = (m_TotalBytesWritten == rTCPGram->m_PackageSize);
+                bool bFinished = (m_TotalBytesWritten == rTCPGram->m_Data.size());
                 if (bFinished)
                     m_TotalBytesWritten = 0;
 
@@ -769,69 +767,48 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         break;
         case UDP:
         {
-            if (rTCPGram->m_PackageSize > m_MaxUDPMessageSize)
+            if (rTCPGram->m_Data.size() > m_MaxUDPMessageSize)
             {
                 std::string ErrorMessage =
-                    std::format("Error sending data over UDP : the package size {} is bigger than allowed {}", rTCPGram->m_PackageSize, m_MaxUDPMessageSize);
+                    std::format("Error sending data over UDP : the package size {} is bigger than allowed {}", rTCPGram->m_Data.size(), m_MaxUDPMessageSize);
                 THROW_ERROR(ErrorMessage);
             }
-            int rVal = ::sendto(m_Socket, rTCPGram->m_pData.get(), rTCPGram->m_PackageSize, 0, (SOCKADDR *)&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
+            int rVal = ::sendto(m_Socket, reinterpret_cast<const char *>(rTCPGram->m_Data.data()), static_cast<int>(rTCPGram->m_Data.size()), 0,
+                                (SOCKADDR *)&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
             if (rVal == SOCKET_ERROR)
             {
                 int LastError = WSAGetLastError();
                 THROW_SOCKET_ERROR(("An error occurred trying to send data over the UDP network"), LastError);
             }
             else
-                return (rVal == rTCPGram->m_PackageSize);
+                return (rVal == rTCPGram->m_Data.size());
         };
         break;
     }
     return false;
 }
 
-void CSocket::AppendBack(char *&pMainBuffer, unsigned long &MainBufferSize, char *pAppendBuffer, unsigned long NewBufferSize)
+void CSocket::AppendBack(std::vector<std::uint8_t> &mainBuffer, const std::vector<std::uint8_t> &appendBuffer)
 {
-    if (NewBufferSize == 0)
+    if (appendBuffer.empty())
         return;
 
-    char *pNewBuffer = new char[MainBufferSize + NewBufferSize];
-    if (MainBufferSize)
-        memcpy(pNewBuffer, pMainBuffer, MainBufferSize);
-    memcpy(&pNewBuffer[MainBufferSize], pAppendBuffer, NewBufferSize);
-    if (pMainBuffer)
-        delete[] pMainBuffer;
-    MainBufferSize += NewBufferSize;
-    pMainBuffer = pNewBuffer;
+    mainBuffer.insert(mainBuffer.end(), appendBuffer.begin(), appendBuffer.end());
 }
 
-char *CSocket::RemoveFront(char *&pMainBuffer, unsigned long &MainBufferSize, unsigned long SizeToRemove)
+std::vector<std::uint8_t> CSocket::RemoveFront(std::vector<std::uint8_t> &mainBuffer, unsigned long sizeToRemove)
 {
-    char *pReturnBuffer = nullptr;
-    if (SizeToRemove > MainBufferSize || SizeToRemove == 0)
-        return nullptr;
-    if (MainBufferSize > SizeToRemove)
-    {
-        // copy front part to return pointer
-        pReturnBuffer = new char[SizeToRemove];
-        memcpy(pReturnBuffer, pMainBuffer, SizeToRemove);
+    std::vector<std::uint8_t> returnBuffer;
 
-        // remove from main buffer
-        MainBufferSize -= SizeToRemove;
-        char *pNewBuffer = new char[MainBufferSize];
-        memcpy(pNewBuffer, &pMainBuffer[SizeToRemove], MainBufferSize);
+    if (sizeToRemove > mainBuffer.size() || sizeToRemove == 0)
+        return returnBuffer;
 
-        if (pMainBuffer)
-            delete[] pMainBuffer;
-        pMainBuffer = pNewBuffer;
-    }
-    else if (MainBufferSize == SizeToRemove)
-    {
-        pReturnBuffer  = pMainBuffer;
-        pMainBuffer    = nullptr;
-        MainBufferSize = 0;
-    }
-    return pReturnBuffer;
+    returnBuffer.assign(mainBuffer.begin(), mainBuffer.begin() + sizeToRemove);
+    mainBuffer.erase(mainBuffer.begin(), mainBuffer.begin() + sizeToRemove);
+
+    return returnBuffer;
 }
+
 
 //------------------------------------------------------------------------------------------------------------------
 /*

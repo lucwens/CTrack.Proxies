@@ -2,6 +2,8 @@
 
 #include "../XML/TinyXML_AttributeValues.h"
 #include "../XML/ProxyKeywords.h"
+#include <thread>
+#include <chrono>
 
 std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
@@ -33,21 +35,26 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     GetSetAttribute(Return.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
-
+    m_bRunning = true;
+    m_TimeStep = 1.0 / m_MeasurementFrequencyHz;
     return Return;
 }
 
 bool Driver::Run()
 {
-    return true;
+    if (m_bRunning)
+    {
+        m_arDoubles[0] += m_TimeStep;
+        std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(m_TimeStep)));
+    }
+    return m_bRunning;
 }
 
 std::unique_ptr<TiXmlElement> Driver::ShutDown()
 {
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
+    m_bRunning = false;
 
     return Return;
 }
-
-

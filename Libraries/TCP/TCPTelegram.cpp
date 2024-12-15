@@ -2,86 +2,6 @@
 #include "TCPTelegram.h"
 #include "../XML/TinyXML_AttributeValues.h"
 
-unsigned long CalcBufferSize(unsigned long NScanPoints) noexcept
-{
-    unsigned long ReturnSize = 2 /*buttonid + button state*/;
-    ReturnSize += sizeof(CycleItem6D) /*position of localizer*/;
-    ReturnSize += sizeof(unsigned long) /*number of scans*/;
-    ReturnSize += NScanPoints * sizeof(ScanPoint3D) /*variable length array of scanpoints*/;
-
-    return ReturnSize;
-}
-
-void EncodeScanToBuffer(char *pBuffer, size_t BufferSize, char &ButtonID, char &ButtonState, CycleItem6D &Pose, std::deque<ScanPoint3D> &ScanPoints) noexcept
-{
-    char *pBufferPos{pBuffer};
-    /* the buffer is composed of
-    N scanpoints [4 bytes]
-    Pose of scanner [sizeof(CycleItem6D) bytes]
-    N x ScanPoint3D [N x sizeof(ScanPoint3D)]
-    */
-    // get button id and state
-    memcpy(pBufferPos, &ButtonID, sizeof(char));
-    pBufferPos += sizeof(char);
-    memcpy(pBufferPos, &ButtonState, sizeof(char));
-    pBufferPos += sizeof(char);
-
-    // get pose
-    memcpy(pBufferPos, &Pose, sizeof(CycleItem6D));
-    pBufferPos += sizeof(CycleItem6D);
-
-    // get num of scan points
-    unsigned long N = static_cast<unsigned long>(ScanPoints.size());
-    memcpy(pBufferPos, &N, sizeof(unsigned long));
-    pBufferPos += sizeof(unsigned long);
-
-    // get scan points
-    for (auto &ScanPoint : ScanPoints)
-    {
-        // get pose
-        memcpy(pBufferPos, &ScanPoint, sizeof(ScanPoint3D));
-        pBufferPos += sizeof(ScanPoint3D);
-        ScanPoints.push_back(ScanPoint);
-    }
-}
-
-unsigned long DecodeScanFromBuffer(/*input*/ char *pBuffer, size_t BufferSize,
-                                   /*output*/ char &ButtonID, char &ButtonState, CycleItem6D &Pose, std::deque<ScanPoint3D> &ScanPoints) noexcept
-{
-    char *pBufferPos{pBuffer};
-    /* the buffer is composed of
-    N scanpoints [4 bytes]
-    Pose of scanner [sizeof(CycleItem6D) bytes]
-    N x ScanPoint3D [N x sizeof(ScanPoint3D)]
-    */
-    // get button id and state
-    memcpy(&ButtonID, pBufferPos, sizeof(char));
-    pBufferPos += sizeof(char);
-    memcpy(&ButtonState, pBufferPos, sizeof(char));
-    pBufferPos += sizeof(char);
-
-    // get pose as 4x4 matrix
-    memcpy(&Pose, pBufferPos, sizeof(CycleItem6D));
-    pBufferPos += sizeof(CycleItem6D);
-
-    // get num of scan points
-    unsigned long N{0};
-    memcpy(&N, pBufferPos, sizeof(unsigned long));
-    pBufferPos += sizeof(unsigned long);
-
-    // get scan points
-    ScanPoints.clear();
-    ScanPoint3D ScanPoint;
-    for (unsigned long I = 0; I < N; I++)
-    {
-        // get pose
-        memcpy(&ScanPoint, pBufferPos, sizeof(ScanPoint3D));
-        pBufferPos += sizeof(ScanPoint3D);
-        ScanPoints.push_back(ScanPoint);
-    }
-    return N;
-}
-
 std::unique_ptr<TiXmlElement> CreateCommandDetect()
 {
     std::string                   Command(TCP_XML_ATTRIB_COMMAND_DETECT);
@@ -176,33 +96,36 @@ bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, std::string &Command, st
     return false;
 }
 
-unsigned long GetSize(char *pBuffer)
+unsigned long GetSize(std::vector<std::uint8_t> &Buffer)
 {
     unsigned long ReturnSize(0);
-    if (pBuffer)
+    if (Buffer.size() >= 5)
     {
-        memcpy(&ReturnSize, &pBuffer[TCPGRAM_INDEX_SIZE], sizeof(unsigned long));
+        memcpy(&ReturnSize, Buffer.data() + TCPGRAM_INDEX_SIZE, sizeof(unsigned long));
         return ReturnSize;
     }
     else
         return 0;
 }
 
-void SetSize(char *pBuffer, unsigned long iSize)
+void SetSize(std::vector<std::uint8_t> &Buffer, unsigned long iSize)
 {
-    memcpy(&pBuffer[TCPGRAM_INDEX_SIZE], &iSize, sizeof(unsigned long));
+    if (Buffer.size() >= 5)
+        memcpy(Buffer.data() + TCPGRAM_INDEX_SIZE, &iSize, sizeof(unsigned long));
 }
 
-int GetCode(char *pBuffer)
+std::uint8_t GetCode(std::vector<std::uint8_t> &Buffer)
 {
-    unsigned char ReturnCode(0);
-    memcpy(&ReturnCode, &pBuffer[TCPGRAM_INDEX_CODE], sizeof(unsigned char));
+    std::uint8_t ReturnCode(0);
+    if (Buffer.size() >= 5)
+        ReturnCode = Buffer[TCPGRAM_INDEX_CODE];
     return ReturnCode;
 }
 
-void SetCode(char *pBuffer, int iCode)
+void SetCode(std::vector<std::uint8_t> &Buffer, std::uint8_t iCode)
 {
-    memcpy(&pBuffer[TCPGRAM_INDEX_CODE], &iCode, sizeof(unsigned char));
+    if (Buffer.size() >= 5)
+        Buffer[TCPGRAM_INDEX_CODE] = iCode;
 }
 
 //------------------------------------------------------------------------------------------------------------------
@@ -211,84 +134,91 @@ CTCPGRam class
 */
 //------------------------------------------------------------------------------------------------------------------
 
-CTCPGram::CTCPGram(char *pFromReadBuffer)
-{
-    m_Destination = ALL_DESTINATIONS;
-    m_PackageSize = ::GetSize(pFromReadBuffer);
-    m_pData.reset(pFromReadBuffer);
-}
-
 CTCPGram::CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code)
 {
-    m_Destination = ALL_DESTINATIONS;
-    m_PackageSize = TCPGRAM_HEADER_SIZE + NumBytes;
-    m_pData.reset(new char[m_PackageSize]);
-    SetCode(m_pData.get(), Code);
-    SetSize(m_pData.get(), m_PackageSize);
-    memcpy(&(m_pData.get()[TCPGRAM_INDEX_PAYLOAD]), pBytes, NumBytes);
+    m_Destination             = ALL_DESTINATIONS;
+    unsigned long PackageSize = TCPGRAM_HEADER_SIZE + NumBytes;
+    m_Data.resize(PackageSize);
+    SetCode(m_Data, Code);
+    SetSize(m_Data, PackageSize);
+    memcpy(&(m_Data[TCPGRAM_INDEX_PAYLOAD]), pBytes, NumBytes);
 }
 
 void CTCPGram::EncodeText(const std::string &iText, unsigned char Code)
 {
-    m_Destination = ALL_DESTINATIONS;
-    m_PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(char) * (iText.size() + 1));
-    m_pData.reset(new char[m_PackageSize]);
-    SetCode(m_pData.get(), Code);
-    SetSize(m_pData.get(), m_PackageSize);
+    m_Destination             = ALL_DESTINATIONS;
+    unsigned long PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(char) * (iText.size() + 1));
+    m_Data.resize(PackageSize);
+    SetCode(m_Data, Code);
+    SetSize(m_Data, PackageSize);
 
     // transfer xml string
-    m_pData.get()[TCPGRAM_INDEX_PAYLOAD] = ('\0');
-    strcat_s(&m_pData.get()[TCPGRAM_INDEX_PAYLOAD], m_PackageSize, iText.c_str());
+    m_Data[TCPGRAM_INDEX_PAYLOAD] = ('\0');
+    strcat_s(reinterpret_cast<char *>(m_Data.data() + TCPGRAM_INDEX_PAYLOAD), PackageSize, iText.c_str());
 }
 
 CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 {
-    std::string XMLText = XML_To_String(&rCommand);
+    std::string XMLText = XMLToString(&rCommand);
     EncodeText(XMLText, Code);
 }
 
 CTCPGram::CTCPGram(std::vector<double> &arDoubles)
 {
-    m_Destination  = ALL_DESTINATIONS;
-    size_t NumDoubles = arDoubles.size();
-    m_PackageSize  = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(double) * NumDoubles);
-    m_pData.reset(new char[m_PackageSize]);
-    SetCode(m_pData.get(), TCPGRAM_CODE_DOUBLES);
-    SetSize(m_pData.get(), m_PackageSize);
+    m_Destination      = ALL_DESTINATIONS;
+    size_t NumDoubles  = arDoubles.size();
+    size_t PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(double) * NumDoubles);
+    m_Data.resize(PackageSize);
+    SetCode(m_Data, TCPGRAM_CODE_DOUBLES);
+    SetSize(m_Data, static_cast<unsigned long>(PackageSize));
 
-    double *pDouble = (double *)&(m_pData.get()[TCPGRAM_INDEX_PAYLOAD]);
+    double *pDouble = (double *)(m_Data.data() + TCPGRAM_INDEX_PAYLOAD);
     for (int c = 0; c < NumDoubles; c++)
         pDouble[c] = arDoubles[c];
+}
+
+CTCPGram::CTCPGram(std::vector<std::uint8_t> &arBytes, unsigned char Code)
+{
+    m_Destination      = ALL_DESTINATIONS;
+    size_t NumBytes    = arBytes.size();
+    size_t PackageSize = TCPGRAM_HEADER_SIZE + NumBytes;
+    m_Data.resize(PackageSize);
+    SetCode(m_Data, Code);
+    SetSize(m_Data, static_cast<unsigned long>(PackageSize));
+    memcpy(m_Data.data() + TCPGRAM_INDEX_PAYLOAD, arBytes.data(), NumBytes);
+}
+
+CTCPGram::CTCPGram(std::vector<std::uint8_t> &arBytes)
+{
+    m_Data = std::move(arBytes);
 }
 
 CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
 {
     std::string XMLText;
     if (rCommand)
-        XMLText = XML_To_String((rCommand.get()));
+        XMLText = XMLToString((rCommand.get()));
     EncodeText(XMLText, Code);
 }
 
 void CTCPGram::CopyFrom(std::unique_ptr<CTCPGram> &rFrom)
 {
-    m_PackageSize = rFrom->m_PackageSize;
     m_Destination = rFrom->m_Destination;
-    m_pData.reset(new char[m_PackageSize]);
-    memcpy(m_pData.get(), rFrom->m_pData.get(), m_PackageSize);
+    m_Data        = rFrom->m_Data;
 }
 
 unsigned char CTCPGram::GetCode()
 {
-    if (m_pData != nullptr && m_PackageSize > 0)
-        return ::GetCode(m_pData.get());
+    if (m_Data.size() >= 5)
+        return ::GetCode(m_Data);
     else
         return TCPGRAM_CODE_INVALID;
 }
 
 unsigned long CTCPGram::GetSize()
 {
-    if (m_pData != nullptr && m_PackageSize > 0)
-        return ::GetSize(m_pData.get());
+    if (m_Data.size() >= 5)
+        return ::GetSize(m_Data);
     else
         return 0;
 }
@@ -298,7 +228,7 @@ const char *CTCPGram::GetText()
     unsigned char DataType = GetCode();
     if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
         return NULL;
-    return (const char *)(&(m_pData.get()[TCPGRAM_INDEX_PAYLOAD]));
+    return reinterpret_cast<const char *>(m_Data.data() + TCPGRAM_INDEX_PAYLOAD);
 }
 
 std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
@@ -322,6 +252,5 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
 
 void CTCPGram::Clear()
 {
-    m_pData.reset();
-    m_PackageSize = 0;
+    m_Data.clear();
 }

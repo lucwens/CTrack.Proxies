@@ -1,8 +1,11 @@
 #include "TinyXML_Extra.h"
 #include <map>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <set>
 
-std::string XML_To_String(TiXmlElement *pXML)
+std::string XMLToString(TiXmlElement *pXML)
 {
     std::string  ReturnString;
     TiXmlPrinter printer;
@@ -12,7 +15,20 @@ std::string XML_To_String(TiXmlElement *pXML)
     return ReturnString;
 }
 
-TiXmlElement *String_To_XML(const std::string &XMLText, TiXmlDocument &doc)
+std::string XMLToString(std::unique_ptr<TiXmlElement> &element)
+{
+    std::string ReturnString;
+    if (element)
+    {
+        TiXmlPrinter printer;
+        printer.SetIndent("\t");
+        element->Accept(&printer);
+        ReturnString = printer.CStr();
+    }
+    return ReturnString;
+};
+
+TiXmlElement *StringToXML(const std::string &XMLText, TiXmlDocument &doc)
 {
     doc.Parse(XMLText.c_str());
     TiXmlHandle   docHandle(&doc);
@@ -20,20 +36,15 @@ TiXmlElement *String_To_XML(const std::string &XMLText, TiXmlDocument &doc)
     return pChildElement;
 }
 
-//
-// this function finds recursively the first TiXmlElement that matches TagName
 TiXmlElement *FindRecursed(TiXmlElement *pRoot, const char *TagName)
 {
-    // maybe it is the root
     if (strcmp(pRoot->Value(), TagName) == 0)
         return pRoot;
 
-    // search first level
     TiXmlElement *pResult = pRoot->FirstChildElement(TagName);
     if (pResult)
         return pResult;
 
-    // iterate
     TiXmlElement *pChild = pRoot->FirstChildElement();
     for (pChild; pChild; pChild = pChild->NextSiblingElement())
     {
@@ -42,8 +53,7 @@ TiXmlElement *FindRecursed(TiXmlElement *pRoot, const char *TagName)
             return pResult;
     }
 
-    // nothing found
-    return NULL; // nothing found
+    return NULL;
 }
 
 TiXmlText *GetTextPointer(TiXmlElement *pElement)
@@ -57,123 +67,103 @@ TiXmlText *GetTextPointer(TiXmlElement *pElement)
     return NULL;
 }
 
-TiXmlNode *FindNode(TiXmlNode *pParentNode, const char *Path)
+TiXmlNode *FindNode(TiXmlNode *pParentNode, const std::string &Path)
 {
-    const char *BackSlashCharPtr = strchr(Path, '\\');
-    if (BackSlashCharPtr)
+    size_t BackSlashPos = Path.find('\\');
+    if (BackSlashPos != std::string::npos)
     {
-        int         BackSlashPos = static_cast<int>(BackSlashCharPtr - Path);
-        char       *TagName      = new char[BackSlashPos + 1];
-        const char *NextPath     = BackSlashCharPtr + 1;
-        strncpy_s(TagName, BackSlashPos + 1, Path, BackSlashPos);
-        TagName[BackSlashPos] = '\0';
+        std::string TagName   = Path.substr(0, BackSlashPos);
+        std::string NextPath  = Path.substr(BackSlashPos + 1);
 
-        TiXmlNode *pNextLevel = pParentNode->FirstChild(TagName);
-        delete[] TagName;
-        TagName = NULL;
+        TiXmlNode *pNextLevel = pParentNode->FirstChild(TagName.c_str());
         if (!pNextLevel)
             return NULL;
         else
             return FindNode(pNextLevel, NextPath);
     }
     else
-        return pParentNode->FirstChild(Path);
+        return pParentNode->FirstChild(Path.c_str());
 }
 
-TiXmlNode *CreateNode(TiXmlNode *pParentNode, const char *Path)
+TiXmlNode *CreateNode(TiXmlNode *pParentNode, const std::string &Path)
 {
-    const char *BackSlashCharPtr = strchr(Path, '\\');
-    if (BackSlashCharPtr)
+    size_t BackSlashPos = Path.find('\\');
+    if (BackSlashPos != std::string::npos)
     {
-        int         BackSlashPos = static_cast<int>(BackSlashCharPtr - Path);
-        char       *TagName      = new char[BackSlashPos + 1];
-        const char *NextPath     = BackSlashCharPtr + 1;
-        strncpy_s(TagName, BackSlashPos + 1, Path, BackSlashPos);
-        TagName[BackSlashPos] = '\0';
+        std::string TagName  = Path.substr(0, BackSlashPos);
+        std::string NextPath = Path.substr(BackSlashPos + 1);
 
-        TiXmlNode *pNode      = pParentNode->FirstChild(TagName);
+        TiXmlNode *pNode     = pParentNode->FirstChild(TagName.c_str());
         if (!pNode)
         {
-            pNode = new TiXmlElement(TagName);
+            pNode = new TiXmlElement(TagName.c_str());
             pParentNode->LinkEndChild(pNode);
         }
-        delete[] TagName;
-        TagName = NULL;
         return CreateNode(pNode, NextPath);
     }
     else
     {
-        TiXmlNode *pNode = pParentNode->FirstChild(Path);
+        TiXmlNode *pNode = pParentNode->FirstChild(Path.c_str());
         if (!pNode)
         {
-            pNode = new TiXmlElement(Path);
+            pNode = new TiXmlElement(Path.c_str());
             pParentNode->LinkEndChild(pNode);
         }
         return pNode;
     }
 }
 
-TiXmlElement *FindElement(TiXmlNode *pParentNode, const char *Path)
+TiXmlElement *FindElement(TiXmlNode *pParentNode, const std::string &Path)
 {
-    const char *BackSlashCharPtr = strchr(Path, '\\');
-    if (BackSlashCharPtr)
+    size_t BackSlashPos = Path.find('\\');
+    if (BackSlashPos != std::string::npos)
     {
-        int         BackSlashPos = static_cast<int>(BackSlashCharPtr - Path);
-        char       *TagName      = new char[BackSlashPos + 1];
-        const char *NextPath     = BackSlashCharPtr + 1;
-        strncpy_s(TagName, BackSlashPos + 1, Path, BackSlashPos);
-        TagName[BackSlashPos]    = '\0';
+        std::string TagName      = Path.substr(0, BackSlashPos);
+        std::string NextPath     = Path.substr(BackSlashPos + 1);
 
-        TiXmlElement *pNextLevel = pParentNode->FirstChildElement(TagName);
-        delete[] TagName;
-        TagName = NULL;
+        TiXmlElement *pNextLevel = pParentNode->FirstChildElement(TagName.c_str());
         if (!pNextLevel)
             return NULL;
         else
             return FindElement(pNextLevel, NextPath);
     }
     else
-        return pParentNode->FirstChildElement(Path);
+        return pParentNode->FirstChildElement(Path.c_str());
 }
 
-TiXmlElement *CreateElement(TiXmlNode *pParentNode, const char *Path)
+TiXmlElement *CreateElement(TiXmlNode *pParentNode, const std::string &Path)
 {
-    const char *BackSlashCharPtr = strchr(Path, '\\');
-    if (BackSlashCharPtr)
+    size_t BackSlashPos = Path.find('\\');
+    if (BackSlashPos != std::string::npos)
     {
-        int         BackSlashPos = static_cast<int>(BackSlashCharPtr - Path);
-        char       *TagName      = new char[BackSlashPos + 1];
-        const char *NextPath     = BackSlashCharPtr + 1;
-        strncpy_s(TagName, BackSlashPos + 1, Path, BackSlashPos);
-        TagName[BackSlashPos] = '\0';
+        std::string TagName  = Path.substr(0, BackSlashPos);
+        std::string NextPath = Path.substr(BackSlashPos + 1);
 
-        TiXmlElement *pNode   = pParentNode->FirstChildElement(TagName);
+        TiXmlElement *pNode  = pParentNode->FirstChildElement(TagName.c_str());
         if (!pNode)
         {
-            pNode = new TiXmlElement(TagName);
+            pNode = new TiXmlElement(TagName.c_str());
             pParentNode->LinkEndChild(pNode);
         }
-        delete[] TagName;
-        TagName = NULL;
         return CreateElement(pNode, NextPath);
     }
     else
     {
-        TiXmlElement *pNode = pParentNode->FirstChildElement(Path);
+        TiXmlElement *pNode = pParentNode->FirstChildElement(Path.c_str());
         if (!pNode)
         {
-            pNode = new TiXmlElement(Path);
+            pNode = new TiXmlElement(Path.c_str());
             pParentNode->LinkEndChild(pNode);
         }
         return pNode;
     }
 }
 
-bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, char *Value, const char *File, int Line)
+bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, std::string &Value, const char *File, int Line)
 {
     if (pXML->Attribute(AttributeName))
     {
-        strcpy_s(Value, strlen(pXML->Attribute(AttributeName)) + 1, pXML->Attribute(AttributeName));
+        Value = pXML->Attribute(AttributeName);
         return true;
     }
     return false;
@@ -208,10 +198,9 @@ int IntArray2Text(std::vector<int> &IntArray, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
-    std::vector<int>::iterator iter;
-    for (iter = IntArray.begin(); iter != IntArray.end(); iter++)
+    for (auto iter : IntArray)
     {
-        _itoa_s(*iter, TextBuffer, 10);
+        _itoa_s(iter, TextBuffer, 10);
         Text += TextBuffer;
         Text += ';';
     }
@@ -240,10 +229,9 @@ int IntSet2Text(std::set<int> &IntSet, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
-    std::set<int>::iterator iter;
-    for (iter = IntSet.begin(); iter != IntSet.end(); iter++)
+    for (auto iter : IntSet)
     {
-        _itoa_s(*iter, TextBuffer, 10);
+        _itoa_s(iter, TextBuffer, 10);
         Text += TextBuffer;
         Text += ';';
     }
@@ -301,10 +289,9 @@ int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text)
 int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text)
 {
     Text = "";
-    std::vector<std::string>::iterator iter;
-    for (iter = StringArray.begin(); iter != StringArray.end(); iter++)
+    for (auto iter : StringArray)
     {
-        Text += *iter;
+        Text += iter;
         Text += ';';
     }
     return static_cast<int>(StringArray.size());
@@ -330,10 +317,9 @@ int IntMap2Text(std::map<int, int> &IntMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
-    std::map<int, int>::iterator iter;
-    for (iter = IntMap.begin(); iter != IntMap.end(); iter++)
+    for (auto iter : IntMap)
     {
-        sprintf_s(TextBuffer, sizeof(TextBuffer), "(%d,%d)", iter->first, iter->second);
+        sprintf_s(TextBuffer, sizeof(TextBuffer), "(%d,%d)", iter.first, iter.second);
         Text += TextBuffer;
         Text += ';';
     }
@@ -363,11 +349,10 @@ int VecIntMap2Text(std::map<std::string, std::vector<int>> &VecIntMap, std::stri
     std::string IntText;
     char        TextBuffer[2001];
     Text = "";
-    std::map<std::string, std::vector<int>>::iterator iter;
-    for (iter = VecIntMap.begin(); iter != VecIntMap.end(); iter++)
+    for (auto iter : VecIntMap)
     {
-        IntArray2Text(iter->second, IntText);
-        sprintf_s(TextBuffer, sizeof(TextBuffer), "(\"%s\",%s)", iter->first.c_str(), IntText.c_str());
+        IntArray2Text(iter.second, IntText);
+        sprintf_s(TextBuffer, sizeof(TextBuffer), "(\"%s\",%s)", iter.first.c_str(), IntText.c_str());
         Text += TextBuffer;
         Text += ';';
     }
@@ -400,10 +385,9 @@ int IntMap2Text(std::map<std::string, int> &IntMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
-    std::map<std::string, int>::iterator iter;
-    for (iter = IntMap.begin(); iter != IntMap.end(); iter++)
+    for (auto iter : IntMap)
     {
-        sprintf_s(TextBuffer, sizeof(TextBuffer), "(%s,%d)", iter->first.c_str(), iter->second);
+        sprintf_s(TextBuffer, sizeof(TextBuffer), "(%s,%d)", iter.first.c_str(), iter.second);
         Text += TextBuffer;
         Text += ';';
     }
@@ -497,13 +481,9 @@ int Text2LongDoubleMap(std::map<long, double> &FloatMap, const std::string &Text
     return static_cast<int>(FloatMap.size());
 }
 
-//------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------
-
-void DeleteNodes(TiXmlNode *pMainXML, const char *Path)
+void DeleteNodes(TiXmlNode *pMainXML, const std::string &Path)
 {
     TiXmlNode *pNode = NULL;
-    // strip the visualization out
     while ((pNode = FindNode(pMainXML, Path)) != NULL)
     {
         if (pNode)
@@ -527,11 +507,11 @@ const char *GetText(TiXmlElement *pElement)
         return NULL;
 }
 
-void SetText(TiXmlElement *pElement, const char *newtext)
+void SetText(TiXmlElement *pElement, const std::string &newtext)
 {
     TiXmlText *pText = GetTextPointer(pElement);
     if (pText)
-        pText->SetValue(newtext);
+        pText->SetValue(newtext.c_str());
     else
     {
         pText = new TiXmlText(newtext);
@@ -560,20 +540,16 @@ TiXmlElement *RemoveElement(TiXmlElement *removeThis)
     return removeThis;
 }
 
-std::unique_ptr<TiXmlElement> LoadXmlFile(const std::string filename)
+std::unique_ptr<TiXmlElement> LoadXmlFile(const std::string &filename)
 {
-    // Create a TiXmlDocument object
-    std::unique_ptr<TiXmlDocument> doc;
-    doc.reset(new TiXmlDocument);
+    std::unique_ptr<TiXmlDocument> doc = std::make_unique<TiXmlDocument>();
 
-    // Load the XML file
     if (!doc->LoadFile(filename.c_str()))
     {
         std::cerr << "Failed to load file: " << filename << std::endl;
         return nullptr;
     }
 
-    // Get the root element
     TiXmlElement *root = doc->RootElement();
     if (!root)
     {
@@ -581,11 +557,8 @@ std::unique_ptr<TiXmlElement> LoadXmlFile(const std::string filename)
         return nullptr;
     }
 
-    // Transfer ownership of the root element to a unique pointer
     std::unique_ptr<TiXmlElement> rootElement(root);
 
-    // Since we transferred ownership of the root element, we need to release the document
-    // so it doesn't delete the root element when it goes out of scope
     doc.release();
 
     return rootElement;

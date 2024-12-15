@@ -110,8 +110,8 @@ class CSocket
     virtual bool WriteSend(std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
                                                          // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
   protected:                                             // manipulation of internal buffers
-    virtual void  AppendBack(char *&pMainBuffer, unsigned long &MainBufferSize, char *pAppendBuffer, unsigned long NewBufferSize);
-    virtual char *RemoveFront(char *&pMainBuffer, unsigned long &MainBufferSize, unsigned long SizeToRemove);
+    virtual void                      AppendBack(std::vector<std::uint8_t> &mainBuffer, const std::vector<std::uint8_t> &appendBuffer);
+    virtual std::vector<std::uint8_t> RemoveFront(std::vector<std::uint8_t> &mainBuffer, unsigned long sizeToRemove);
 
   protected: // socket and related
     SOCKET               m_Socket;
@@ -122,11 +122,10 @@ class CSocket
   protected: // read buffer
     unsigned long m_CurrentTelegramSize =
         0; // the size of a telegram is in the front of a message, that is set here when a new message is started for reception
-    char         *m_pAccumulationBuffer    = nullptr; // buffer containing accumulated contents of the telegram
-    unsigned long m_AccumulationBufferSize = 0;       // size of this buffer
-  protected:                                          // write buffer
-    unsigned long m_TotalBytesWritten = 0;            // number of bytes written so far for the current TCPGram
-    unsigned long m_MaxUDPMessageSize = 0;            // only useful for UDP to generate an exception when the datagram is bigger than allowed
+    std::vector<std::uint8_t> m_AccumulationBuffer; // buffer containing accumulated contents of the telegram
+  protected:                                        // write buffer
+    unsigned long m_TotalBytesWritten = 0;          // number of bytes written so far for the current TCPGram
+    unsigned long m_MaxUDPMessageSize = 0;          // only useful for UDP to generate an exception when the datagram is bigger than allowed
     bool m_bBlockWrite = false; // if true then the socket will not write, this is used so that we can send a configuration first before sending anything else
 };
 
@@ -191,8 +190,8 @@ class CCommunicationInterface
     bool              m_bErrorOccurred = false;       // set to true when an error occurred, further information in m_ErrorString
     std::string       m_ErrorString;                  // error that caused our communication to stops
     std::string       m_ErrorSourceFile;
-    int               m_ErrorSourceLine;
-    std::atomic<bool> m_bInitialized = false;
+    int               m_ErrorSourceLine = 0;
+    std::atomic<bool> m_bInitialized    = false;
 
   protected: // buffers
     std::list<std::unique_ptr<CTCPGram>> m_arSendBuffer;

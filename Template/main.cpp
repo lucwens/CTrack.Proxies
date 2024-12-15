@@ -85,7 +85,10 @@ int main(int argc, char *argv[])
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
                     std::unique_ptr<TiXmlElement> Response = driver->HardwareDetect(TCP_XML_Input);
-                    std::unique_ptr<CTCPGram>     TCPGRam  = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
+
+                    std::string xmlstring                  = XMLToString(Response);
+
+                    std::unique_ptr<CTCPGram> TCPGRam      = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
                     TCPServer.PushSendPackage(TCPGRam);
                 }
                 if (Command == TAG_COMMAND_CONFIGDETECT)
@@ -115,8 +118,7 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-                std::unique_ptr<CTCPGram> TCPGRam;
-                //            TCPGRam.reset(new CTCPGram(driver->m_arDoubles));
+                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
                 TCPServer.PushSendPackage(TCPGRam);
             }
 

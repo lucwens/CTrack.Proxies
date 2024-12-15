@@ -35,6 +35,7 @@ distribution.
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <string>
 
 // Help out windows:
 #if defined(_DEBUG) && !defined(DEBUG)
@@ -1596,6 +1597,11 @@ class TiXmlText : public TiXmlNode
     TiXmlText(const char *initValue) : TiXmlNode(TiXmlNode::TEXT)
     {
         SetValue(initValue);
+        cdata = false;
+    }
+    TiXmlText(const std::string &initValue) : TiXmlNode(TiXmlNode::TEXT)
+    {
+        SetValue(initValue.c_str());
         cdata = false;
     }
 

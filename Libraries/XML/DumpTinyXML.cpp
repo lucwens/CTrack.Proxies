@@ -16,7 +16,6 @@ const char *getIndent(unsigned int numIndents)
     return &pINDENT[LENGTH - n];
 }
 
-
 // same as getIndent but no "+" at the end
 const char *getIndentAlt(unsigned int numIndents)
 {
@@ -28,8 +27,6 @@ const char *getIndentAlt(unsigned int numIndents)
 
     return &pINDENT[LENGTH - n];
 }
-
-
 
 int dump_attribs_to_stdout(TiXmlElement *pElement, unsigned int indent)
 {
