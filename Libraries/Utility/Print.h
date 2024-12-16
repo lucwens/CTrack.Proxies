@@ -47,3 +47,12 @@ template <typename... Args> void PrintError(const std::string &format, Args... a
     std::cout << std::vformat(format, std::make_format_args(args...)) << std::endl;
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
+
+// PrintCommand function
+template <typename... Args> void PrintCommand(const std::string &format, Args... args)
+{
+    std::lock_guard<std::mutex> lock(printMutex);
+    SetConsoleColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    std::cout << std::vformat(format, std::make_format_args(args...)) << std::endl;
+    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+}

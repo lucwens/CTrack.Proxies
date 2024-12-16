@@ -134,23 +134,24 @@ CTCPGRam class
 */
 //------------------------------------------------------------------------------------------------------------------
 
-CTCPGram::CTCPGram(char *pBytes, unsigned long NumBytes, unsigned char Code)
+CTCPGram::CTCPGram(char *pBytes, unsigned long PackageSize, unsigned char Code)
 {
-    m_Destination             = ALL_DESTINATIONS;
-    unsigned long PackageSize = TCPGRAM_HEADER_SIZE + NumBytes;
-    m_Data.resize(PackageSize);
+    m_Destination                  = ALL_DESTINATIONS;
+    unsigned long TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
+    m_Data.resize(TotalPackageSize);
     SetCode(m_Data, Code);
-    SetSize(m_Data, PackageSize);
-    memcpy(&(m_Data[TCPGRAM_INDEX_PAYLOAD]), pBytes, NumBytes);
+    SetSize(m_Data, TotalPackageSize);
+    memcpy(m_Data.data() + TCPGRAM_INDEX_PAYLOAD, pBytes, PackageSize);
 }
 
 void CTCPGram::EncodeText(const std::string &iText, unsigned char Code)
 {
-    m_Destination             = ALL_DESTINATIONS;
-    unsigned long PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(char) * (iText.size() + 1));
-    m_Data.resize(PackageSize);
+    m_Destination                  = ALL_DESTINATIONS;
+    unsigned long PackageSize      = static_cast<unsigned long>(sizeof(char) * (iText.size() + 1));
+    unsigned long TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
+    m_Data.resize(TotalPackageSize);
     SetCode(m_Data, Code);
-    SetSize(m_Data, PackageSize);
+    SetSize(m_Data, TotalPackageSize);
 
     // transfer xml string
     m_Data[TCPGRAM_INDEX_PAYLOAD] = ('\0');
@@ -165,12 +166,13 @@ CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 
 CTCPGram::CTCPGram(std::vector<double> &arDoubles)
 {
-    m_Destination      = ALL_DESTINATIONS;
-    size_t NumDoubles  = arDoubles.size();
-    size_t PackageSize = TCPGRAM_HEADER_SIZE + static_cast<unsigned long>(sizeof(double) * NumDoubles);
-    m_Data.resize(PackageSize);
+    m_Destination           = ALL_DESTINATIONS;
+    size_t NumDoubles       = arDoubles.size();
+    size_t PackageSize      = static_cast<unsigned long>(sizeof(double) * NumDoubles);
+    size_t TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
+    m_Data.resize(TotalPackageSize);
     SetCode(m_Data, TCPGRAM_CODE_DOUBLES);
-    SetSize(m_Data, static_cast<unsigned long>(PackageSize));
+    SetSize(m_Data, static_cast<unsigned long>(TotalPackageSize));
 
     double *pDouble = (double *)(m_Data.data() + TCPGRAM_INDEX_PAYLOAD);
     for (int c = 0; c < NumDoubles; c++)
@@ -179,13 +181,13 @@ CTCPGram::CTCPGram(std::vector<double> &arDoubles)
 
 CTCPGram::CTCPGram(std::vector<std::uint8_t> &arBytes, unsigned char Code)
 {
-    m_Destination      = ALL_DESTINATIONS;
-    size_t NumBytes    = arBytes.size();
-    size_t PackageSize = TCPGRAM_HEADER_SIZE + NumBytes;
-    m_Data.resize(PackageSize);
+    m_Destination           = ALL_DESTINATIONS;
+    size_t PackageSize      = arBytes.size();
+    size_t TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
+    m_Data.resize(TotalPackageSize);
     SetCode(m_Data, Code);
-    SetSize(m_Data, static_cast<unsigned long>(PackageSize));
-    memcpy(m_Data.data() + TCPGRAM_INDEX_PAYLOAD, arBytes.data(), NumBytes);
+    SetSize(m_Data, static_cast<unsigned long>(TotalPackageSize));
+    memcpy(m_Data.data() + TCPGRAM_INDEX_PAYLOAD, arBytes.data(), PackageSize);
 }
 
 CTCPGram::CTCPGram(std::vector<std::uint8_t> &arBytes)

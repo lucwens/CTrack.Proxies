@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 
             if (!Command.empty())
             {
+                PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
                     std::cout << "Quit" << endl;
