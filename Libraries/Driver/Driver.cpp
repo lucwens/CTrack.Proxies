@@ -30,11 +30,11 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     return Return;
 }
 
-std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &)
+std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
 {
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
-    GetSetAttribute(Return.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
     m_bRunning = true;
     m_TimeStep = 1.0 / m_MeasurementFrequencyHz;
     return Return;

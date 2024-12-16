@@ -13,6 +13,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <format>
 
 int main(int argc, char *argv[])
 {
@@ -28,8 +29,8 @@ int main(int argc, char *argv[])
     PrintInfo("q : quit");
     PrintInfo("h : hardware detect");
     PrintInfo("c : configuration detect");
-    PrintInfo("t : start track");
-    PrintInfo("s : stop track");
+    PrintInfo("s : start track");
+    PrintInfo("t : stop track");
     PrintInfo("p : simulate push trigger button");
     PrintInfo("v : simulate push validate button");
     PrintInfo("i : print info");
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
 
             if (!Command.empty())
             {
+                std::unique_ptr<TiXmlElement> Response;
                 PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
@@ -85,31 +87,26 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
-                    std::unique_ptr<TiXmlElement> Response = driver->HardwareDetect(TCP_XML_Input);
-
-                    std::string xmlstring                  = XMLToString(Response);
-
-                    std::unique_ptr<CTCPGram> TCPGRam      = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                    TCPServer.PushSendPackage(TCPGRam);
+                    Response = driver->HardwareDetect(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_CONFIGDETECT)
                 {
-                    std::unique_ptr<TiXmlElement> Response = driver->ConfigDetect(TCP_XML_Input);
-                    std::unique_ptr<CTCPGram>     TCPGRam  = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                    TCPServer.PushSendPackage(TCPGRam);
+                    Response = driver->ConfigDetect(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_CHECKINIT)
                 {
-                    std::unique_ptr<TiXmlElement> Response = driver->CheckInitialize(TCP_XML_Input);
-                    std::unique_ptr<CTCPGram>     TCPGRam  = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                    TCPServer.PushSendPackage(TCPGRam);
+                    std::string xmlstring = XMLToString(TCP_XML_Input);
+                    Response = driver->CheckInitialize(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_SHUTDOWN)
                 {
-                    std::unique_ptr<TiXmlElement> Response = driver->ShutDown();
-                    std::unique_ptr<CTCPGram>     TCPGRam  = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                    TCPServer.PushSendPackage(TCPGRam);
+                    Response = driver->ShutDown();
                 }
+
+                std::string xmlstring = XMLToString(Response);
+                Print("Response : " + xmlstring);
+                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
+                TCPServer.PushSendPackage(TCPGRam);
                 Command.clear();
             }
             //------------------------------------------------------------------------------------------------------------------
@@ -119,6 +116,11 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
+                for (auto &value : driver->m_arDoubles)
+                {
+                    std::cout << value << " ";
+                };
+                std::cout << endl;
                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
                 TCPServer.PushSendPackage(TCPGRam);
             }
@@ -142,7 +144,7 @@ int main(int argc, char *argv[])
                     case 'c':
                         Command = TAG_COMMAND_CONFIGDETECT;
                         break;
-                    case 't':
+                    case 's':
                     {
                         double AcquisitionRate(1.0);
                         Command = TAG_COMMAND_CHECKINIT;
@@ -155,7 +157,7 @@ int main(int argc, char *argv[])
                         }
                     };
                     break;
-                    case 's':
+                    case 't':
                         Command = TAG_COMMAND_SHUTDOWN;
                         break;
                 }
