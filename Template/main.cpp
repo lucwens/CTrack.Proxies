@@ -9,6 +9,10 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 
+#ifndef n_DEBUG
+#include "../../CTrack_Data/ProxyHandshake.h"
+#endif
+
 #include <conio.h>
 #include <iostream>
 #include <memory>
@@ -85,6 +89,12 @@ int main(int argc, char *argv[])
                     std::cout << "Quit" << endl;
                     bContinueLoop = false;
                 }
+                if (Command == TAG_HANDSHAKE)
+                {
+#ifndef n_DEBUG
+                    Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
+#endif
+                }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
                     Response = driver->HardwareDetect(TCP_XML_Input);
@@ -96,11 +106,16 @@ int main(int argc, char *argv[])
                 if (Command == TAG_COMMAND_CHECKINIT)
                 {
                     std::string xmlstring = XMLToString(TCP_XML_Input);
-                    Response = driver->CheckInitialize(TCP_XML_Input);
+                    Response              = driver->CheckInitialize(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_SHUTDOWN)
                 {
                     Response = driver->ShutDown();
+                }
+                if (Command == TAG_COMMAND_QUIT)
+                {
+                    std::cout << "Quit" << endl;
+                    bContinueLoop = false;
                 }
 
                 std::string xmlstring = XMLToString(Response);

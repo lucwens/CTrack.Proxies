@@ -79,6 +79,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
     <RunCodeAnalysis>true</RunCodeAnalysis>
+    <IncludePath>..\..\Libraries\Botan\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
@@ -163,6 +165,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
     <ClInclude Include="..\Libraries\Driver\Driver.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />

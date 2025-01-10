@@ -137,5 +137,8 @@
     <ClInclude Include="..\Libraries\Driver\Driver.h">
       <Filter>Libraries\Driver</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
