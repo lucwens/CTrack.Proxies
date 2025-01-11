@@ -198,7 +198,7 @@ class CCommunicationInterface
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
-    std::mutex           m_Mutex;       // critical section to be used with CSingleLock to protect data
+    std::recursive_mutex m_Mutex;       // critical section to be used with CSingleLock to protect data
 };
 
 //------------------------------------------------------------------------------------------------------------------
