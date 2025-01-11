@@ -118,9 +118,8 @@ int main(int argc, char *argv[])
                     bContinueLoop = false;
                 }
 
-                std::string xmlstring = XMLToString(Response);
-                Print("Response : " + xmlstring);
-                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
+                std::string               xmlstring = XMLToString(Response);
+                std::unique_ptr<CTCPGram> TCPGRam   = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
                 TCPServer.PushSendPackage(TCPGRam);
                 Command.clear();
             }
@@ -180,7 +179,7 @@ int main(int argc, char *argv[])
         }
         catch (const std::exception &e)
         {
-            PrintError(e.what());
+            PrintError("An error occurred : {}", e.what());
         }
         catch (...)
         {
