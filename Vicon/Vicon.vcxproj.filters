@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{13b4add6-85f4-4697-b7ca-7e833d773bbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TCP">
+      <UniqueIdentifier>{8b7851d4-f3c3-49e1-9225-8c7463b8b0ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Utility">
+      <UniqueIdentifier>{6be3e0a0-de50-4e07-bddb-7b624a68d314}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Driver">
+      <UniqueIdentifier>{5307f8f1-df4a-41a6-9785-b09b4e33b014}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML">
+      <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML\Additional">
+      <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinystr.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxml.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\os.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\XML.cpp">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkError.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Print.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Driver\Driver.cpp">
+      <Filter>Libraries\Driver</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\tinystr.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\tinyxml.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\os.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Print.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\XML.h">
+      <Filter>Libraries\XML\Additional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\errorHandling.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkError.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Header.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Driver\Driver.h">
+      <Filter>Libraries\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
