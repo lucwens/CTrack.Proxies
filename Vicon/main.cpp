@@ -1,5 +1,4 @@
 
-#include "../Libraries/Driver/Driver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
 #include "../Libraries/Utility/errorHandling.h"
@@ -8,8 +7,9 @@
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include "DriverVicon.h"
 
-#ifndef n_DEBUG
+#ifndef _DEBUG
 #include "../../CTrack_Data/ProxyHandshake.h"
 #endif
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     // startup server object
     CCommunicationObject    TCPServer;
-    std::unique_ptr<Driver> driver = std::make_unique<Driver>();
+    std::unique_ptr<IDriver> driver = std::make_unique<DriverVicon>();
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_HANDSHAKE)
                 {
-#ifndef n_DEBUG
+#ifndef _DEBUG
                     Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
 #endif
                 }
@@ -130,13 +130,13 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-                for (auto &value : driver->m_arDoubles)
-                {
-                    std::cout << value << " ";
-                };
-                std::cout << endl;
-                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
-                TCPServer.PushSendPackage(TCPGRam);
+//                 for (auto &value : driver->m_arDoubles)
+//                 {
+//                     std::cout << value << " ";
+//                 };
+//                 std::cout << endl;
+//                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
+//                 TCPServer.PushSendPackage(TCPGRam);
             }
 
             //------------------------------------------------------------------------------------------------------------------

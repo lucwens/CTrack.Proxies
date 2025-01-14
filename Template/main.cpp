@@ -1,5 +1,5 @@
 
-#include "../Libraries/Driver/Driver.h"
+#include "Driver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
 #include "../Libraries/Utility/errorHandling.h"
@@ -9,7 +9,7 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 
-#ifndef n_DEBUG
+#ifndef _DEBUG
 #include "../../CTrack_Data/ProxyHandshake.h"
 #endif
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_HANDSHAKE)
                 {
-#ifndef n_DEBUG
+#ifndef _DEBUG
                     Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
 #endif
                 }

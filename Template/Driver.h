@@ -1,13 +1,14 @@
 #pragma once
 
-#include "../XML/tinyxml.h"
+#include "../Libraries/Driver/IDriver.h"
+#include "../Libraries/XML/tinyxml.h"
 
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
 
-class Driver
+class Driver : public IDriver
 {
   public:
     Driver()  = default;

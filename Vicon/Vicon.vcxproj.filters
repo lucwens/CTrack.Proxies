@@ -31,6 +31,9 @@
     <Filter Include="Libraries\XML\Additional">
       <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{14836a83-5afc-4661-b00a-88ca64f18762}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
@@ -81,8 +84,8 @@
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\Driver\Driver.cpp">
-      <Filter>Libraries\Driver</Filter>
+    <ClCompile Include="DriverVicon.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -134,11 +137,19 @@
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\Driver\Driver.h">
-      <Filter>Libraries\Driver</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="DriverVicon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Driver\IDriver.h">
+      <Filter>Libraries\Driver</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf">
+      <Filter>Documentation</Filter>
+    </None>
   </ItemGroup>
 </Project>

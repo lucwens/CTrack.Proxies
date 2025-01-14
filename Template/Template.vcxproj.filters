@@ -81,8 +81,8 @@
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\Driver\Driver.cpp">
-      <Filter>Libraries\Driver</Filter>
+    <ClCompile Include="Driver.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -134,10 +134,13 @@
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\Driver\Driver.h">
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Driver\IDriver.h">
       <Filter>Libraries\Driver</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+    <ClInclude Include="Driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

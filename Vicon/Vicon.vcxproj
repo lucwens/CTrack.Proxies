@@ -146,7 +146,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Libraries\Driver\Driver.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
@@ -162,11 +161,12 @@
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
+    <ClCompile Include="DriverVicon.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
-    <ClInclude Include="..\Libraries\Driver\Driver.h" />
+    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
@@ -182,7 +182,11 @@
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
+    <ClInclude Include="DriverVicon.h" />
     <ClInclude Include="Header.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

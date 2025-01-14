@@ -1,7 +1,7 @@
 #include "Driver.h"
 
-#include "../XML/TinyXML_AttributeValues.h"
-#include "../XML/ProxyKeywords.h"
+#include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include "../Libraries/XML/ProxyKeywords.h"
 #include <thread>
 #include <chrono>
 
