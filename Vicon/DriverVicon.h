@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Libraries/Driver/IDriver.h"
+#include "DataStreamClient.h"
 
 class DriverVicon : public IDriver
 {
