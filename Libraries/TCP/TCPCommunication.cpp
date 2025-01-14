@@ -144,7 +144,6 @@ bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number)
 
 int FindAvailableTCPPort(const std::string &ipAddress, int startingPort)
 {
-    WSADATA     wsaData;
     SOCKET      sock = INVALID_SOCKET;
     sockaddr_in addr{};
     int         availablePort = -1;
