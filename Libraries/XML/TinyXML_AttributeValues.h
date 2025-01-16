@@ -31,6 +31,7 @@ bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::se
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<std::string> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<int> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<double> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<std::vector<double>> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, int> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, double> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<long, double> &rvalue, bool Read);
@@ -39,3 +40,5 @@ bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::se
 
 bool GetSetAttributeTime(TiXmlElement *pSettings, const char *AttributeName, time_t &value, bool Read);
 bool GetSetAttributeBinary(TiXmlElement *pXML, const char *AttributeName, std::unique_ptr<char> &value, const int Length, bool Read);
+
+std::vector<std::vector<double>> Unit4x4();

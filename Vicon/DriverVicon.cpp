@@ -48,8 +48,9 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                     ViconDataStreamSDK::CPP::Output_GetCameraName CameraNameResult = Client.GetCameraName(i);
                     if (CameraNameResult.Result == ViconDataStreamSDK::CPP::Result::Success)
                     {
-                        CameraNames.push_back(CameraNameResult.CameraName);
-                        ViconDataStreamSDK::CPP::Output_GetCameraId CameraIDResult = Client.GetCameraId(CameraNameResult.CameraName);
+                        std::string CameraName = CameraNameResult.CameraName;
+                        CameraNames.push_back(CameraName);
+                        ViconDataStreamSDK::CPP::Output_GetCameraId CameraIDResult = Client.GetCameraId(CameraName);
                         if (CameraIDResult.Result == ViconDataStreamSDK::CPP::Result::Success)
                         {
                             std::string SerialString = std::to_string(CameraIDResult.CameraId);
@@ -58,6 +59,25 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                         else
                         {
                             CameraSerials.push_back("0");
+                        }
+
+                        std::vector<std::vector<double>>                              CameraPos4x4 = Unit4x4();
+                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalTranslation    CameraPos    = Client.GetCameraGlobalTranslation(CameraName);
+                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalRotationMatrix CameraRot    = Client.GetCameraGlobalRotationMatrix(CameraName);
+                        if (CameraPos.Result == ViconDataStreamSDK::CPP::Result::Success && CameraRot.Result == ViconDataStreamSDK::CPP::Result::Success)
+                        {
+                            for (int r = 0; r < 3; r++)
+                            {
+                                for (int c = 0; c < 3; c++)
+                                {
+                                    size_t Index       = r * 3 + c;
+                                    CameraPos4x4[r][c] = CameraRot.Rotation[Index];
+                                }
+                            }
+                            for (int r = 0; r < 3; r++)
+                            {
+                                CameraPos4x4[r][3] = CameraPos.Translation[r];
+                            }
                         }
                     }
                 }

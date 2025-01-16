@@ -1,9 +1,11 @@
 #include "TinyXML_Extra.h"
-#include <map>
+
 #include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <set>
 
 std::string XMLToString(TiXmlElement *pXML)
 {
@@ -284,6 +286,88 @@ int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text)
             break;
     }
     return static_cast<int>(rArray.size());
+}
+
+void Matrix2Text(const std::vector<std::vector<double>> &iMatrix, std::string &Text)
+{
+    std::ostringstream oss;
+    for (const auto &row : iMatrix)
+    {
+        for (const auto &value : row)
+        {
+            oss << value << " ";
+        }
+        oss << ";"; // Use semicolon to separate rows
+    }
+    Text = oss.str();
+}
+
+size_t Text2Matrix(std::vector<std::vector<double>> &rMatrix, const std::string &iText)
+{
+    std::istringstream rowStream(iText);
+    std::string        Text;
+    size_t             numRows = 0;
+    size_t             numCols = 0;
+
+    while (std::getline(rowStream, Text, ';'))
+    {
+        std::istringstream  elementStream(Text);
+        std::vector<double> row;
+        double              value;
+        size_t              currentRowCols = 0;
+
+        while (elementStream >> value)
+        {
+            row.push_back(value);
+            currentRowCols++;
+        }
+
+        if (!row.empty())
+        {
+            numRows++;
+            rMatrix.push_back(row);
+            if (currentRowCols > numCols)
+            {
+                numCols = currentRowCols;
+            }
+        }
+    }
+
+    return numRows * numCols;
+}
+
+void MatrixArray2Text(const std::vector<std::vector<std::vector<double>>> &rMatrixArray, std::string &Text)
+{
+    std::ostringstream oss;
+    for (const auto &matrix : rMatrixArray)
+    {
+        Matrix2Text(matrix, Text);
+        oss << "[" << Text << "]";
+    }
+    Text = oss.str();
+}
+
+size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
+{
+    std::istringstream matrixStream(Text);
+    std::string        Text;
+    size_t             numMatrices = 0;
+    size_t             numElements = 0;
+    while (std::getline(matrixStream, Text, '['))
+    {
+        std::vector<std::vector<double>> matrix;
+        size_t                           currentMatrixElements = Text2Matrix(matrix, Text);
+        if (!matrix.empty())
+        {
+            numMatrices++;
+            rMatrixArray.push_back(matrix);
+            if (currentMatrixElements > numElements)
+            {
+                numElements = currentMatrixElements;
+            }
+        }
+    }
+    return numMatrices * numElements;
 }
 
 int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text)

@@ -361,19 +361,36 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<lon
     return Success;
 }
 
-bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<double> &rArray, bool Read)
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<double> &rMatrix, bool Read)
 {
     std::string Text;
     if (!Read)
     {
-        DoubleArray2Text(rArray, Text);
+        DoubleArray2Text(rMatrix, Text);
     }
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
     {
-        Text2DoubleArray(rArray, Text);
+        Text2DoubleArray(rMatrix, Text);
+    }
+    return Success;
+}
+
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<std::vector<double>> &rMatrix, bool Read)
+{
+    std::string Text;
+    if (!Read)
+    {
+        Matrix2Text(rMatrix, Text);
+    }
+
+    bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
+
+    if (Read && Success)
+    {
+        Text2Matrix(rMatrix, Text);
     }
     return Success;
 }
@@ -390,4 +407,11 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<int
         Text2IntSet(rvalue, Text);
 
     return Success;
+}
+
+
+std::vector<std::vector<double>> Unit4x4()
+{
+    std::vector<std::vector<double>> matrix = {{1.0, 0.0, 0.0, 0.0}, {0.0, 1.0, 0.0, 0.0}, {0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 1.0}};
+    return matrix;
 }

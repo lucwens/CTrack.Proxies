@@ -36,6 +36,12 @@ int Text2IntSet(std::set<int> &IntSet, const std::string &Text);
 int DoubleArray2Text(std::vector<double> &rArray, std::string &Text);
 int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text);
 
+void   Matrix2Text(const std::vector<std::vector<double>> &rArray, std::string &Text);
+size_t Text2Matrix(std::vector<std::vector<double>> &rArray, const std::string &Text);
+
+void   MatrixArray2Text(const std::vector < std::vector<std::vector<double>>> & rArray, std::string &Text);
+size_t Text2MatrixArray(std::vector < std::vector<std::vector<double>>> & rArray, const std::string &Text);
+
 int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text);
 int Text2StringArray(std::vector<std::string> &StringArray, const std::string &Text);
 
