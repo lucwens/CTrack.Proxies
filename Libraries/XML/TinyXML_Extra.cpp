@@ -350,13 +350,13 @@ void MatrixArray2Text(const std::vector<std::vector<std::vector<double>>> &rMatr
 size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
 {
     std::istringstream matrixStream(Text);
-    std::string        Text;
+    std::string        LineText;
     size_t             numMatrices = 0;
     size_t             numElements = 0;
-    while (std::getline(matrixStream, Text, '['))
+    while (std::getline(matrixStream, LineText, '['))
     {
         std::vector<std::vector<double>> matrix;
-        size_t                           currentMatrixElements = Text2Matrix(matrix, Text);
+        size_t                           currentMatrixElements = Text2Matrix(matrix, LineText);
         if (!matrix.empty())
         {
             numMatrices++;

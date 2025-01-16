@@ -31,6 +31,9 @@
     <Filter Include="Libraries\XML\Additional">
       <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{def92487-9f98-48ed-9585-ae7922b656f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
