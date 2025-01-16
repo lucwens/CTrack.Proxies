@@ -1,5 +1,6 @@
 #include "TinyXML_Extra.h"
 
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <set>
@@ -295,7 +296,7 @@ void Matrix2Text(const std::vector<std::vector<double>> &iMatrix, std::string &T
     {
         for (const auto &value : row)
         {
-            oss << value << " ";
+            oss << std::scientific << std::setprecision(12) << value << " ";
         }
         oss << ";"; // Use semicolon to separate rows
     }
