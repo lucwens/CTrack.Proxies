@@ -68,7 +68,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         Client.Disconnect();
     }
 
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, bPresent, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_PRESENT, bPresent, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, FeedBack, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NUM_TRACKERS, CameraCount, XML_WRITE);
