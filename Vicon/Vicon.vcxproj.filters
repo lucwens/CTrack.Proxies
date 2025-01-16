@@ -90,6 +90,9 @@
     <ClCompile Include="DriverVicon.cpp">
       <Filter>Driver</Filter>
     </ClCompile>
+    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">

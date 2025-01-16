@@ -24,6 +24,7 @@ constexpr char const *TAG_COMMAND_HARDWAREDETECT                = "HARDWARE_DETE
 constexpr char const *ATTRIB_HARDWAREDETECT_PRESENT             = "present";
 constexpr char const *ATTRIB_HARDWAREDETECT_FEEDBACK            = "feedback";
 constexpr char const *ATTRIB_HARDWAREDETECT_NUM_TRACKERS        = "num_trackers";
+constexpr char const *ATTRIB_HARDWAREDETECT_NAMES               = "names";
 constexpr char const *ATTRIB_HARDWAREDETECT_SERIALS             = "serial_numbers";
 constexpr char const *ATTRIB_HARDWAREDETECT_EXECUTINGAPIVERSION = "exe_version";
 constexpr char const *ATTRIB_HARDWAREDETECT_APIVERSION          = "api_version";
