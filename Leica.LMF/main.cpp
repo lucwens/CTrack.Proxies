@@ -1,5 +1,5 @@
 
-#include "Driver.h"
+#include "LeicaDriver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
 #include "../Libraries/Utility/errorHandling.h"
@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
     PrintInfo("l : report last coordinates");
 
     // startup server object
-    CCommunicationObject    TCPServer;
-    std::unique_ptr<Driver> driver = std::make_unique<Driver>();
+    CCommunicationObject TCPServer;
+    CLeicaDriver         driver;
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
@@ -97,20 +97,20 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
-                    Response = driver->HardwareDetect(TCP_XML_Input);
+                    Response = driver.HardwareDetect(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_CONFIGDETECT)
                 {
-                    Response = driver->ConfigDetect(TCP_XML_Input);
+                    Response = driver.ConfigDetect(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_CHECKINIT)
                 {
                     std::string xmlstring = XMLToString(TCP_XML_Input);
-                    Response              = driver->CheckInitialize(TCP_XML_Input);
+                    Response              = driver.CheckInitialize(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_SHUTDOWN)
                 {
-                    Response = driver->ShutDown();
+                    Response = driver.ShutDown();
                 }
                 if (Command == TAG_COMMAND_QUIT)
                 {
@@ -128,15 +128,17 @@ int main(int argc, char *argv[])
             Running
             */
             //------------------------------------------------------------------------------------------------------------------
-            if (driver->Run())
+            if (driver.Run())
             {
-                for (auto &value : driver->m_arDoubles)
+                for each (double value in driver.m_arDoubles)
                 {
                     std::cout << value << " ";
-                };
+                }
                 std::cout << endl;
-                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
+#ifdef _MANAGED
+                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver.m_arDoubles, driver.m_NumDoubles);
                 TCPServer.PushSendPackage(TCPGRam);
+#endif
             }
 
             //------------------------------------------------------------------------------------------------------------------

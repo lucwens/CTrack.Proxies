@@ -38,6 +38,10 @@ bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::ma
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::string &value, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::set<int> &rvalue, bool Read);
 
+#ifdef _MANAGED
+
+#endif 
+
 bool GetSetAttributeTime(TiXmlElement *pSettings, const char *AttributeName, time_t &value, bool Read);
 bool GetSetAttributeBinary(TiXmlElement *pXML, const char *AttributeName, std::unique_ptr<char> &value, const int Length, bool Read);
 

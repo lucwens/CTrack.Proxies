@@ -203,6 +203,23 @@ CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
     EncodeText(XMLText, Code);
 }
 
+#ifdef _MANAGED
+
+CTCPGram::CTCPGram(array<double> ^ &arDoubles, size_t NumDoubles)
+{
+    m_Destination           = ALL_DESTINATIONS;
+    size_t PackageSize      = sizeof(double) * NumDoubles;
+    size_t TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
+    m_Data.resize(TotalPackageSize);
+    SetCode(m_Data, TCPGRAM_CODE_DOUBLES);
+    SetSize(m_Data, static_cast<unsigned long>(TotalPackageSize));
+    double *pDouble = (double *)(m_Data.data() + TCPGRAM_INDEX_PAYLOAD);
+    for (int c = 0; c < NumDoubles; c++)
+        pDouble[c] = arDoubles[c];
+}
+
+#endif
+
 void CTCPGram::CopyFrom(std::unique_ptr<CTCPGram> &rFrom)
 {
     m_Destination = rFrom->m_Destination;

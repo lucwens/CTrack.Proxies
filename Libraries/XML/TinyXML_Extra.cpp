@@ -451,8 +451,9 @@ int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std
     const char *pText = strchr(Text.c_str(), '(');
     VecIntMap.clear();
     std::vector<int> arInt;
-    while (pText && sscanf_s(pText, "(%[^,],%[^)])", KeyText.data(), static_cast<unsigned int>(KeyText.size()), IntText.data(),
+    while (pText && sscanf_s(pText, "(%[^,],%[^)])", &KeyText[0], static_cast<unsigned int>(KeyText.size()), &IntText[0],
                              static_cast<unsigned int>(IntText.size())) == 2)
+
     {
         KeyText.erase(std::remove(KeyText.begin(), KeyText.end(), '"'), KeyText.end());
         Text2IntArray(arInt, IntText);

@@ -87,6 +87,9 @@
     <ClCompile Include="Driver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LeicaDriver.cpp">
+      <Filter>Libraries\Driver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
@@ -145,6 +148,9 @@
     </ClInclude>
     <ClInclude Include="Driver.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LeicaDriver.h">
+      <Filter>Libraries\Driver</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

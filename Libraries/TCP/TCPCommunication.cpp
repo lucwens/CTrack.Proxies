@@ -7,7 +7,7 @@
 
 #include <ws2tcpip.h>
 #include <iostream>
-#include <format>
+
 #include <string>
 #include <tlhelp32.h>
 
@@ -885,7 +885,7 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
             if (rTCPGram->m_Data.size() > m_MaxUDPMessageSize)
             {
                 std::string ErrorMessage =
-                    std::format("Error sending data over UDP : the package size {} is bigger than allowed {}", rTCPGram->m_Data.size(), m_MaxUDPMessageSize);
+                    FormatString("Error sending data over UDP : the package size %d is bigger than allowed %d", rTCPGram->m_Data.size(), m_MaxUDPMessageSize);
                 THROW_ERROR(ErrorMessage);
             }
             int rVal = ::sendto(m_Socket, reinterpret_cast<const char *>(rTCPGram->m_Data.data()), static_cast<int>(rTCPGram->m_Data.size()), 0,
@@ -1136,7 +1136,7 @@ void CCommunicationThread::ThreadFunction()
 
         if (!ResolveIP4_Address(HostName, IP4))
         {
-            std::string ErrorMessage = std::format("The host {} could not be resolved", HostName);
+            std::string ErrorMessage = FormatString("The host %s could not be resolved", HostName);
             THROW_ERROR(ErrorMessage);
         }
 
@@ -1156,7 +1156,7 @@ void CCommunicationThread::ThreadFunction()
                 if (MainSocket == INVALID_SOCKET)
                 {
                     int         LastError    = WSAGetLastError();
-                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
+                    std::string ErrorMessage = FormatString("The creation of the socket (host : %s port:%d) failed.", HostName.c_str(), PortNumber);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 };
                 std::cout << "TCP client on port " << PortNumber << std::endl;
@@ -1173,7 +1173,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError = WSAGetLastError();
                     std::string ErrorMessage =
-                        std::format("The creation of the socket (host : {} port:{}) failed. Lasterror was {}.", HostName, PortNumber, LastError);
+                        FormatString("The creation of the socket (host : %s port:%d) failed. Lasterror was %d.", HostName.c_str(), PortNumber, LastError);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
@@ -1184,7 +1184,7 @@ void CCommunicationThread::ThreadFunction()
                 if (rVal == SOCKET_ERROR)
                 {
                     int         LastError    = WSAGetLastError();
-                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
+                    std::string ErrorMessage = FormatString("The creation of the socket (host : %s port:%d) failed.", HostName.c_str(), PortNumber);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
@@ -1193,7 +1193,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError = WSAGetLastError();
                     std::string ErrorMessage =
-                        std::format("The binding of the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.", HostName,
+                        FormatString("The binding of the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use.", HostName.c_str(),
                                     PortNumber, LastError);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
@@ -1203,8 +1203,8 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError = WSAGetLastError();
                     std::string ErrorMessage =
-                        std::format("The listen command on the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.",
-                                    HostName, PortNumber, LastError);
+                        FormatString("The listen command on the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use.",
+                                    HostName.c_str(), PortNumber, LastError);
                     std::cout << ErrorMessage << std::endl;
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
@@ -1220,7 +1220,7 @@ void CCommunicationThread::ThreadFunction()
                 if (MainSocket == INVALID_SOCKET)
                 {
                     int         LastError    = WSAGetLastError();
-                    std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumberUDP);
+                    std::string ErrorMessage = FormatString("The creation of the socket (host : %s port:%d) failed.", HostName.c_str(), PortNumberUDP);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
@@ -1229,7 +1229,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError = WSAGetLastError();
                     std::string ErrorMessage =
-                        std::format("The binding of the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.", HostName,
+                        FormatString("The binding of the socket (host : %s port:%d) failed.Lasterror was %d.\nPossibly the port is already in use.", HostName.c_str(),
                                     PortNumberUDP, LastError);
                     std::cout << ErrorMessage << std::endl;
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
@@ -1291,7 +1291,7 @@ void CCommunicationThread::ThreadFunction()
                             if (MainSocket == INVALID_SOCKET)
                             {
                                 int         LastError    = WSAGetLastError();
-                                std::string ErrorMessage = std::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
+                                std::string ErrorMessage = FormatString("The creation of the socket (host : $s port:%d) failed.", HostName.c_str(), PortNumber);
                                 THROW_SOCKET_ERROR(ErrorMessage, LastError);
                             }
                             ZeroMemory(&sincontrol, sizeof(sincontrol));
