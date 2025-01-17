@@ -21,46 +21,6 @@
 
 int main(int argc, char *argv[])
 {
-    //------------------------------------------------------------------------------------------------------------------
-    // test section
-    //------------------------------------------------------------------------------------------------------------------
-
-    PrintInfo("Starting up");
-    if (1)
-    {
-        std::vector<std::vector<std::vector<double>>> MatrixArray;
-        MatrixArray.push_back({{1.2345678910111213141516, 2.0, 3.0}, {4.0, 5.0, 6.0}});
-        MatrixArray.push_back({{7.0, 8.0, 9.0}, {10.0, 11.0, 12.0}});
-        MatrixArray.push_back(Unit4x4());
-        std::string Text;
-        MatrixArray2Text(MatrixArray, Text);
-        std::cout << Text << endl;
-        std::vector<std::vector<std::vector<double>>> MatrixArray2;
-        Text2MatrixArray(MatrixArray2, Text);
-        for (auto &matrix : MatrixArray2)
-        {
-            for (auto &row : matrix)
-            {
-                for (auto &value : row)
-                {
-                    std::cout << value << " ";
-                }
-                std::cout << endl;
-            }
-        }
-
-        for (int i = 0; i < MatrixArray2.size(); i++)
-        {
-            for (int j = 0; j < MatrixArray2[i].size(); j++)
-                for (int k = 0; k < MatrixArray2[i][j].size(); k++)
-                    std::cout << MatrixArray[i][j][k] << " difference : " << MatrixArray[i][j][k] - MatrixArray2[i][j][k] << std::endl;
-        }
-    }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // test section
-    //----------------------------------------------------------------------------------------------------------------
-
     //
     // parse port
     unsigned short                PortNumber(40014);

@@ -3,7 +3,7 @@
 #include "../Utility/os.h"
 #include "../Utility/Print.h"
 #include "../Utility/ErrorHandling.h"
-#include "../Utility//os.h"
+#include "../Utility/StringUtilities.h"
 
 #include <ws2tcpip.h>
 #include <iostream>

@@ -147,4 +147,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Program Files (x86)\Leica Metrology Foundation - Tracker SDK\LMFDocumentation.chm">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="..\..\..\..\..\Program Files (x86)\Leica Metrology Foundation - Tracker SDK\LMF Tracker User Guide.pdf">
+      <Filter>Documentation</Filter>
+    </None>
+  </ItemGroup>
 </Project>
