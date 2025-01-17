@@ -205,9 +205,10 @@ CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
 
 #ifdef _MANAGED
 
-CTCPGram::CTCPGram(array<double> ^ &arDoubles, size_t NumDoubles)
+CTCPGram::CTCPGram(cliext::vector<double> arDoubles)
 {
     m_Destination           = ALL_DESTINATIONS;
+    size_t NumDoubles       = arDoubles.size();
     size_t PackageSize      = sizeof(double) * NumDoubles;
     size_t TotalPackageSize = TCPGRAM_HEADER_SIZE + PackageSize;
     m_Data.resize(TotalPackageSize);

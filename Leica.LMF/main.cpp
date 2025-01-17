@@ -17,7 +17,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <format>
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +41,7 @@ int main(int argc, char *argv[])
 
     // startup server object
     CCommunicationObject TCPServer;
-    CLeicaDriver         driver;
+    CLeicaLMFDriver      driver;
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
@@ -130,13 +129,14 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver.Run())
             {
-                for each (double value in driver.m_arDoubles)
+                for each (double value in driver.m_doublesArray)
                 {
                     std::cout << value << " ";
                 }
                 std::cout << endl;
 #ifdef _MANAGED
-                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver.m_arDoubles, driver.m_NumDoubles);
+                std::unique_ptr<CTCPGram> TCPGRam;
+                TCPGRam.reset(new CTCPGram(driver.m_doublesArray));
                 TCPServer.PushSendPackage(TCPGRam);
 #endif
             }

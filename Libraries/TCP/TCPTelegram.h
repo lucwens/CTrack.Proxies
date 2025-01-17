@@ -6,15 +6,18 @@
 #include <memory>
 #include <string>
 
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    /*
-    TCPGram data packet represents the telegram. The typical use is that you derive from CTCPGram and provided a constructor for
-    each type of data you want to send, the constructor is responsible for converting your data to the binary telegram
-    */
-    //--------------------------------------------------------------------------------------------------------------------------------------
+#ifdef _MANAGED
+#include <cliext/vector>
+#endif
+//--------------------------------------------------------------------------------------------------------------------------------------
+/*
+TCPGram data packet represents the telegram. The typical use is that you derive from CTCPGram and provided a constructor for
+each type of data you want to send, the constructor is responsible for converting your data to the binary telegram
+*/
+//--------------------------------------------------------------------------------------------------------------------------------------
 
-    // in the CTCPGram the next bytes are used
-    constexpr unsigned char TCPGRAM_INDEX_SIZE  = 0;
+// in the CTCPGram the next bytes are used
+constexpr unsigned char TCPGRAM_INDEX_SIZE      = 0;
 constexpr unsigned char TCPGRAM_INDEX_CODE      = 4;
 constexpr unsigned char TCPGRAM_INDEX_PAYLOAD   = 5;
 constexpr unsigned char TCPGRAM_HEADER_SIZE     = 5;
@@ -96,7 +99,7 @@ class CTCPGram
     explicit CTCPGram(std::vector<std::uint8_t> &arBytes, unsigned char Code);
     explicit CTCPGram(std::vector<std::uint8_t> &arBytes);
 #ifdef _MANAGED
-    CTCPGram(array<double>^& arDoubles , size_t NumDoubles);
+    CTCPGram(cliext::vector<double>  arDoubles);
 #endif
     virtual ~CTCPGram()
     {

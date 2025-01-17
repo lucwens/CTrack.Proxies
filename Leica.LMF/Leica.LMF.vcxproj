@@ -83,7 +83,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
     <IncludePath>..\..\Libraries\Botan\build\include;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
