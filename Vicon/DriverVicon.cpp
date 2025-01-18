@@ -40,7 +40,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
             if (CameraCountResult.Result == ViconDataStreamSDK::CPP::Result::Success)
             {
                 bPresent    = true;
-                FeedBack    = std::format("SDK Version {}:{}:{}:{}\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
+                FeedBack    = fmt::format("SDK Version {}:{}:{}:{}\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
                                           CameraCountResult.CameraCount);
                 CameraCount = CameraCountResult.CameraCount;
                 for (unsigned int i = 0; i < CameraCountResult.CameraCount; i++)
