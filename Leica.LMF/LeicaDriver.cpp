@@ -1,4 +1,5 @@
 #include "LeicaDriver.h"
+#include <msclr/marshal_cppstd.h>
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -79,7 +80,18 @@ void CLeicaLMFDriver::RegisterEvents(LMF::Tracker::Tracker ^ LMFTracker)
 
 int CLeicaLMFDriver::DetectTrackers()
 {
-    return 0;
+    int                                                  NumTrackers{0};
+    LMF::Tracker::TrackerFinder ^ pTrackerFinder = gcnew LMF::Tracker::TrackerFinder;
+    NumTrackers                                  = pTrackerFinder->Trackers->Count;
+    for (int i = 0; i < NumTrackers; i++)
+    {
+        std::string Comment   = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Comment);
+        std::string IPAddress = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->IPAddress);
+        std::string Serial    = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->SerialNumber);
+        std::string Type      = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Type);
+    }
+
+    return NumTrackers;
 }
 
 void CLeicaLMFDriver::OnErrorArrived(LMF::Tracker::Tracker ^ sender, LMF::Tracker::ErrorHandling::LmfError ^ error)

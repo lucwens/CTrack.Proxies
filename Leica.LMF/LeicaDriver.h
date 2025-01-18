@@ -34,10 +34,12 @@ ref class CLeicaLMFDriver
     bool                          Run();
     std::unique_ptr<TiXmlElement> ShutDown();
 
+  public:
+    int DetectTrackers();
+
   protected:
     LMF::Tracker::Tracker ^ ConnectTo(const std::string &DeviceSerial, const std::string &IPAddress);
     void RegisterEvents(LMF::Tracker::Tracker ^ LMFTracker);
-    int  DetectTrackers();
 
   protected: // event handlers
     void OnErrorArrived(LMF::Tracker::Tracker ^ sender, LMF::Tracker::ErrorHandling::LmfError ^ error);
@@ -51,8 +53,8 @@ ref class CLeicaLMFDriver
     static void OnImageArrived(LMF::Tracker::OVC::OverviewCamera ^ sender, cli::array<System::Byte> ^ % image, ATRCoordinateCollection ^ atrcoordinates);
     static void OnMeasurementPreconditionsChanged(LMF::Tracker::MeasurementStatus::MeasurementPreconditionCollection ^ sender);
     static void OnMeasurmentStatusChanged(LMF::Tracker::MeasurementStatus::MeasurementStatusValue ^ sender, LMF::Tracker::Enums::EMeasurementStatus newValue);
-    static void OnPowerLevelChanged(LMF::Tracker::BasicTypes::DoubleValue::ReadOnlyDoubleValue ^ sender, double newValue) ;
-    static void OnPowerSourceChanged(LMF::Tracker::BasicTypes::EnumTypes::ReadOnlyPowerSourceValue ^ sender, LMF::Tracker::Enums::EPowerSource newValue) ;
+    static void OnPowerLevelChanged(LMF::Tracker::BasicTypes::DoubleValue::ReadOnlyDoubleValue ^ sender, double newValue);
+    static void OnPowerSourceChanged(LMF::Tracker::BasicTypes::EnumTypes::ReadOnlyPowerSourceValue ^ sender, LMF::Tracker::Enums::EPowerSource newValue);
     /* */
   public:
     cliext::vector<double> m_doublesArray;

@@ -1,5 +1,21 @@
 #pragma once
 
+#define FMT_UNICODE     0
+#define FMT_HEADER_ONLY 1
+// #define FMT_USE_WINDOWS_H             0
+// #define FMT_USE_USER_DEFINED_LITERALS 0
+// #define FMT_USE_GRISU                 0
+// #define FMT_USE_FULL_CACHE_LINE       0
+// #define FMT_USE_FLOAT                 0
+// #define FMT_USE_DOUBLE                0
+// #define FMT_USE_LONG_DOUBLE           0
+// #define FMT_USE_CHAR8_T               0
+// #define FMT_USE_WINDOWS_H             0
+// #define FMT_USE_UDL_TEMPLATE          0
+// #define FMT_USE_USER_DEFINED_LITERALS 0
+// #define FMT_USE_GRISU                 0
+
+#include "../fmt/format.h"
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -11,25 +27,21 @@ extern std::mutex printMutex;
 // Helper function to set console text color
 void SetConsoleColor(WORD color);
 
-std::string FormatString(const std::string format, ...);
-
 // PrintInfo function
 template <typename... Args> void Print(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-    std::printf(format.c_str(), args...);
-    std::printf("\n");                                                    // Add a newline explicitly if needed
+    fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintInfo function
-template <typename... Args> void PrintInfo(const std::string &format, Args... args)
+template <typename... Args> void PrintInfo(const std::string &format, Args &&...args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
     SetConsoleColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-    std::printf(format.c_str(), args...);
-    std::printf("\n");                                                    // Add a newline explicitly if needed
+    fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
@@ -38,8 +50,7 @@ template <typename... Args> void PrintWarning(const std::string &format, Args...
 {
     std::lock_guard<std::mutex> lock(printMutex);
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-    std::printf(format.c_str(), args...);
-    std::printf("\n");                                                    // Add a newline explicitly if needed
+    fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
@@ -48,8 +59,7 @@ template <typename... Args> void PrintError(const std::string &format, Args... a
 {
     std::lock_guard<std::mutex> lock(printMutex);
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_INTENSITY);
-    std::printf(format.c_str(), args...);
-    std::printf("\n");                                                    // Add a newline explicitly if needed
+    fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
@@ -58,7 +68,6 @@ template <typename... Args> void PrintCommand(const std::string &format, Args...
 {
     std::lock_guard<std::mutex> lock(printMutex);
     SetConsoleColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-    std::printf(format.c_str(), args...);
-    std::printf("\n");                                                    // Add a newline explicitly if needed
+    fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
