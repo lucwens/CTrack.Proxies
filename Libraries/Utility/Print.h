@@ -1,19 +1,5 @@
 #pragma once
 
-#define FMT_UNICODE     0
-#define FMT_HEADER_ONLY 1
-// #define FMT_USE_WINDOWS_H             0
-// #define FMT_USE_USER_DEFINED_LITERALS 0
-// #define FMT_USE_GRISU                 0
-// #define FMT_USE_FULL_CACHE_LINE       0
-// #define FMT_USE_FLOAT                 0
-// #define FMT_USE_DOUBLE                0
-// #define FMT_USE_LONG_DOUBLE           0
-// #define FMT_USE_CHAR8_T               0
-// #define FMT_USE_WINDOWS_H             0
-// #define FMT_USE_UDL_TEMPLATE          0
-// #define FMT_USE_USER_DEFINED_LITERALS 0
-// #define FMT_USE_GRISU                 0
 
 #include "../fmt/format.h"
 #include <iostream>

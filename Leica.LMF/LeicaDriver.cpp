@@ -2,6 +2,7 @@
 
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include "../Libraries/Utility/StringUtilities.h"
 #include <msclr/marshal_cppstd.h>
 
 //------------------------------------------------------------------------------------------------------------------
@@ -19,8 +20,8 @@ CLeicaLMFDriver::~CLeicaLMFDriver()
 
 std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
 {
-    std::vector<std::string>      Names, SerialNumbers, IPAddresses, Types, Comments;
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+    std::vector<std::string>      Names, SerialNumbers, IPAddresses, Types, Comments;
 
     DetectTrackers(Names, SerialNumbers, IPAddresses, Types, Comments);
     GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, false);
@@ -32,9 +33,39 @@ std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<Ti
     return Return;
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
+std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
 {
-    return nullptr;
+    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+    std::string                   Result    = ATTRIB_RESULT_OK;
+    std::vector<std::string>      SerialNumbers, IPAddresses;
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_SERIAL, SerialNumbers, true);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, true);
+
+    if (SerialNumbers.size() != IPAddresses.size())
+    {
+        Result = fmt::format("SerialNumbers and IPAddresses have different sizes : {}-{}", SerialNumbers.size(), IPAddresses.size());
+    }
+    else
+    {
+        for (int i = 0; i < SerialNumbers.size(); i++)
+        {
+            std::string SerialNumber           = SerialNumbers[i];
+            std::string IPAddress              = IPAddresses[i];
+            LMF::Tracker::Tracker ^ LMFTracker = ConnectTo(SerialNumber, IPAddress);
+            if (LMFTracker)
+            {
+                RegisterEvents(LMFTracker);
+            }
+            else
+            {
+                Result = "Failed to connect to " + SerialNumber + " at " + IPAddress + "\nPerform a hardware detection.";
+                break;
+            }
+        }
+    }
+
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
+    return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> CLeicaLMFDriver::CheckInitialize(std::unique_ptr<TiXmlElement> &)
