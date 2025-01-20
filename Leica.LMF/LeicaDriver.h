@@ -15,6 +15,7 @@ using namespace LMF::Tracker::Triggers;
 using namespace LMF::Tracker::Enums;
 using namespace LMF::Tracker::BasicTypes;
 using namespace LMF::Tracker::OVC;
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 CLeicaDriver
@@ -35,7 +36,8 @@ ref class CLeicaLMFDriver
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
-    int DetectTrackers();
+    int DetectTrackers(std::vector<std::string> &Names, std::vector<std::string> &SerialNumbers, std::vector<std::string> &IPAddresses,
+                       std::vector<std::string> &Types, std::vector<std::string> &Comments);
 
   protected:
     LMF::Tracker::Tracker ^ ConnectTo(const std::string &DeviceSerial, const std::string &IPAddress);

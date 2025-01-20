@@ -34,6 +34,7 @@ constexpr char const *ATTRIB_HARDWAREDETECT_SERIAL              = "serial";
 constexpr char const *ATTRIB_HARDWAREDETECT_TYPE                = "type";
 constexpr char const *ATTRIB_HARDWAREDETECT_IPADDRESS           = "ipaddress";
 constexpr char const *ATTRIB_HARDWAREDETECT_IPADDRESSES         = "ipaddresses";
+constexpr char const *ATTRIB_HARDWAREDETECT_COMMENTS            = "comments";
 
 //------------------------------------------------------------------------------------------------------------------
 /*

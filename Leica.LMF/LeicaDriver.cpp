@@ -1,4 +1,7 @@
 #include "LeicaDriver.h"
+
+#include "../Libraries/XML/ProxyKeywords.h"
+#include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include <msclr/marshal_cppstd.h>
 
 //------------------------------------------------------------------------------------------------------------------
@@ -14,9 +17,19 @@ CLeicaLMFDriver::~CLeicaLMFDriver()
 {
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
+std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
 {
-    return nullptr;
+    std::vector<std::string>      Names, SerialNumbers, IPAddresses, Types, Comments;
+    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+
+    DetectTrackers(Names, SerialNumbers, IPAddresses, Types, Comments);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, false);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_SERIAL, SerialNumbers, false);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, false);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_TYPE, Types, false);
+    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_COMMENTS, Comments, false);
+
+    return Return;
 }
 
 std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
@@ -78,17 +91,25 @@ void CLeicaLMFDriver::RegisterEvents(LMF::Tracker::Tracker ^ LMFTracker)
     }
 }
 
-int CLeicaLMFDriver::DetectTrackers()
+int CLeicaLMFDriver::DetectTrackers(std::vector<std::string> &Names, std::vector<std::string> &SerialNumbers, std::vector<std::string> &IPAddresses,
+                                    std::vector<std::string> &Types, std::vector<std::string> &Comments)
 {
     int                                                  NumTrackers{0};
     LMF::Tracker::TrackerFinder ^ pTrackerFinder = gcnew LMF::Tracker::TrackerFinder;
     NumTrackers                                  = pTrackerFinder->Trackers->Count;
     for (int i = 0; i < NumTrackers; i++)
     {
-        std::string Comment   = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Comment);
-        std::string IPAddress = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->IPAddress);
+        std::string Name      = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Name);
         std::string Serial    = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->SerialNumber);
+        std::string IPAddress = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->IPAddress);
         std::string Type      = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Type);
+        std::string Comment   = msclr::interop::marshal_as<std::string>(pTrackerFinder->Trackers[i]->Comment);
+
+        Names.push_back(Name);
+        SerialNumbers.push_back(Serial);
+        IPAddresses.push_back(IPAddress);
+        Types.push_back(Type);
+        Comments.push_back(Comment);
     }
 
     return NumTrackers;

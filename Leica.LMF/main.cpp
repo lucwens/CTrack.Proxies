@@ -45,8 +45,6 @@ int main(int argc, char *argv[])
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
-    driver.DetectTrackers();
-
     bool bContinueLoop = true;
 
     while (bContinueLoop)
