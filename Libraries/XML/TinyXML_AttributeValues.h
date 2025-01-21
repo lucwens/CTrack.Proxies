@@ -32,6 +32,7 @@ bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::ve
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<int> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<double> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<std::vector<double>> &rvalue, bool Read);
+bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::vector<std::vector<std::vector<double>>> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, int> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<std::string, double> &rvalue, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, std::map<long, double> &rvalue, bool Read);

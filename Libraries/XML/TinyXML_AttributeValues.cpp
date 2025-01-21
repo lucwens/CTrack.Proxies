@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 bool GetSetAttributeTime(TiXmlElement *pXML, const char *AttributeName, time_t &value, bool Read)
 {
@@ -395,6 +396,23 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
     return Success;
 }
 
+bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<std::vector<std::vector<double>>> &rMatrix, bool Read)
+{
+    std::string Text;
+    if (!Read)
+    {
+        MatrixArray2Text(rMatrix, Text);
+    }
+
+    bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
+
+    if (Read && Success)
+    {
+        Text2MatrixArray(rMatrix, Text);
+    }
+    return Success;
+}
+
 bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<int> &rvalue, bool Read)
 {
     std::string Text;
@@ -408,7 +426,6 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<int
 
     return Success;
 }
-
 
 std::vector<std::vector<double>> Unit4x4()
 {

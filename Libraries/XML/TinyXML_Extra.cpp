@@ -354,6 +354,7 @@ size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixAr
     std::string        LineText;
     size_t             numMatrices = 0;
     size_t             numElements = 0;
+    rMatrixArray.clear();
     while (std::getline(matrixStream, LineText, '['))
     {
         std::vector<std::vector<double>> matrix;
