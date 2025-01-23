@@ -69,26 +69,9 @@ Check the requirements for the external library:
 
 ## Implement driver functions
 ### Hardware detection
-
-It should perform the next actions on the proxy:
-* Check if the device can be connected
-* Get general info
-
-The proxydevice on the engine will then:
-* Set the `m_Attribute.Present`
-* Set any relevant settings
-* Add a CConfigOpticalTrackerUnit which represents a 3D producing unit 
-
 The hardware detection should at a minimum set the next attributes:
-* ATTRIB_HARDWAREDETECT_PRESENT
-* ATTRIB_HARDWAREDETECT_FEEDBACK
 
-In addition the next attributes can be set
-* ATTRIB_HARDWAREDETECT_NAMES
-* ATTRIB_HARDWAREDETECT_SERIALS
-
-It should also add `CConfigOpticalTrackerUnit` as child to the device
-Setting is done on the Proxy.exe with `Driver::HardwareDetect`. Gettings is done on the engine with `CProxyXXXXDevice::HardwareDetect` which is called by `CNodeFactory::HardwareDetect()`
+In addition the next attributes should be set
 
 ### Configuration detection
 

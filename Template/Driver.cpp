@@ -7,14 +7,13 @@
 
 std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
-    bool                                          Present     = true;
-    std::string                                   Feedback    = "Found 2 cameras";
-    std::vector<std::string>                      Names       = {"Tracker1", "Tracker2"};
-    std::vector<std::string>                      Serials     = {"123", "456"};
-    std::vector<std::string>                      IPAddresses = {"127.0.0.1", "127.0.0.1"};
-    std::vector<int>                              Ports       = {5000, 5001};
-    std::vector<std::vector<std::vector<double>>> Unit4x4s    = {Unit4x4(), Unit4x4()};
-    std::unique_ptr<TiXmlElement>                 Return      = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+    bool                          Present     = true;
+    std::string                   Feedback    = "Found 2 cameras";
+    std::vector<std::string>      Names       = {"Tracker1", "Tracker2"};
+    std::vector<std::string>      Serials     = {"123", "456"};
+    std::vector<std::string>      IPAddresses = {"127.0.0.1", "127.0.0.1"};
+    std::vector<int>              Ports       = {5000, 5001};
+    std::unique_ptr<TiXmlElement> Return      = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
 
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_PRESENT, Present, XML_WRITE);
@@ -22,8 +21,7 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, XML_WRITE);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIALS, Serials, XML_WRITE);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_COMMENTS, Ports, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_POS4x4, Unit4x4s, XML_WRITE);
+    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPPORTS, Ports, XML_WRITE);
 
     auto debugtxt = XMLToString(Return.get());
 

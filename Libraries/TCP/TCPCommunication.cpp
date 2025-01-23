@@ -940,9 +940,7 @@ CCommunicationThread::CCommunicationThread()
     m_IterCurrentSocket = m_arSockets.begin();
 }
 
-CCommunicationThread::~CCommunicationThread()
-{
-}
+CCommunicationThread::~CCommunicationThread() {}
 
 void CCommunicationThread::SetQuit(bool ibQuit)
 {
@@ -1078,7 +1076,7 @@ void CCommunicationThread::SetError(const std::string iFileName, int iLineNumber
 {
     // copy error to all CCommunicationObjects
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    PrintError("error occurred in %s at %d : %s ", iFileName.c_str(), iLineNumber, iMessage.c_str());
+    PrintError("error occurred in {} at {} : {} ", iFileName.c_str(), iLineNumber, iMessage.c_str());
     for (auto iter : m_setCommunicationObject)
         iter->SetError(iFileName, iLineNumber, iMessage);
 }
