@@ -30,12 +30,14 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
 
 std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
-    Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
-    Return->SetAttribute(ATTRIB_PROBE_PRESENT, "true");
-    Return->SetAttribute(ATTRIB_NUM_MARKERS, "1");
-    Return->SetAttribute(ATTRIB_MARKER_NAMES, "[marker1]");
+    std::string              Result       = ATTRIB_RESULT_OK;
+    std::vector<std::string> ProbeSerials = {"123"};
+    std::vector<std::string> MarkerNames  = {"marker1", "marker2", "marker3"};
 
+    std::unique_ptr<TiXmlElement> Return  = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+    GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
+    GetSetAttribute(Return.get(), ATTRIB_MARKER_NAMES, MarkerNames, XML_WRITE);
+    GetSetAttribute(Return.get(), ATTRIB_PROBE_SERIALS, ProbeSerials, XML_WRITE);
     return Return;
 }
 
