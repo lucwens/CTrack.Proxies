@@ -8,10 +8,10 @@
 std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
     bool                          Present     = true;
-    std::string                   Feedback    = "Found 2 cameras";
-    std::vector<std::string>      Names       = {"Tracker1", "Tracker2"};
-    std::vector<std::string>      Serials     = {"123", "456"};
-    std::vector<std::string>      IPAddresses = {"127.0.0.1", "127.0.0.1"};
+    std::string                   Feedback    = "Found 1 camera";
+    std::vector<std::string>      Names       = {"Tracker1"};
+    std::vector<std::string>      Serials     = {"123"};
+    std::vector<std::string>      IPAddresses = {"127.0.0.1"};
     std::vector<int>              Ports       = {5000, 5001};
     std::unique_ptr<TiXmlElement> Return      = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
 
