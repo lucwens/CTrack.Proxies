@@ -296,12 +296,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
 {
     std::string Text;
     if (!Read)
-        StringArray2Text(rvalue, Text);
+        StringArrayToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2StringArray(rvalue, Text);
+        TextToStringArray(rvalue, Text);
 
     return Success;
 }
@@ -310,12 +310,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
 {
     std::string Text;
     if (!Read)
-        IntArray2Text(rvalue, Text);
+        IntArrayToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2IntArray(rvalue, Text);
+        TextToIntArray(rvalue, Text);
 
     return Success;
 }
@@ -324,12 +324,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<std
 {
     std::string Text;
     if (!Read)
-        IntMap2Text(rvalue, Text);
+        IntMapToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2IntMap(rvalue, Text);
+        TextToIntMap(rvalue, Text);
 
     return Success;
 }
@@ -338,12 +338,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<std
 {
     std::string Text;
     if (!Read)
-        StringDoubleMap2Text(rvalue, Text);
+        StringDoubleMapToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2StringDoubleMap(rvalue, Text);
+        TextToStringDoubleMap(rvalue, Text);
 
     return Success;
 }
@@ -352,12 +352,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::map<lon
 {
     std::string Text;
     if (!Read)
-        LongDoubleMap2Text(rvalue, Text);
+        LongDoubleMapToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2LongDoubleMap(rvalue, Text);
+        TextToLongDoubleMap(rvalue, Text);
 
     return Success;
 }
@@ -367,14 +367,14 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
     std::string Text;
     if (!Read)
     {
-        DoubleArray2Text(rMatrix, Text);
+        DoubleArrayToText(rMatrix, Text);
     }
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
     {
-        Text2DoubleArray(rMatrix, Text);
+        TextToDoubleArray(rMatrix, Text);
     }
     return Success;
 }
@@ -384,14 +384,14 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
     std::string Text;
     if (!Read)
     {
-        Matrix2Text(rMatrix, Text);
+        MatrixToText(rMatrix, Text);
     }
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
     {
-        Text2Matrix(rMatrix, Text);
+        TextToMatrix(rMatrix, Text);
     }
     return Success;
 }
@@ -401,14 +401,14 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::vector<
     std::string Text;
     if (!Read)
     {
-        MatrixArray2Text(rMatrix, Text);
+        MatrixArrayToText(rMatrix, Text);
     }
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
     {
-        Text2MatrixArray(rMatrix, Text);
+        TextToMatrixArray(rMatrix, Text);
     }
     return Success;
 }
@@ -417,12 +417,12 @@ bool GetSetAttribute(TiXmlElement *pXML, const char *AttributeName, std::set<int
 {
     std::string Text;
     if (!Read)
-        IntSet2Text(rvalue, Text);
+        IntSetToText(rvalue, Text);
 
     bool Success = GetSetAttribute(pXML, AttributeName, Text, Read);
 
     if (Read && Success)
-        Text2IntSet(rvalue, Text);
+        TextToIntSet(rvalue, Text);
 
     return Success;
 }

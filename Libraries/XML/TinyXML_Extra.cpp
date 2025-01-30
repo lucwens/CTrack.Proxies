@@ -197,7 +197,7 @@ bool GetAttributeHandleError(TiXmlElement *pXML, const char *AttributeName, unsi
     return false;
 }
 
-int IntArray2Text(std::vector<int> &IntArray, std::string &Text)
+int IntArrayToText(std::vector<int> &IntArray, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -210,7 +210,7 @@ int IntArray2Text(std::vector<int> &IntArray, std::string &Text)
     return static_cast<int>(IntArray.size());
 }
 
-int Text2IntArray(std::vector<int> &IntArray, const std::string &Text)
+int TextToIntArray(std::vector<int> &IntArray, const std::string &Text)
 {
     int         i;
     const char *pText = Text.c_str();
@@ -228,7 +228,7 @@ int Text2IntArray(std::vector<int> &IntArray, const std::string &Text)
     return static_cast<int>(IntArray.size());
 }
 
-int IntSet2Text(std::set<int> &IntSet, std::string &Text)
+int IntSetToText(std::set<int> &IntSet, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -241,7 +241,7 @@ int IntSet2Text(std::set<int> &IntSet, std::string &Text)
     return static_cast<int>(IntSet.size());
 }
 
-int Text2IntSet(std::set<int> &IntSet, const std::string &Text)
+int TextToIntSet(std::set<int> &IntSet, const std::string &Text)
 {
     int         i;
     const char *pText = Text.c_str();
@@ -259,7 +259,7 @@ int Text2IntSet(std::set<int> &IntSet, const std::string &Text)
     return static_cast<int>(IntSet.size());
 }
 
-int DoubleArray2Text(std::vector<double> &rArray, std::string &Text)
+int DoubleArrayToText(std::vector<double> &rArray, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -271,7 +271,7 @@ int DoubleArray2Text(std::vector<double> &rArray, std::string &Text)
     return static_cast<int>(rArray.size());
 }
 
-int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text)
+int TextToDoubleArray(std::vector<double> &rArray, const std::string &Text)
 {
     double      f;
     const char *pText = Text.c_str();
@@ -289,7 +289,7 @@ int Text2DoubleArray(std::vector<double> &rArray, const std::string &Text)
     return static_cast<int>(rArray.size());
 }
 
-void Matrix2Text(const std::vector<std::vector<double>> &iMatrix, std::string &Text)
+void MatrixToText(const std::vector<std::vector<double>> &iMatrix, std::string &Text)
 {
     std::ostringstream oss;
     for (const auto &row : iMatrix)
@@ -303,7 +303,7 @@ void Matrix2Text(const std::vector<std::vector<double>> &iMatrix, std::string &T
     Text = oss.str();
 }
 
-size_t Text2Matrix(std::vector<std::vector<double>> &rMatrix, const std::string &iText)
+size_t TextToMatrix(std::vector<std::vector<double>> &rMatrix, const std::string &iText)
 {
     std::istringstream rowStream(iText);
     std::string        Text;
@@ -337,18 +337,18 @@ size_t Text2Matrix(std::vector<std::vector<double>> &rMatrix, const std::string 
     return numRows * numCols;
 }
 
-void MatrixArray2Text(const std::vector<std::vector<std::vector<double>>> &rMatrixArray, std::string &Text)
+void MatrixArrayToText(const std::vector<std::vector<std::vector<double>>> &rMatrixArray, std::string &Text)
 {
     std::ostringstream oss;
     for (const auto &matrix : rMatrixArray)
     {
-        Matrix2Text(matrix, Text);
+        MatrixToText(matrix, Text);
         oss << "[" << Text << "]";
     }
     Text = oss.str();
 }
 
-size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
+size_t TextToMatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
 {
     std::istringstream matrixStream(Text);
     std::string        LineText;
@@ -358,7 +358,7 @@ size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixAr
     while (std::getline(matrixStream, LineText, '['))
     {
         std::vector<std::vector<double>> matrix;
-        size_t                           currentMatrixElements = Text2Matrix(matrix, LineText);
+        size_t                           currentMatrixElements = TextToMatrix(matrix, LineText);
         if (!matrix.empty())
         {
             numMatrices++;
@@ -372,7 +372,7 @@ size_t Text2MatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixAr
     return numMatrices * numElements;
 }
 
-int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text)
+int StringArrayToText(std::vector<std::string> &StringArray, std::string &Text)
 {
     Text = "";
     for (auto iter : StringArray)
@@ -383,7 +383,7 @@ int StringArray2Text(std::vector<std::string> &StringArray, std::string &Text)
     return static_cast<int>(StringArray.size());
 }
 
-int Text2StringArray(std::vector<std::string> &StringArray, const std::string &iText)
+int TextToStringArray(std::vector<std::string> &StringArray, const std::string &iText)
 {
     std::string Text = iText;
     StringArray.clear();
@@ -399,7 +399,7 @@ int Text2StringArray(std::vector<std::string> &StringArray, const std::string &i
     return static_cast<int>(StringArray.size());
 }
 
-int IntMap2Text(std::map<int, int> &IntMap, std::string &Text)
+int IntMapToText(std::map<int, int> &IntMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -412,7 +412,7 @@ int IntMap2Text(std::map<int, int> &IntMap, std::string &Text)
     return static_cast<int>(IntMap.size());
 }
 
-int Text2IntMap(std::map<int, int> &IntMap, const std::string &Text)
+int TextToIntMap(std::map<int, int> &IntMap, const std::string &Text)
 {
     int         key, data;
     const char *pText = Text.c_str();
@@ -430,14 +430,14 @@ int Text2IntMap(std::map<int, int> &IntMap, const std::string &Text)
     return static_cast<int>(IntMap.size());
 }
 
-int VecIntMap2Text(std::map<std::string, std::vector<int>> &VecIntMap, std::string &Text)
+int VecIntMapToText(std::map<std::string, std::vector<int>> &VecIntMap, std::string &Text)
 {
     std::string IntText;
     char        TextBuffer[2001];
     Text = "";
     for (auto iter : VecIntMap)
     {
-        IntArray2Text(iter.second, IntText);
+        IntArrayToText(iter.second, IntText);
         sprintf_s(TextBuffer, sizeof(TextBuffer), "(\"%s\",%s)", iter.first.c_str(), IntText.c_str());
         Text += TextBuffer;
         Text += ';';
@@ -445,7 +445,7 @@ int VecIntMap2Text(std::map<std::string, std::vector<int>> &VecIntMap, std::stri
     return static_cast<int>(VecIntMap.size());
 }
 
-int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std::string &Text)
+int TextToVecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std::string &Text)
 {
     std::string KeyText;
     std::string IntText;
@@ -457,7 +457,7 @@ int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std
 
     {
         KeyText.erase(std::remove(KeyText.begin(), KeyText.end(), '"'), KeyText.end());
-        Text2IntArray(arInt, IntText);
+        TextToIntArray(arInt, IntText);
         VecIntMap[KeyText] = arInt;
         pText              = strchr(pText + 1, '(');
         if (!pText)
@@ -468,7 +468,7 @@ int Text2VecIntMap(std::map<std::string, std::vector<int>> &VecIntMap, const std
     return static_cast<int>(VecIntMap.size());
 }
 
-int IntMap2Text(std::map<std::string, int> &IntMap, std::string &Text)
+int IntMapToText(std::map<std::string, int> &IntMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -481,7 +481,7 @@ int IntMap2Text(std::map<std::string, int> &IntMap, std::string &Text)
     return static_cast<int>(IntMap.size());
 }
 
-int Text2IntMap(std::map<std::string, int> &IntMap, const std::string &Text)
+int TextToIntMap(std::map<std::string, int> &IntMap, const std::string &Text)
 {
     std::string key;
     char        TextBuffer[1500];
@@ -502,7 +502,7 @@ int Text2IntMap(std::map<std::string, int> &IntMap, const std::string &Text)
     return static_cast<int>(IntMap.size());
 }
 
-int StringDoubleMap2Text(std::map<std::string, double> &FloatMap, std::string &Text)
+int StringDoubleMapToText(std::map<std::string, double> &FloatMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -515,7 +515,7 @@ int StringDoubleMap2Text(std::map<std::string, double> &FloatMap, std::string &T
     return static_cast<int>(FloatMap.size());
 }
 
-int Text2StringDoubleMap(std::map<std::string, double> &FloatMap, const std::string &Text)
+int TextToStringDoubleMap(std::map<std::string, double> &FloatMap, const std::string &Text)
 {
     std::string key;
     char        TextBuffer[1500];
@@ -536,7 +536,7 @@ int Text2StringDoubleMap(std::map<std::string, double> &FloatMap, const std::str
     return static_cast<int>(FloatMap.size());
 }
 
-int LongDoubleMap2Text(std::map<long, double> &FloatMap, std::string &Text)
+int LongDoubleMapToText(std::map<long, double> &FloatMap, std::string &Text)
 {
     char TextBuffer[1500];
     Text = "";
@@ -549,7 +549,7 @@ int LongDoubleMap2Text(std::map<long, double> &FloatMap, std::string &Text)
     return static_cast<int>(FloatMap.size());
 }
 
-int Text2LongDoubleMap(std::map<long, double> &FloatMap, const std::string &Text)
+int TextToLongDoubleMap(std::map<long, double> &FloatMap, const std::string &Text)
 {
     long        key;
     double      data;
