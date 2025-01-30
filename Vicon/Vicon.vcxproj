@@ -167,10 +167,10 @@
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
     <ClCompile Include="DriverVicon.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
+    <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />

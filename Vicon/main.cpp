@@ -41,14 +41,8 @@ int main(int argc, char *argv[])
     PrintInfo("l : report last coordinates");
 
     // startup server object
-    CCommunicationObject    TCPServer;
+    CCommunicationObject     TCPServer;
     std::unique_ptr<IDriver> driver = std::make_unique<DriverVicon>();
-
-    // test section
-    std::unique_ptr<TiXmlElement> TestXML;
-    std::unique_ptr<TiXmlElement> ReturnXML = driver->HardwareDetect(TestXML);
-    // test section
-
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
@@ -137,13 +131,13 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-//                 for (auto &value : driver->m_arDoubles)
-//                 {
-//                     std::cout << value << " ";
-//                 };
-//                 std::cout << endl;
-//                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
-//                 TCPServer.PushSendPackage(TCPGRam);
+                //                 for (auto &value : driver->m_arDoubles)
+                //                 {
+                //                     std::cout << value << " ";
+                //                 };
+                //                 std::cout << endl;
+                //                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
+                //                 TCPServer.PushSendPackage(TCPGRam);
             }
 
             //------------------------------------------------------------------------------------------------------------------

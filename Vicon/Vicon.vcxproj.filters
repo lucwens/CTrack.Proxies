@@ -42,9 +42,6 @@
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
       <Filter>Libraries\TCP</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Libraries\XML\tinystr.cpp">
       <Filter>Libraries\XML</Filter>
     </ClCompile>
@@ -91,6 +88,9 @@
       <Filter>Driver</Filter>
     </ClCompile>
     <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

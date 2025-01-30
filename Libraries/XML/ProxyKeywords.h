@@ -6,6 +6,7 @@
 constexpr char const *TAG_COMMAND_QUIT                          = "QUIT";
 constexpr char const *ATTRIB_RESULT                             = "result";
 constexpr char const *ATTRIB_RESULT_OK                          = "ok";
+constexpr char const *ATTRIB_RESULT_NOK                         = "NOT ok";
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -56,6 +57,7 @@ constexpr char const *TAG_COMMAND_CONFIGDETECT                  = "CONFIG_DETECT
 constexpr char const *ATTRIB_PROBE_PRESENT                      = "probe_present";
 constexpr char const *ATTRIB_NUM_MARKERS                        = "num_markers";
 constexpr char const *ATTRIB_MARKER_NAMES                       = "marker_names";
+constexpr char const *ATTRIB_MARKER_PARENTS                     = "marker_parents";
 constexpr char const *ATTRIB_PROBE_SERIALS                      = "probe_serials";
 constexpr char const *ATTRIB_MODELS                             = "models";
 constexpr char const *ATTRIB_SERIALS                            = "serials";

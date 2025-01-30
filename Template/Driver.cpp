@@ -7,25 +7,42 @@
 
 std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
-    bool                          Present     = true;
-    std::string                   Feedback    = "Found 1 camera";
-    std::vector<std::string>      Names       = {"Tracker1"};
-    std::vector<std::string>      Serials     = {"123"};
-    std::vector<std::string>      IPAddresses = {"127.0.0.1"};
-    std::vector<int>              Ports       = {5000, 5001};
-    std::unique_ptr<TiXmlElement> Return      = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+    bool                                          Present     = true;
+    std::string                                   Feedback    = "Found 1 camera";
+    std::vector<std::string>                      Names       = {"Tracker1", "Tracker2"};
+    std::vector<std::string>                      Serials     = {"123", "456"};
+    std::vector<std::string>                      IPAddresses = {"127.0.0.1"};
+    std::vector<int>                              Ports       = {5000};
+    std::vector<std::vector<std::vector<double>>> CameraPositions;
+    std::unique_ptr<TiXmlElement>                 ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
 
-    Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_PRESENT, Present, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, Feedback, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIALS, Serials, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPPORTS, Ports, XML_WRITE);
+    // position sub trackers
+    for (int i = 0; i < 2; i++)
+    {
+        std::vector<std::vector<double>> CameraPos4x4 = Unit4x4();
+        if (i == 0)
+        {
+            CameraPos4x4[0][3] = 1000.0;
+        }
+        else
+        {
+            CameraPos4x4[0][3] = -1000.0;
+        }
+        CameraPositions.push_back(CameraPos4x4);
+    }
 
-    auto debugtxt = XMLToString(Return.get());
+    ReturnXML->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_PRESENT, Present, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, Feedback, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_SERIALS, Serials, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_IPPORTS, Ports, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
 
-    return Return;
+    auto debugtxt = XMLToString(ReturnXML.get());
+
+    return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)

@@ -14,7 +14,12 @@ class DriverVicon : public IDriver
     bool                          Run() override;
     std::unique_ptr<TiXmlElement> ShutDown() override;
 
+  public:
+    bool Connect();
+    void Disconnect();
+
   protected:
-    double m_MeasurementFrequencyHz = 10.0;
-    bool   m_bRunning               = false;
+    ViconDataStreamSDK::CPP::Client m_Client;
+    double                          m_MeasurementFrequencyHz = 10.0;
+    bool                            m_bRunning               = false;
 };

@@ -4,23 +4,50 @@
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
 
-#include <iostream> // Add this line
+#include <iostream>
+#include < thread>
+
+bool DriverVicon::Connect()
+{
+    m_Client.Connect("localhost");
+    bool bConnected = m_Client.IsConnected().Connected;
+    if (!bConnected)
+    {
+        PrintError("Failed to connect to Vicon DataStream");
+    }
+    m_Client.EnableMarkerData();
+    m_Client.EnableUnlabeledMarkerData();
+    m_Client.EnableDebugData();
+
+    m_Client.EnableCameraCalibrationData();
+    m_Client.EnableCentroidData(); // Enable centroid data to retrieve camera information
+
+    m_Client.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
+
+    m_Client.SetAxisMapping(ViconDataStreamSDK::CPP::Direction::Forward, ViconDataStreamSDK::CPP::Direction::Left, ViconDataStreamSDK::CPP::Direction::Up);
+    return bConnected;
+}
+
+void DriverVicon::Disconnect()
+{
+    m_Client.Disconnect();
+}
 
 std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
-    bool                     bPresent    = false;
-    unsigned int             CameraCount = 0;
-    std::string              Result      = ATTRIB_RESULT_OK;
-    std::string              FeedBack("Not present");
-    std::vector<std::string> CameraSerials;
-    std::vector<std::string> CameraNames;
+    bool                                          bPresent    = false;
+    unsigned int                                  CameraCount = 0;
+    std::string                                   Result      = ATTRIB_RESULT_OK;
+    std::string                                   FeedBack("Not present");
+    std::vector<std::string>                      CameraSerials;
+    std::vector<std::string>                      CameraNames;
+    std::vector<std::vector<std::vector<double>>> CameraPositions;
 
-    std::unique_ptr<TiXmlElement>   ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
-    ViconDataStreamSDK::CPP::Client Client;
-    auto                            Version = Client.GetVersion();
+    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+    auto                          Version   = m_Client.GetVersion();
 
     // Connect to the Vicon DataStream server
-    if (Client.Connect("localhost").Result != ViconDataStreamSDK::CPP::Result::Success)
+    if (!Connect())
     {
         FeedBack = "Failed to connect to Vicon DataStream";
         PrintError(FeedBack);
@@ -29,14 +56,12 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
     }
     else
     {
-        Client.EnableCentroidData(); // Enable centroid data to retrieve camera information
 
         // Fetch the latest frame to ensure data is available
-        auto GetFrameResult = Client.GetFrame();
-        GetFrameResult      = Client.GetFrame(); // for some reason I need to execute this twice
+        auto GetFrameResult = m_Client.GetFrame(); // for some reason I need to execute this twice
         if (GetFrameResult.Result == ViconDataStreamSDK::CPP::Result::Success)
         {
-            auto CameraCountResult = Client.GetCameraCount();
+            auto CameraCountResult = m_Client.GetCameraCount();
             if (CameraCountResult.Result == ViconDataStreamSDK::CPP::Result::Success)
             {
                 bPresent    = true;
@@ -45,25 +70,22 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                 CameraCount = CameraCountResult.CameraCount;
                 for (unsigned int i = 0; i < CameraCountResult.CameraCount; i++)
                 {
-                    ViconDataStreamSDK::CPP::Output_GetCameraName CameraNameResult = Client.GetCameraName(i);
+                    std::string                      CameraName;
+                    std::string                      SerialString;
+                    std::vector<std::vector<double>> CameraPos4x4                  = Unit4x4();
+
+                    ViconDataStreamSDK::CPP::Output_GetCameraName CameraNameResult = m_Client.GetCameraName(i);
                     if (CameraNameResult.Result == ViconDataStreamSDK::CPP::Result::Success)
                     {
-                        std::string CameraName = CameraNameResult.CameraName;
-                        CameraNames.push_back(CameraName);
-                        ViconDataStreamSDK::CPP::Output_GetCameraId CameraIDResult = Client.GetCameraId(CameraName);
+                        CameraName                                                 = CameraNameResult.CameraName;
+                        ViconDataStreamSDK::CPP::Output_GetCameraId CameraIDResult = m_Client.GetCameraId(CameraName);
                         if (CameraIDResult.Result == ViconDataStreamSDK::CPP::Result::Success)
                         {
-                            std::string SerialString = std::to_string(CameraIDResult.CameraId);
-                            CameraSerials.push_back(SerialString);
-                        }
-                        else
-                        {
-                            CameraSerials.push_back("0");
+                            SerialString = std::to_string(CameraIDResult.CameraId);
                         }
 
-                        std::vector<std::vector<double>>                              CameraPos4x4 = Unit4x4();
-                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalTranslation    CameraPos    = Client.GetCameraGlobalTranslation(CameraName);
-                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalRotationMatrix CameraRot    = Client.GetCameraGlobalRotationMatrix(CameraName);
+                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalTranslation    CameraPos = m_Client.GetCameraGlobalTranslation(CameraName);
+                        ViconDataStreamSDK::CPP::Output_GetCameraGlobalRotationMatrix CameraRot = m_Client.GetCameraGlobalRotationMatrix(CameraName);
                         if (CameraPos.Result == ViconDataStreamSDK::CPP::Result::Success && CameraRot.Result == ViconDataStreamSDK::CPP::Result::Success)
                         {
                             for (int r = 0; r < 3; r++)
@@ -79,42 +101,104 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                                 CameraPos4x4[r][3] = CameraPos.Translation[r];
                             }
                         }
+                        CameraNames.push_back(CameraName);
+                        CameraSerials.push_back(SerialString);
+                        CameraPositions.push_back(CameraPos4x4);
                     }
                 }
+                PrintInfo(FeedBack);
             }
         }
 
         // Disconnect from the server
-        Client.Disconnect();
+        Disconnect();
     }
 
     GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_PRESENT, bPresent, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, FeedBack, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NUM_TRACKERS, CameraCount, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_SERIALS, CameraSerials, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NAMES, CameraNames, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_SERIALS, CameraSerials, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
 
     return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> DriverVicon::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
-    Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
-    Return->SetAttribute(ATTRIB_PROBE_PRESENT, "true");
-    Return->SetAttribute(ATTRIB_NUM_MARKERS, "1");
-    Return->SetAttribute(ATTRIB_MARKER_NAMES, "[marker1]");
-    return Return;
+    std::string                   Result = ATTRIB_RESULT_OK;
+    std::vector<std::string>      ar6DOF;
+    std::vector<std::string>      ar3D;       // belong to a 6DOF
+    std::vector<std::string>      ar3DParent; // belong to a 6DOF
+    int                           numUnlabeled{0};
+    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+
+    if (Connect())
+    {
+        int Attempts = 4;
+        while (m_Client.GetFrame().Result != ViconDataStreamSDK::CPP::Result::Success)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            Attempts--;
+            if (Attempts < 0)
+            {
+                Result = "Failed to get frames";
+                break;
+            }
+        }
+        if (Attempts >= 0)
+        {
+
+            // unlabeled 3D
+            numUnlabeled      = m_Client.GetUnlabeledMarkerCount().MarkerCount;
+
+            // 6DOF
+            auto SubjectCount = m_Client.GetSubjectCount().SubjectCount;
+
+            for (unsigned int SubjectIndex = 0; SubjectIndex < SubjectCount; ++SubjectIndex)
+            {
+                std::string SubjectName = m_Client.GetSubjectName(SubjectIndex).SubjectName;
+                ar6DOF.push_back(SubjectName);
+                // labeled 3D
+                unsigned int MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
+                for (unsigned int MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
+                {
+                    std::string MarkerName       = m_Client.GetMarkerName(SubjectName, MarkerIndex).MarkerName;
+                    std::string MarkerParentName = m_Client.GetMarkerParentName(SubjectName, MarkerName).SegmentName;
+                    ar3D.push_back(MarkerName);
+                    ar3DParent.push_back(MarkerParentName);
+                }
+            }
+        }
+
+        PrintInfo("Vicon 6DOF objects:");
+        for (auto &object : ar6DOF)
+            PrintInfo(object);
+        PrintInfo("Vicon 3D objects");
+        for (auto &object : ar3D)
+            PrintInfo(object);
+
+        Disconnect();
+    }
+    else
+    {
+        Result = "Failed to connect to Vicon DataStream";
+    }
+
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_MODELS, ar6DOF, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_MARKER_NAMES, ar3D, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_MARKER_PARENTS, ar3DParent, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_NUM_MARKERS, numUnlabeled, XML_WRITE);
+    return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
 {
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-    Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
+    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
+    ReturnXML->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
     m_bRunning = true;
-    return Return;
+    return ReturnXML;
 }
 
 bool DriverVicon::Run()
