@@ -2,6 +2,7 @@
 
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/XML/ProxyKeywords.h"
+#include <cmath>
 #include <thread>
 #include <chrono>
 
@@ -63,8 +64,13 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_SIM_FILEPATH, m_SimulationFile, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELS, m_channelNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3D, m_3DNames, XML_READ);
+
     m_bRunning = true;
     m_TimeStep = 1.0 / m_MeasurementFrequencyHz;
+    m_arDoubles.resize(m_channelNames.size(), NAN);
     return Return;
 }
 
@@ -74,6 +80,10 @@ bool Driver::Run()
     {
         m_arDoubles[0] += m_TimeStep;
         std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration<double>(m_TimeStep)));
+        for (int i = 1; i < m_arDoubles.size(); i++)
+        {
+            m_arDoubles[i] = i * 100.0 * sin(m_arDoubles[0] * i * 2 * 3.14159265358979323846);
+        }
     }
     return m_bRunning;
 }

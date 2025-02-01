@@ -20,8 +20,11 @@ class Driver : public IDriver
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
-    double              m_MeasurementFrequencyHz = 10.0;
-    double              m_TimeStep               = 0.0;
-    bool                m_bRunning               = false;
-    std::vector<double> m_arDoubles              = {0.0, 1.0, 2.0, 3.0}; //  t,x,y,z
+    double                   m_MeasurementFrequencyHz = 10.0;
+    double                   m_TimeStep               = 0.0;
+    bool                     m_bRunning               = false;
+    std::vector<double>      m_arDoubles;
+    std::string              m_SimulationFile;
+    std::vector<std::string> m_channelNames;
+    std::vector<std::string> m_3DNames;
 };
