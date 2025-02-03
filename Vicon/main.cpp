@@ -23,11 +23,13 @@ int main(int argc, char *argv[])
 {
     //
     // parse port
-    unsigned short                PortNumber(40014);
+    unsigned short                PortNumber(40001);
     std::string                   Command;
     std::unique_ptr<TiXmlElement> TCP_XML_Input;
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
+
+    PortNumber = findPortNumber(PortNumber);
 
     PrintInfo("Big loop starting");
     PrintInfo("q : quit");

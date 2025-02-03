@@ -1,6 +1,7 @@
 
 #include "TCPTelegram.h"
 #include "../XML/TinyXML_AttributeValues.h"
+#include "../Utility/Print.h"
 
 std::unique_ptr<TiXmlElement> CreateCommandDetect()
 {
@@ -261,8 +262,15 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
     {
         TiXmlDocument doc;
         if (strlen(pXMLString) != 0)
-            if (!doc.Parse(pXMLString))
-                throw std::exception("TCP Error : the XML contents could not be decoded");
+        {
+            doc.Parse(pXMLString);
+            if (doc.Error())
+            {
+                std::string ErrorDescription = fmt::format("TCP Error ({},{}): the XML contents could not be decoded :{} \n{}", doc.ErrorRow(), doc.ErrorCol(),
+                                                           doc.ErrorDesc(), pXMLString);
+                throw std::exception(ErrorDescription.c_str());
+            }
+        }
         TiXmlElement *pXML = doc.FirstChildElement();
         RemoveElement(pXML); // remove from doc, otherwise doc's destructor will kill our XML
         ReturnXML.reset(pXML);

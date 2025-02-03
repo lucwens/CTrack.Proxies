@@ -186,8 +186,8 @@ std::unique_ptr<TiXmlElement> DriverVicon::ConfigDetect(std::unique_ptr<TiXmlEle
 
     GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_MODELS, ar6DOF, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_MARKER_NAMES, ar3D, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_MARKER_PARENTS, ar3DParent, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D, ar3D, XML_WRITE);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D_PARENTS, ar3DParent, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_NUM_MARKERS, numUnlabeled, XML_WRITE);
     return ReturnXML;
 }
@@ -203,9 +203,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
 
 bool DriverVicon::Run()
 {
-    if (m_bRunning)
-    {
-    }
+    if (m_bRunning) {}
     return m_bRunning;
 }
 

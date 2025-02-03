@@ -22,6 +22,7 @@ Ping : check if a destination can be reached
 //------------------------------------------------------------------------------------------------------------------
 
 bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout = 1000);
+int  FindAvailableTCPPortNumber(int startPort);
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -85,10 +86,7 @@ class CSocket
   public:
     CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string iUDPSendToAddress);
     virtual ~CSocket();
-    SOCKET GetSocket()
-    {
-        return m_Socket;
-    };
+    SOCKET GetSocket() { return m_Socket; };
 
   public: // socket manipulations
     void SetNagle(bool bDisableNagle = true);
@@ -96,10 +94,7 @@ class CSocket
     void SetReuseAddress(bool bEnableReuseAddress = true);
     void SetBroadcast(bool bEnableBroadcast = true);
     int  GetMaxUDPMessageSize();
-    void SetBlockWrite(bool ibBlockWrite = true)
-    {
-        m_bBlockWrite = ibBlockWrite;
-    };
+    void SetBlockWrite(bool ibBlockWrite = true) { m_bBlockWrite = ibBlockWrite; };
 
   public:
     virtual bool DataAvailable();  // returns true if data is available for reading, throws FALSE if connection was reset or CExceptionSocket for socket error
@@ -161,10 +156,7 @@ class CCommunicationInterface
     virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
                                     // available
     virtual void     AddNewComer(CSocket *);
-    virtual size_t   GetNumConnections()
-    {
-        return 0;
-    };
+    virtual size_t   GetNumConnections() { return 0; };
 
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
@@ -221,22 +213,10 @@ class CCommunicationObject : public CCommunicationInterface
     virtual void Close();
 
   public: // from statemanager
-    virtual void SetError(const std::string iFileName, int iLineNumber, LPCTSTR iMessage)
-    {
-        ;
-    };
-    virtual void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage)
-    {
-        ;
-    };
-    bool IsConnected()
-    {
-        return m_TCPNumConnections > 0;
-    };
-    std::string GetHost()
-    {
-        return GetHostName();
-    };
+    virtual void SetError(const std::string iFileName, int iLineNumber, LPCTSTR iMessage) { ; };
+    virtual void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) { ; };
+    bool         IsConnected() { return m_TCPNumConnections > 0; };
+    std::string  GetHost() { return GetHostName(); };
     void         CheckConnections();
     virtual void TCPReceiveRespond();
     void         Run();

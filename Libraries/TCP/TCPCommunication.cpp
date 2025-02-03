@@ -7,9 +7,11 @@
 
 #include <ws2tcpip.h>
 #include <iostream>
-
 #include <string>
 #include <tlhelp32.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
 
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
@@ -29,25 +31,6 @@ void InterruptSet(bool bValue)
 Supporting routines for the communication thread
 */
 //------------------------------------------------------------------------------------------------------------------
-
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iostream>
-
-#pragma comment(lib, "Ws2_32.lib")
-
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <iphlpapi.h>
-#include <icmpapi.h>
-#include <iostream>
-
-#pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "Iphlpapi.lib")
-
-#include <ws2tcpip.h>
-
-// ...
 
 bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
 {
@@ -142,39 +125,66 @@ bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number)
     return true;
 }
 
-int FindAvailableTCPPort(const std::string &ipAddress, int startingPort)
+int FindAvailableTCPPortNumber(int startPort)
 {
-    SOCKET      sock = INVALID_SOCKET;
-    sockaddr_in addr{};
-    int         availablePort = -1;
-
-    sock                      = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == INVALID_SOCKET)
+    WSADATA wsaData;
+    int     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0)
     {
-        std::cerr << "Socket creation failed with error: " << WSAGetLastError() << "\n";
+        std::cerr << "WSAStartup failed: " << result << std::endl;
+        return 0;
+    }
+    SOCKET      listenSocket = INVALID_SOCKET;
+    sockaddr_in service;
+    int         port = startPort;
+
+    // Create a socket
+    listenSocket     = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listenSocket == INVALID_SOCKET)
+    {
+        std::cerr << "Socket creation failed: " << WSAGetLastError() << std::endl;
         WSACleanup();
-        return -1;
+        return 0;
     }
 
-    addr.sin_family = AF_INET;
-    inet_pton(AF_INET, ipAddress.c_str(), &addr.sin_addr);
+    // Setup the sockaddr_in structure
+    service.sin_family      = AF_INET;
+    service.sin_addr.s_addr = INADDR_ANY; // Bind to any available interface
 
-    for (int port = startingPort; port <= 65535; ++port)
+    // Try binding the socket starting from startPort
+    for (; port <= 65535; ++port)
     {
-        addr.sin_port = htons(port);
+        service.sin_port = htons(port);
 
-        if (::bind(sock, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == 0)
+        if (::bind(listenSocket, (SOCKADDR *)&service, sizeof(service)) == 0)
         {
-            // Found available port
-            availablePort = port;
+            // Successfully bound to the port
             break;
+        }
+        else
+        {
+            int err = WSAGetLastError();
+            if (err != WSAEADDRINUSE)
+            {
+                std::cerr << "Bind failed with error: " << err << std::endl;
+                closesocket(listenSocket);
+                WSACleanup();
+                return 0;
+            }
         }
     }
 
-    // Clean up
-    closesocket(sock);
+    // Cleanup
+    closesocket(listenSocket);
 
-    return availablePort;
+    if (port > 65535)
+    {
+        std::cerr << "No free port found." << std::endl;
+        return 0;
+    }
+
+    WSACleanup();
+    return port;
 }
 
 std::string GetProcessNameByPID(DWORD pid)

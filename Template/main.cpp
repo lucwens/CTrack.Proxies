@@ -22,11 +22,12 @@ int main(int argc, char *argv[])
 {
     //
     // parse port
-    unsigned short                PortNumber(40014);
+    unsigned short                PortNumber(40001);
     std::string                   Command;
     std::unique_ptr<TiXmlElement> TCP_XML_Input;
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
+    PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
     PrintInfo("Big loop starting");
     PrintInfo("q : quit");
@@ -129,13 +130,21 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
+                std::string ValueString,FullLine;
                 for (auto &value : driver->m_arDoubles)
                 {
-                    std::cout << value << " ";
+                    ValueString = fmt::format("{:10.3f}", value);
+                    FullLine += ValueString + " ";
                 };
-                std::cout << endl;
+                PrintInfo(FullLine);
                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
                 TCPServer.PushSendPackage(TCPGRam);
+
+                if (!TCPServer.IsConnected())
+                {
+                    PrintWarning("No connections, stopping");
+                    driver->ShutDown();
+                }
             }
 
             //------------------------------------------------------------------------------------------------------------------

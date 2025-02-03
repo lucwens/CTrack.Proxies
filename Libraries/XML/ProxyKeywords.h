@@ -18,6 +18,17 @@ constexpr char const *ATTRIB_CHALLENGE                          = "challenge";
 
 //------------------------------------------------------------------------------------------------------------------
 /*
+LIST OF DATA
+*/
+//------------------------------------------------------------------------------------------------------------------
+constexpr char const *ATTRIB_DATA_3D                            = "data_3d";
+constexpr char const *ATTRIB_DATA_3D_PARENTS                    = "data_3d_parents";
+constexpr char const *ATTRIB_DATA_6DOF                          = "data_6dof";
+constexpr char const *ATTRIB_DATA_PROBES                        = "data_probes";
+constexpr char const *ATTRIB_DATA_CHANNELS                      = "data_channels";
+//
+//------------------------------------------------------------------------------------------------------------------
+/*
 HARDWARE DETECTION
 */
 //------------------------------------------------------------------------------------------------------------------
@@ -56,9 +67,6 @@ CONFIGURATION DETECTION
 constexpr char const *TAG_COMMAND_CONFIGDETECT                  = "CONFIG_DETECT";
 constexpr char const *ATTRIB_PROBE_PRESENT                      = "probe_present";
 constexpr char const *ATTRIB_NUM_MARKERS                        = "num_markers";
-constexpr char const *ATTRIB_MARKER_NAMES                       = "marker_names";
-constexpr char const *ATTRIB_MARKER_PARENTS                     = "marker_parents";
-constexpr char const *ATTRIB_PROBE_SERIALS                      = "probe_serials";
 constexpr char const *ATTRIB_MODELS                             = "models";
 constexpr char const *ATTRIB_SERIALS                            = "serials";
 constexpr char const *ATTRIB_MODEL_TYPES                        = "model_types";
@@ -76,9 +84,6 @@ START / STOP
 //------------------------------------------------------------------------------------------------------------------
 constexpr char const *TAG_COMMAND_CHECKINIT                     = "CHECK_INIT";
 constexpr char const *ATTRIB_CHECKINIT_MEASFREQ                 = "meas_freq";
-constexpr char const *ATTRIB_CHECKINIT_NUM_CHANNELS             = "num_channels";
-constexpr char const *ATTRIB_CHECKINIT_CHANNELS                 = "channels";
-constexpr char const *ATTRIB_CHECKINIT_3D                       = "3d_objects";
 constexpr char const *TAG_COMMAND_SHUTDOWN                      = "SHUTDOWN";
 
 //------------------------------------------------------------------------------------------------------------------

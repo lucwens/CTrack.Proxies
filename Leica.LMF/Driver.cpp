@@ -25,7 +25,7 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     Return->SetAttribute(ATTRIB_PROBE_PRESENT, "true");
     Return->SetAttribute(ATTRIB_NUM_MARKERS, "1");
-    Return->SetAttribute(ATTRIB_MARKER_NAMES, "[marker1]");
+    Return->SetAttribute(ATTRIB_DATA_3D, "[marker1]");
 
     return Return;
 }
