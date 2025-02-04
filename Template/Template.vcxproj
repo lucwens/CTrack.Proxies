@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Utility\FileReader.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\Utility\os.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
+    <ClInclude Include="..\Libraries\Utility\FileReader.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkError.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h" />
     <ClInclude Include="..\Libraries\Utility\os.h" />
@@ -183,7 +185,6 @@
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
     <ClInclude Include="Driver.h" />
-    <ClInclude Include="Header.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

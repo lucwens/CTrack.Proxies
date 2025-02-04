@@ -130,21 +130,15 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-                std::string ValueString,FullLine;
-                for (auto &value : driver->m_arDoubles)
-                {
-                    ValueString = fmt::format("{:10.3f}", value);
-                    FullLine += ValueString + " ";
-                };
-                PrintInfo(FullLine);
+                //                 std::string ValueString, FullLine;
+                //                 for (auto &value : driver->m_arDoubles)
+                //                 {
+                //                     ValueString = fmt::format("{:10.3f}", value);
+                //                     FullLine += ValueString + " ";
+                //                 };
+                //                 PrintInfo(FullLine);
                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
                 TCPServer.PushSendPackage(TCPGRam);
-
-                if (!TCPServer.IsConnected())
-                {
-                    PrintWarning("No connections, stopping");
-                    driver->ShutDown();
-                }
             }
 
             //------------------------------------------------------------------------------------------------------------------

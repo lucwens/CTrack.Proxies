@@ -27,4 +27,8 @@ class Driver : public IDriver
     std::string              m_SimulationFile;
     std::vector<std::string> m_channelNames;
     std::vector<std::string> m_3DNames;
+
+  protected:
+    std::vector<std::vector<double>>            m_matrixData;
+    std::vector<std::vector<double>>::iterator  m_matrixDataCurrentRow;
 };
