@@ -59,6 +59,20 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
 
         // Fetch the latest frame to ensure data is available
         auto GetFrameResult = m_Client.GetFrame(); // for some reason I need to execute this twice
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        m_Client.EnableMarkerRayData();
+        m_Client.EnableSegmentData();
+        m_Client.EnableMarkerData();
+        m_Client.EnableCentroidData(); 
+        m_Client.EnableGreyscaleData();
+        m_Client.EnableCameraCalibrationData();
+
+        m_Client.EnableUnlabeledMarkerData();
+        m_Client.EnableDebugData();
+        m_Client.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        GetFrameResult      = m_Client.GetFrame(); 
         if (GetFrameResult.Result == ViconDataStreamSDK::CPP::Result::Success)
         {
             auto CameraCountResult = m_Client.GetCameraCount();
@@ -99,6 +113,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                             for (int r = 0; r < 3; r++)
                             {
                                 CameraPos4x4[r][3] = CameraPos.Translation[r];
+                                PrintInfo("CameraPos4x4[{}]: {} {} {} {}", r, CameraPos4x4[r][0], CameraPos4x4[r][1], CameraPos4x4[r][2], CameraPos4x4[r][3]);
                             }
                         }
                         CameraNames.push_back(CameraName);

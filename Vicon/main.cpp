@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
 
-    PortNumber = findPortNumber(PortNumber);
+    PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
     PrintInfo("Big loop starting");
     PrintInfo("q : quit");
