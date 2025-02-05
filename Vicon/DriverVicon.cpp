@@ -37,7 +37,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
 {
     bool                                          bPresent    = false;
     unsigned int                                  CameraCount = 0;
-    std::string                                   Result      = ATTRIB_RESULT_OK;
+    bool                                          Result      = true;
     std::string                                   FeedBack("Not present");
     std::vector<std::string>                      CameraSerials;
     std::vector<std::string>                      CameraNames;
@@ -63,7 +63,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         m_Client.EnableMarkerRayData();
         m_Client.EnableSegmentData();
         m_Client.EnableMarkerData();
-        m_Client.EnableCentroidData(); 
+        m_Client.EnableCentroidData();
         m_Client.EnableGreyscaleData();
         m_Client.EnableCameraCalibrationData();
 
@@ -72,7 +72,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         m_Client.SetStreamMode(ViconDataStreamSDK::CPP::StreamMode::ServerPush);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
-        GetFrameResult      = m_Client.GetFrame(); 
+        GetFrameResult = m_Client.GetFrame();
         if (GetFrameResult.Result == ViconDataStreamSDK::CPP::Result::Success)
         {
             auto CameraCountResult = m_Client.GetCameraCount();
@@ -129,18 +129,18 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         Disconnect();
     }
 
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, FeedBack, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NAMES, CameraNames, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_SERIALS, CameraSerials, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
 
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> DriverVicon::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
-    std::string                   Result = ATTRIB_RESULT_OK;
+    bool                          Result = true;
     std::vector<std::string>      ar6DOF;
     std::vector<std::string>      ar3D;       // belong to a 6DOF
     std::vector<std::string>      ar3DParent; // belong to a 6DOF
@@ -199,20 +199,23 @@ std::unique_ptr<TiXmlElement> DriverVicon::ConfigDetect(std::unique_ptr<TiXmlEle
         Result = "Failed to connect to Vicon DataStream";
     }
 
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_MODELS, ar6DOF, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D, ar3D, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D_PARENTS, ar3DParent, XML_WRITE);
     GetSetAttribute(ReturnXML.get(), ATTRIB_NUM_MARKERS, numUnlabeled, XML_WRITE);
+
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
 {
+    bool                          Result    = true;
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-    ReturnXML->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
     m_bRunning = true;
+
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return ReturnXML;
 }
 
@@ -224,8 +227,10 @@ bool DriverVicon::Run()
 
 std::unique_ptr<TiXmlElement> DriverVicon::ShutDown()
 {
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
-    Return->SetAttribute(ATTRIB_RESULT, ATTRIB_RESULT_OK);
-    m_bRunning = false;
-    return Return;
+    m_bRunning                              = false;
+
+    bool                          Result    = true;
+    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
+    return ReturnXML;
 }
