@@ -10,7 +10,7 @@
 
 std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
 {
-    std::string                                   Result            = ATTRIB_RESULT_OK;
+    bool                                          Result            = true;
     std::unique_ptr<TiXmlElement>                 Return            = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
     bool                                          Present           = true;
     std::string                                   Feedback          = "Found 1 camera";
@@ -49,7 +49,7 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
 
 std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
-    std::string                   Result = ATTRIB_RESULT_OK;
+    bool                          Result = true;
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
 
     std::vector<std::string> Data3D      = {"marker1", "marker2", "marker3"};
@@ -66,7 +66,8 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
 
 std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
 {
-    std::string                   Result = ATTRIB_RESULT_OK;
+    bool                          Result = true;
+    std::string                   ResultFeedback;
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
 
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
@@ -106,9 +107,9 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
     }
     catch (const std::exception &e)
     {
-        Result = ATTRIB_RESULT_NOK;
-        Result.append(" : ");
-        Result.append(e.what());
+        Result         = false;
+        ResultFeedback = e.what();
+        GetSetAttribute(Return.get(), ATTRIB_RESULT_FEEDBACK, ResultFeedback, XML_WRITE);
     }
 
     GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
@@ -136,7 +137,7 @@ bool Driver::Run()
 
 std::unique_ptr<TiXmlElement> Driver::ShutDown()
 {
-    std::string                   Result = ATTRIB_RESULT_OK;
+    bool                          Result = true;
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
 
     m_bRunning                           = false;

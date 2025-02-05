@@ -3,6 +3,8 @@
 #include "../Libraries/Driver/IDriver.h"
 #include "DataStreamClient.h"
 
+namespace VICONSDK = ViconDataStreamSDK::CPP;
+
 class DriverVicon : public IDriver
 {
   public:

@@ -5,8 +5,7 @@
 
 constexpr char const *TAG_COMMAND_QUIT                          = "QUIT";
 constexpr char const *ATTRIB_RESULT                             = "result";
-constexpr char const *ATTRIB_RESULT_OK                          = "ok";
-constexpr char const *ATTRIB_RESULT_NOK                         = "NOT ok";
+constexpr char const *ATTRIB_RESULT_FEEDBACK                    = "feedback";
 
 //------------------------------------------------------------------------------------------------------------------
 /*

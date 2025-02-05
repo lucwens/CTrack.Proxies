@@ -148,7 +148,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32;DISABLE_HANDSHAKE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>Default</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -183,9 +183,10 @@
     <ClCompile Include="DriverVicon.cpp" />
     <ClCompile Include="main.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
@@ -210,6 +211,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf" />
+    <None Include="D:\Dropbox\C-Tech\Devices\Vicon\DOC\Vicon Tracker User Guide.pdf" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib" />

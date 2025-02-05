@@ -9,7 +9,7 @@
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
 
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
 #include "../../CTrack_Data/ProxyHandshake.h"
 #endif
 
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_HANDSHAKE)
                 {
-#ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
                     Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
 #endif
                 }
