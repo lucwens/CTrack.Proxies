@@ -163,10 +163,10 @@ int main(int argc, char *argv[])
                         break;
                     case 's':
                     {
-                        double AcquisitionRate(1.0);
-                        Command = TAG_COMMAND_CHECKINIT;
-                        std::cout << "Enter the measurement frequency" << endl;
-                        cin >> AcquisitionRate;
+                        double AcquisitionRate(50.0);
+                        Command       = TAG_COMMAND_CHECKINIT;
+                        //                         std::cout << "Enter the measurement frequency" << endl;
+                        //                         cin >> AcquisitionRate;
                         TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
                         if (TCP_XML_Input)
                         {

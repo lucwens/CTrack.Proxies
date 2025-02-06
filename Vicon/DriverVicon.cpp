@@ -22,6 +22,7 @@ bool DriverVicon::Connect()
     m_Client.EnableCentroidData();
     m_Client.EnableMarkerRayData();
     m_Client.EnableMarkerData();
+    m_Client.EnableSegmentData();
     m_Client.EnableUnlabeledMarkerData();
     m_Client.SetStreamMode(VICONSDK::StreamMode::ServerPush);
     m_Client.SetAxisMapping(VICONSDK::Direction::Forward, VICONSDK::Direction::Left, VICONSDK::Direction::Up);
@@ -242,12 +243,17 @@ bool DriverVicon::Run()
                 for (unsigned int SubjectIndex = 0; SubjectIndex < subjectCount.SubjectCount; ++SubjectIndex)
                 {
                     std::string                                  SubjectName       = m_Client.GetSubjectName(SubjectIndex).SubjectName;
-                    std::string                                  RootSegment       = m_Client.GetSubjectRootSegmentName(SubjectName).SegmentName;
-                    VICONSDK::Output_GetSegmentGlobalTranslation globalTranslation = m_Client.GetSegmentGlobalTranslation(SubjectName, RootSegment);
+                    VICONSDK::Output_GetSegmentGlobalTranslation globalTranslation = m_Client.GetSegmentGlobalTranslation(SubjectName, SubjectName);
                     for (int i = 0; i < 3; i++)
+                    {
                         m_arValues.push_back(globalTranslation.Translation[i]);
+                    }
+#ifdef _DEBUG
+                    PrintInfo("6DOF:{} {:.2f} {:.2f} {:.2f}", SubjectName, globalTranslation.Translation[0], globalTranslation.Translation[1],
+                              globalTranslation.Translation[2]);
+#endif
 
-                    VICONSDK::Output_GetSegmentGlobalRotationMatrix globalRotationMatrix = m_Client.GetSegmentGlobalRotationMatrix(SubjectName, RootSegment);
+                    VICONSDK::Output_GetSegmentGlobalRotationMatrix globalRotationMatrix = m_Client.GetSegmentGlobalRotationMatrix(SubjectName, SubjectName);
                     for (int i = 0; i < 9; i++)
                         m_arValues.push_back(globalRotationMatrix.Rotation[i]);
 
@@ -259,7 +265,13 @@ bool DriverVicon::Run()
                         std::string                                 MarkerParentName     = m_Client.GetMarkerParentName(SubjectName, MarkerName).SegmentName;
                         VICONSDK::Output_GetMarkerGlobalTranslation markerGlobalPosition = m_Client.GetMarkerGlobalTranslation(MarkerParentName, MarkerName);
                         for (int i = 0; i < 3; i++)
+                        {
                             m_arValues.push_back(markerGlobalPosition.Translation[i]);
+                        }
+#ifdef _DEBUG
+                        PrintInfo("6DOF 3D:{} {:.2f} {:.2f} {:.2f}", MarkerName, markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
+                                  markerGlobalPosition.Translation[2]);
+#endif
                     }
                 }
 
@@ -267,9 +279,13 @@ bool DriverVicon::Run()
                 VICONSDK::Output_GetUnlabeledMarkerCount output_GetUnlabeledMarkerCount = m_Client.GetUnlabeledMarkerCount();
                 for (unsigned int MarkerIndex = 0; MarkerIndex < output_GetUnlabeledMarkerCount.MarkerCount; ++MarkerIndex)
                 {
-                    VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalTranslation = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
+                    VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalPosition = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
                     for (int i = 0; i < 3; i++)
-                        m_arValues.push_back(markerGlobalTranslation.Translation[i]);
+                        m_arValues.push_back(markerGlobalPosition.Translation[i]);
+#ifdef _DEBUG
+                    PrintInfo("Unlabeled : {:.2f} {:.2f} {:.2f}", markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
+                              markerGlobalPosition.Translation[2]);
+#endif
                 }
             }
         }
