@@ -64,6 +64,14 @@ CONFIGURATION DETECTION
 */
 //------------------------------------------------------------------------------------------------------------------
 constexpr char const *TAG_COMMAND_CONFIGDETECT                  = "CONFIG_DETECT";
+constexpr char const *TAG_CONFIG_MARKER                         = "MARKER";
+constexpr char const *TAG_CONFIG_6DOF                           = "OBJECT6DOF";
+constexpr char const *TAG_CONFIG_PROBE                          = "PROBE";
+
+constexpr char const *ATTRIB_CONFIG_NAME                        = "name";
+constexpr char const *ATTRIB_CONFIG_ORIENT_CONVENTION           = "orient_convention";
+constexpr char const *ATTRIB_CONFIG_RESIDU                      = "residu";
+constexpr char const *ATTRIB_CONFIG_BUTTONS                     = "buttons";
 constexpr char const *ATTRIB_PROBE_PRESENT                      = "probe_present";
 constexpr char const *ATTRIB_NUM_MARKERS                        = "num_markers";
 constexpr char const *ATTRIB_MODELS                             = "models";

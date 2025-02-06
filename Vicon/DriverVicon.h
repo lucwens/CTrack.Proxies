@@ -24,4 +24,6 @@ class DriverVicon : public IDriver
     ViconDataStreamSDK::CPP::Client m_Client;
     double                          m_MeasurementFrequencyHz = 10.0;
     bool                            m_bRunning               = false;
+    unsigned int                    m_LastFrameNumber        = 0;
+    std::vector<double>             m_arValues;
 };

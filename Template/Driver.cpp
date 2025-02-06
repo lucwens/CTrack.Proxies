@@ -47,21 +47,89 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     return Return;
 }
 
+/* return of Configdetect
+<CONFIG_DETECT result="true">
+    <6DOF name="6dof" orient_convention="3x3" residu="false">
+        <MARKER name="6dof1" />
+        <MARKER name="6dof2" />
+        <MARKER name="6dof3" />
+    </6DOF>
+    <PROBE name="probe" orient_convention="3x3" residu="false" buttons="true">
+        <MARKER name="probe1" />
+        <MARKER name="probe2" />
+        <MARKER name="probe3" />
+        <MARKER name="probe4" />
+    </PROBE>
+    <MARKER name="marker1" />
+    <MARKER name="marker2" />
+    <MARKER name="marker3" />
+</CONFIG_DETECT>
+*/
+
 std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
-    bool                          Result = true;
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+    bool                          Result       = true;
+    std::unique_ptr<TiXmlElement> ReturnXML    = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
 
-    std::vector<std::string> Data3D      = {"marker1", "marker2", "marker3"};
-    std::vector<std::string> Data6DOF    = {};
-    std::vector<std::string> DataProbes  = {};
+    //
+    // data provided by the hardware
+    std::vector<std::string> Data3D            = {"marker1", "marker2", "marker3"};
+    std::vector<std::string> Data6DOF          = {"6dof"};
+    std::vector<std::string> Data6DOF_Markers  = {"6dof1", "6dof2", "6dof3"};
+    std::vector<std::string> DataProbes        = {"probe"};
+    std::vector<std::string> DataProbesMarkers = {
+        "probe1",
+        "probe2",
+        "probe3",
+        "probe4",
+    };
+    std::string orient_convention = "3x3"; // for the 6DOF and the probe
+    bool        hasResidu         = false; // for the 6DOF and the probe
+    bool        hasButtons        = true;  // for the probe
 
-    GetSetAttribute(Return.get(), ATTRIB_DATA_3D, Data3D, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_DATA_6DOF, Data6DOF, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_DATA_PROBES, DataProbes, XML_WRITE);
+    //
+    // Add 6DOF
+    TiXmlElement *p6DOF           = new TiXmlElement(TAG_CONFIG_6DOF);
+    GetSetAttribute(p6DOF, ATTRIB_CONFIG_NAME, Data6DOF[0], XML_WRITE);
+    GetSetAttribute(p6DOF, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
+    GetSetAttribute(p6DOF, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
+    ReturnXML->LinkEndChild(p6DOF);
+    for (auto &marker : Data6DOF_Markers)
+    {
+        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
+        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
+        p6DOF->LinkEndChild(pMarker);
+    }
 
-    GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return Return;
+    //
+    // Add Probe
+    TiXmlElement *pProbes = new TiXmlElement(TAG_CONFIG_PROBE);
+    GetSetAttribute(pProbes, ATTRIB_CONFIG_NAME, DataProbes[0], XML_WRITE);
+    GetSetAttribute(pProbes, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
+    GetSetAttribute(pProbes, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
+    GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, hasButtons, XML_WRITE);
+    ReturnXML->LinkEndChild(pProbes);
+    for (auto &marker : DataProbesMarkers)
+    {
+        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
+        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
+        pProbes->LinkEndChild(pMarker);
+    }
+
+    //
+    // Add 3D
+    for (auto &marker : Data3D)
+    {
+        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
+        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
+        ReturnXML->LinkEndChild(pMarker);
+    }
+
+    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
+
+    std::string XMLString = XMLToString(ReturnXML.get());
+
+    return ReturnXML;
 }
 
 std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
