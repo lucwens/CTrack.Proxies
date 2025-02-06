@@ -212,8 +212,9 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
     bool                          Result    = true;
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
-    m_bRunning        = true;
-    m_LastFrameNumber = 0;
+    m_bRunning           = true;
+    m_LastFrameNumber    = 0;
+    m_InitialFrameNumber = 0;
 
     if (!Connect())
     {
@@ -229,14 +230,23 @@ bool DriverVicon::Run()
     if (m_bRunning)
     {
         m_arValues.clear();
-        if (m_Client.GetFrame().Result == VICONSDK::Result::Success)
+        auto FrameResult = m_Client.GetFrame();
+        if (FrameResult.Result == VICONSDK::Result::Success)
         {
             VICONSDK::Output_GetFrameNumber         currentFrameNumber  = m_Client.GetFrameNumber();
             VICONSDK::Output_GetHardwareFrameNumber hardwareFrameNumber = m_Client.GetHardwareFrameNumber();
-            if (m_LastFrameNumber = currentFrameNumber.FrameNumber)
+            if (m_LastFrameNumber != currentFrameNumber.FrameNumber)
             {
-                VICONSDK::Output_GetFrameRate Rate            = m_Client.GetFrameRate();
-                VICONSDK::Output_GetTimecode  timecode        = m_Client.GetTimecode();
+                m_LastFrameNumber = currentFrameNumber.FrameNumber;
+                if (m_InitialFrameNumber == 0)
+                {
+                    m_InitialFrameNumber = m_LastFrameNumber;
+                }
+
+                VICONSDK::Output_GetFrameRate Rate         = m_Client.GetFrameRate();
+                VICONSDK::Output_GetTimecode  timecode     = m_Client.GetTimecode();
+                double                        RelativeTime = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
+                m_arValues.push_back(RelativeTime);
 
                 // get 6DOF data
                 VICONSDK::Output_GetSubjectCount subjectCount = m_Client.GetSubjectCount();
@@ -248,7 +258,7 @@ bool DriverVicon::Run()
                     {
                         m_arValues.push_back(globalTranslation.Translation[i]);
                     }
-#ifdef _DEBUG
+#ifdef DISABLE_HANDSHAKE
                     PrintInfo("6DOF:{} {:.2f} {:.2f} {:.2f}", SubjectName, globalTranslation.Translation[0], globalTranslation.Translation[1],
                               globalTranslation.Translation[2]);
 #endif
@@ -268,7 +278,7 @@ bool DriverVicon::Run()
                         {
                             m_arValues.push_back(markerGlobalPosition.Translation[i]);
                         }
-#ifdef _DEBUG
+#ifdef DISABLE_HANDSHAKE
                         PrintInfo("6DOF 3D:{} {:.2f} {:.2f} {:.2f}", MarkerName, markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
                                   markerGlobalPosition.Translation[2]);
 #endif
@@ -282,12 +292,18 @@ bool DriverVicon::Run()
                     VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalPosition = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
                     for (int i = 0; i < 3; i++)
                         m_arValues.push_back(markerGlobalPosition.Translation[i]);
-#ifdef _DEBUG
+#ifdef DISABLE_HANDSHAKE
                     PrintInfo("Unlabeled : {:.2f} {:.2f} {:.2f}", markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
                               markerGlobalPosition.Translation[2]);
 #endif
                 }
             }
+        }
+        else
+        {
+            m_bRunning    = false;
+            int ErrorCode = FrameResult.Result;
+            // no error information available
         }
     }
     return m_bRunning;

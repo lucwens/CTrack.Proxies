@@ -25,5 +25,6 @@ class DriverVicon : public IDriver
     double                          m_MeasurementFrequencyHz = 10.0;
     bool                            m_bRunning               = false;
     unsigned int                    m_LastFrameNumber        = 0;
+    unsigned int                    m_InitialFrameNumber            = 0;
     std::vector<double>             m_arValues;
 };
