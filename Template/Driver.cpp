@@ -66,6 +66,23 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
 </CONFIG_DETECT>
 */
 
+void AMT(std::vector<std::string> &Data3D, std::vector<std::string> &Data6DOF, std::vector<std::string> &Data6DOF_Markers, std::vector<std::string> &DataProbes,
+         std::vector<std::string> &DataProbesMarkers)
+{
+    Data3D.clear();
+    Data6DOF.clear();
+    Data6DOF_Markers.clear();
+    DataProbes.clear();
+    DataProbesMarkers.clear();
+
+    Data6DOF.push_back("MSP");
+    for (int i = 0; i < 25; i++)
+    {
+        std::string MarkerName = fmt::format("MSP{}", i);
+        Data6DOF_Markers.push_back(MarkerName);
+    }
+}
+
 std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
 {
     bool                          Result       = true;
@@ -87,33 +104,40 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     bool        hasResidu         = false; // for the 6DOF and the probe
     bool        hasButtons        = true;  // for the probe
 
+    AMT(Data3D, Data6DOF, Data6DOF_Markers, DataProbes, DataProbesMarkers);
     //
     // Add 6DOF
-    TiXmlElement *p6DOF           = new TiXmlElement(TAG_CONFIG_6DOF);
-    GetSetAttribute(p6DOF, ATTRIB_CONFIG_NAME, Data6DOF[0], XML_WRITE);
-    GetSetAttribute(p6DOF, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
-    GetSetAttribute(p6DOF, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
-    ReturnXML->LinkEndChild(p6DOF);
-    for (auto &marker : Data6DOF_Markers)
+    if (Data6DOF.size() > 0)
     {
-        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
-        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
-        p6DOF->LinkEndChild(pMarker);
+        TiXmlElement *p6DOF = new TiXmlElement(TAG_CONFIG_6DOF);
+        GetSetAttribute(p6DOF, ATTRIB_CONFIG_NAME, Data6DOF[0], XML_WRITE);
+        GetSetAttribute(p6DOF, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
+        GetSetAttribute(p6DOF, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
+        ReturnXML->LinkEndChild(p6DOF);
+        for (auto &marker : Data6DOF_Markers)
+        {
+            TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
+            GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
+            p6DOF->LinkEndChild(pMarker);
+        }
     }
 
     //
     // Add Probe
-    TiXmlElement *pProbes = new TiXmlElement(TAG_CONFIG_PROBE);
-    GetSetAttribute(pProbes, ATTRIB_CONFIG_NAME, DataProbes[0], XML_WRITE);
-    GetSetAttribute(pProbes, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
-    GetSetAttribute(pProbes, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
-    GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, hasButtons, XML_WRITE);
-    ReturnXML->LinkEndChild(pProbes);
-    for (auto &marker : DataProbesMarkers)
+    if (DataProbes.size() > 0)
     {
-        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
-        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
-        pProbes->LinkEndChild(pMarker);
+        TiXmlElement *pProbes = new TiXmlElement(TAG_CONFIG_PROBE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_NAME, DataProbes[0], XML_WRITE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, hasButtons, XML_WRITE);
+        ReturnXML->LinkEndChild(pProbes);
+        for (auto &marker : DataProbesMarkers)
+        {
+            TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
+            GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
+            pProbes->LinkEndChild(pMarker);
+        }
     }
 
     //
@@ -139,9 +163,11 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
     std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
 
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_SIM_FILEPATH, m_SimulationFile, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_DATA_CHANNELS, m_channelNames, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_DATA_3D, m_3DNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_SIM_FILEPATH, m_simulationFile, XML_READ);
+
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DNAMES, m_3DNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELNAMES, m_channelNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DINDICES, m_3DIndices, XML_READ);
 
     try
     {
@@ -152,11 +178,11 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
             throw std::runtime_error(message);
         }
 
-        m_matrixData = FileReader::ReadNumbersFromFile(m_SimulationFile);
+        m_matrixData = FileReader::ReadNumbersFromFile(m_simulationFile);
         size_t nCols, nRows = m_matrixData.size();
         if (nRows == 0)
         {
-            std::string message = fmt::format("No data read from file : {}", m_SimulationFile);
+            std::string message = fmt::format("No data read from file : {}", m_simulationFile);
             throw std::runtime_error(message);
         }
 

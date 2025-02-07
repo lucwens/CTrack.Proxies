@@ -3,8 +3,7 @@
 #include <vector>
 #include <string>
 
-class FileReader
+namespace FileReader
 {
-  public:
-    static std::vector<std::vector<double>> ReadNumbersFromFile(const std::string &filename);
+    std::vector<std::vector<double>> ReadNumbersFromFile(const std::string &filename, const std::string &delimiters = ";|,\\s");
 };

@@ -92,6 +92,9 @@ START / STOP
 constexpr char const *TAG_COMMAND_CHECKINIT                     = "CHECK_INIT";
 constexpr char const *ATTRIB_CHECKINIT_MEASFREQ                 = "meas_freq";
 constexpr char const *TAG_COMMAND_SHUTDOWN                      = "SHUTDOWN";
+constexpr char const *ATTRIB_CHECKINIT_3DNAMES                  = "_3d_names";
+constexpr char const *ATTRIB_CHECKINIT_3DINDICES                = "_3d_indices";
+constexpr char const *ATTRIB_CHECKINIT_CHANNELNAMES             = "channel_names";
 
 //------------------------------------------------------------------------------------------------------------------
 /*

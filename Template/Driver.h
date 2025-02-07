@@ -24,11 +24,12 @@ class Driver : public IDriver
     double                   m_TimeStep               = 0.0;
     bool                     m_bRunning               = false;
     std::vector<double>      m_arDoubles;
-    std::string              m_SimulationFile;
-    std::vector<std::string> m_channelNames;
+    std::string              m_simulationFile;
     std::vector<std::string> m_3DNames;
+    std::vector<int>         m_3DIndices;
+    std::vector<std::string> m_channelNames;
 
   protected:
-    std::vector<std::vector<double>>            m_matrixData;
-    std::vector<std::vector<double>>::iterator  m_matrixDataCurrentRow;
+    std::vector<std::vector<double>>           m_matrixData;
+    std::vector<std::vector<double>>::iterator m_matrixDataCurrentRow;
 };
