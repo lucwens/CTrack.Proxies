@@ -14,6 +14,7 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     std::unique_ptr<TiXmlElement>                 Return            = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
     bool                                          Present           = true;
     std::string                                   Feedback          = "Found 1 camera";
+    std::string                                   Serial            = "123456789";
     std::vector<std::string>                      SubTrackerNames   = {"Tracker1", "Tracker2"};
     std::vector<std::string>                      SubTrackerSerials = {"123", "456"};
     std::vector<std::string>                      IPAddresses       = {"127.0.0.1"};
@@ -36,6 +37,7 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     }
 
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_PRESENT, Present, XML_WRITE);
+    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIAL, Serial, XML_WRITE);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, Feedback, XML_WRITE);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_NAMES, SubTrackerNames, XML_WRITE);
     GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIALS, SubTrackerSerials, XML_WRITE);
@@ -91,8 +93,8 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     //
     // data provided by the hardware
     std::vector<std::string> Data3D            = {"marker1", "marker2", "marker3"};
-    std::vector<std::string> Data6DOF          = {"6dof"};
-    std::vector<std::string> Data6DOF_Markers  = {"6dof1", "6dof2", "6dof3"};
+    std::vector<std::string> Data6DOF          = {}; //{"6dof"};
+    std::vector<std::string> Data6DOF_Markers  = {}; //{"6dof1", "6dof2", "6dof3"};
     std::vector<std::string> DataProbes        = {"probe"};
     std::vector<std::string> DataProbesMarkers = {
         "probe1",
@@ -102,11 +104,12 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     };
     std::string orient_convention = "3x3"; // for the 6DOF and the probe
     bool        hasResidu         = false; // for the 6DOF and the probe
-    bool        hasButtons        = true;  // for the probe
+    int         numButtons        = 4;     // for the probe
+    bool        hasTipDiameter    = false; // for the probe
 
-    AMT(Data3D, Data6DOF, Data6DOF_Markers, DataProbes, DataProbesMarkers);
+    // AMT(Data3D, Data6DOF, Data6DOF_Markers, DataProbes, DataProbesMarkers);
     //
-    // Add 6DOF
+    //  Add 6DOF
     if (Data6DOF.size() > 0)
     {
         TiXmlElement *p6DOF = new TiXmlElement(TAG_CONFIG_6DOF);
@@ -130,7 +133,8 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
         GetSetAttribute(pProbes, ATTRIB_CONFIG_NAME, DataProbes[0], XML_WRITE);
         GetSetAttribute(pProbes, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
         GetSetAttribute(pProbes, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, hasButtons, XML_WRITE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, numButtons, XML_WRITE);
+        GetSetAttribute(pProbes, ATTRIB_CONFIG_TIP_DIAMETER, hasTipDiameter, XML_WRITE);
         ReturnXML->LinkEndChild(pProbes);
         for (auto &marker : DataProbesMarkers)
         {
@@ -156,6 +160,19 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
     return ReturnXML;
 }
 
+int Driver::FindChannelTypeIndex(const int Value)
+{
+    auto it = std::find(m_channelTypes.begin(), m_channelTypes.end(), Value);
+    if (it != m_channelTypes.end())
+    {
+        return std::distance(m_channelTypes.begin(), it);
+    }
+    else
+    {
+        return -1; // Return -1 if the value 1 is not found
+    }
+}
+
 std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
 {
     bool                          Result = true;
@@ -167,6 +184,8 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
 
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DNAMES, m_3DNames, XML_READ);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELNAMES, m_channelNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELTYPES, m_channelTypes, XML_READ);
+
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DINDICES, m_3DIndices, XML_READ);
 
     try
@@ -194,10 +213,13 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
         }
 
         m_arDoubles.resize(m_channelNames.size(), NAN);
-        m_bRunning             = true;
-        m_TimeStep             = 1.0 / m_MeasurementFrequencyHz;
-        m_arDoubles[0]         = 0.0;
-        m_matrixDataCurrentRow = m_matrixData.begin();
+        m_bRunning              = true;
+        m_TimeStep              = 1.0 / m_MeasurementFrequencyHz;
+        m_arDoubles[0]          = 0.0;
+        m_matrixDataCurrentRow  = m_matrixData.begin();
+        m_ButtonChannelIndex    = FindChannelTypeIndex(ChannelTypeButton);
+        m_ButtonTriggerPressed  = false;
+        m_ButtonValidatePressed = false;
     }
     catch (const std::exception &e)
     {
@@ -220,6 +242,24 @@ bool Driver::Run()
         {
             m_arDoubles[i] = (*m_matrixDataCurrentRow)[i];
         }
+        // handle buttons
+        if (m_ButtonChannelIndex != -1)
+        {
+            T_ProbeButton ButtonState;
+            if (m_ButtonTriggerPressed)
+            {
+                m_ButtonTriggerPressed = false;
+                ButtonState.Set(0 /*button channel*/, 1 /*value*/);
+            }
+            if (m_ButtonValidatePressed)
+            {
+                m_ButtonValidatePressed = false;
+                ButtonState.Set(1, 1);
+            }
+            m_arDoubles[m_ButtonChannelIndex] = ButtonState.DoubleVal;
+        }
+
+        // next row of data
         m_matrixDataCurrentRow++;
         if (m_matrixDataCurrentRow == m_matrixData.end())
         {

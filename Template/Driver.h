@@ -20,6 +20,11 @@ class Driver : public IDriver
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
+    void PressTriggerButton() { m_ButtonTriggerPressed = true; };
+    void PressValidateButton() { m_ButtonValidatePressed = true; };
+    int  FindChannelTypeIndex(const int Value);
+
+  public:
     double                   m_MeasurementFrequencyHz = 10.0;
     double                   m_TimeStep               = 0.0;
     bool                     m_bRunning               = false;
@@ -28,8 +33,14 @@ class Driver : public IDriver
     std::vector<std::string> m_3DNames;
     std::vector<int>         m_3DIndices;
     std::vector<std::string> m_channelNames;
+    std::vector<int>         m_channelTypes;
 
   protected:
     std::vector<std::vector<double>>           m_matrixData;
     std::vector<std::vector<double>>::iterator m_matrixDataCurrentRow;
+
+  protected:
+    int  m_ButtonChannelIndex    = -1;
+    bool m_ButtonTriggerPressed  = false;
+    bool m_ButtonValidatePressed = false;
 };

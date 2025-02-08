@@ -177,6 +177,12 @@ int main(int argc, char *argv[])
                     case 't':
                         Command = TAG_COMMAND_SHUTDOWN;
                         break;
+                    case 'p':
+                        driver->PressTriggerButton();
+                        break;
+                    case 'v':
+                        driver->PressValidateButton();
+                        break;
                 }
             }
         }

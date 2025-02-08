@@ -72,6 +72,7 @@ constexpr char const *ATTRIB_CONFIG_NAME                        = "name";
 constexpr char const *ATTRIB_CONFIG_ORIENT_CONVENTION           = "orient_convention";
 constexpr char const *ATTRIB_CONFIG_RESIDU                      = "residu";
 constexpr char const *ATTRIB_CONFIG_BUTTONS                     = "buttons";
+constexpr char const *ATTRIB_CONFIG_TIP_DIAMETER                = "tip_diameter";
 constexpr char const *ATTRIB_PROBE_PRESENT                      = "probe_present";
 constexpr char const *ATTRIB_NUM_MARKERS                        = "num_markers";
 constexpr char const *ATTRIB_MODELS                             = "models";
@@ -95,6 +96,11 @@ constexpr char const *TAG_COMMAND_SHUTDOWN                      = "SHUTDOWN";
 constexpr char const *ATTRIB_CHECKINIT_3DNAMES                  = "_3d_names";
 constexpr char const *ATTRIB_CHECKINIT_3DINDICES                = "_3d_indices";
 constexpr char const *ATTRIB_CHECKINIT_CHANNELNAMES             = "channel_names";
+constexpr char const *ATTRIB_CHECKINIT_CHANNELTYPES             = "channel_types";
+
+constexpr int ChannelTypeNormal                                 = 0;
+constexpr int ChannelTypeButton                                 = 1;
+constexpr int ChannelTypeTime                                   = 2;
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -109,18 +115,39 @@ enum ERunState
     STATE_ERROR
 };
 
-constexpr char const *TAG_STATE_ERROR                 = "ERROR";
-constexpr char const *ATTRIB_STATE                    = "state";
-constexpr char const *STATE_STRING_IDLE               = "IDLE";
-constexpr char const *STATE_STRING_RUNNING            = "RUNNING";
-constexpr char const *STATE_STRING_ERROR              = "ERROR";
-constexpr char const *ATTRIB_MESSAGE                  = "message";
+constexpr char const *TAG_STATE_ERROR      = "ERROR";
+constexpr char const *ATTRIB_STATE         = "state";
+constexpr char const *STATE_STRING_IDLE    = "IDLE";
+constexpr char const *STATE_STRING_RUNNING = "RUNNING";
+constexpr char const *STATE_STRING_ERROR   = "ERROR";
+constexpr char const *ATTRIB_MESSAGE       = "message";
 
 //------------------------------------------------------------------------------------------------------------------
 /*
 BUTTON VALUES
 */
 //------------------------------------------------------------------------------------------------------------------
+
+/*
+we have 8 bytes, so 64 bits in total, we need 2 bits to store the above states, so we can have 64/2=32 buttons
+*/
+
+union T_ProbeButton
+{
+    T_ProbeButton() { Reset(); };
+    void Reset() { memset(&Int64Value, 0, sizeof(double)); };
+    void Set(int ButtonIndex, int Value)
+    {
+        unsigned long long Value64 = Value;
+        Int64Value &= ~(3ull << (ButtonIndex * 2)); // first clear
+        Int64Value |= (Value64 << (ButtonIndex * 2));
+    };
+    int Get(int ButtonIndex) { return ((Int64Value >> (ButtonIndex * 2)) & 3); };
+
+    unsigned long long Int64Value;
+    double             DoubleVal;
+};
+
 constexpr double BUTTON_NONE                          = 0.0;
 constexpr double BUTTON_TRIGGER                       = 1.0;
 constexpr double BUTTON_VALIDATE                      = 2.0;
