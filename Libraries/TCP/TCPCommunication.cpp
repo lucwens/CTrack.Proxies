@@ -16,9 +16,7 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
 
-#define RECEIVEBUFFERLENGTH 65535
-#define MAX_DEBUG_TELEGRAMS 500
-char ReceiveBuffer[RECEIVEBUFFERLENGTH];
+constexpr int MAX_DEBUG_TELEGRAMS = 500;
 
 std::atomic<bool> Interrupted{false};
 
@@ -34,13 +32,13 @@ Supporting routines for the communication thread
 
 bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
 {
-    HANDLE         hIcmpFile;
-    unsigned long  ipaddr      = INADDR_NONE;
-    DWORD          dwRetVal    = 0;
-    char           SendData[]  = "Data Buffer";
-    LPVOID         ReplyBuffer = nullptr;
-    DWORD          ReplySize   = 0;
-    struct in_addr addr;
+    HANDLE            hIcmpFile;
+    unsigned long     ipaddr     = INADDR_NONE;
+    DWORD             dwRetVal   = 0;
+    char              SendData[] = "Data Buffer";
+    std::vector<char> ReplyBuffer;
+    DWORD             ReplySize = 0;
+    struct in_addr    addr;
 
     if (InetPtonA(AF_INET, ipAddress, &addr) != 1)
     {
@@ -56,18 +54,13 @@ bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
         return false;
     }
 
-    ReplySize   = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
-    ReplyBuffer = (VOID *)malloc(ReplySize);
-    if (ReplyBuffer == nullptr)
-    {
-        FeedBack = "Unable to allocate memory";
-        return false;
-    }
+    ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
+    ReplyBuffer.resize(ReplySize);
 
-    dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), nullptr, ReplyBuffer, ReplySize, iTimeout);
+    dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), nullptr, ReplyBuffer.data(), ReplySize, iTimeout);
     if (dwRetVal != 0)
     {
-        PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+        PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer.data();
         struct in_addr   ReplyAddr;
         ReplyAddr.S_un.S_addr = pEchoReply->Address;
 
@@ -76,13 +69,11 @@ bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
         FeedBack = "Received " + std::to_string(pEchoReply->DataSize) + " bytes from " + std::string(ipStr) +
                    ": icmp_seq=" + std::to_string(pEchoReply->RoundTripTime) + " ms";
 
-        free(ReplyBuffer);
         return true;
     }
     else
     {
         FeedBack = "Ping failed: " + std::to_string(GetLastError());
-        free(ReplyBuffer);
         return false;
     }
 }
@@ -220,34 +211,30 @@ std::string GetProcessNameByPID(DWORD pid)
 
 std::vector<DWORD> ListTcpConnectionsForApp(const std::string &appName)
 {
-    DWORD                   dwSize   = 0;
-    DWORD                   dwRetVal = 0;
-    std::vector<DWORD>      returnVector;
-    PMIB_TCPTABLE_OWNER_PID pTcpTable = nullptr;
+    DWORD              dwSize   = 0;
+    DWORD              dwRetVal = 0;
+    std::vector<DWORD> returnVector;
+    std::vector<char>  buffer;
 
     // Call GetExtendedTcpTable to get the size needed
-    dwRetVal                          = GetExtendedTcpTable(nullptr, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
+    dwRetVal = GetExtendedTcpTable(nullptr, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
     if (dwRetVal != ERROR_INSUFFICIENT_BUFFER)
     {
         std::cerr << "Failed to get buffer size for TCP table.\n";
         return returnVector;
     }
 
-    pTcpTable = (PMIB_TCPTABLE_OWNER_PID)malloc(dwSize);
-    if (pTcpTable == nullptr)
-    {
-        std::cerr << "Memory allocation failed.\n";
-        return returnVector;
-    }
+    buffer.resize(dwSize);
 
     // Get the TCP table
-    dwRetVal = GetExtendedTcpTable(pTcpTable, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
+    dwRetVal = GetExtendedTcpTable(reinterpret_cast<PMIB_TCPTABLE_OWNER_PID>(buffer.data()), &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_ALL, 0);
     if (dwRetVal != NO_ERROR)
     {
         std::cerr << "GetExtendedTcpTable failed with error: " << dwRetVal << "\n";
-        free(pTcpTable);
         return returnVector;
     }
+
+    PMIB_TCPTABLE_OWNER_PID pTcpTable = reinterpret_cast<PMIB_TCPTABLE_OWNER_PID>(buffer.data());
 
     // Loop through the TCP table
     for (DWORD i = 0; i < pTcpTable->dwNumEntries; i++)
@@ -262,7 +249,7 @@ std::vector<DWORD> ListTcpConnectionsForApp(const std::string &appName)
             std::cout << "Process: " << processName << " (PID: " << pid << ") - Local Port: " << localPort << "\n";
         }
     }
-    free(pTcpTable);
+
     return returnVector;
 }
 
@@ -681,13 +668,12 @@ CSocket class
 CSocket::CSocket(SOCKET iSocket, E_COMMUNICATION_Mode iCommunicationMode, SOCKADDR_IN *ipSockAddress, int UDBroadCastPort, bool iUDPBroadcast,
                  const std::string iUDPSendToAddress)
 {
-    m_Socket              = iSocket;
-    m_CommunicationMode   = iCommunicationMode;
-    m_pSockAddress        = ipSockAddress;
-    m_CurrentTelegramSize = 0;
+    m_Socket            = iSocket;
+    m_CommunicationMode = iCommunicationMode;
+    m_pSockAddress      = ipSockAddress;
 
-    m_TotalBytesWritten   = 0;
-    m_MaxUDPMessageSize   = 0;
+    m_TotalBytesWritten = 0;
+    m_MaxUDPMessageSize = 0;
 
     ZeroMemory(&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
     if (iUDPBroadcast)
@@ -725,14 +711,39 @@ CSocket::~CSocket()
     closesocket(m_Socket);
 }
 
-void CSocket::SetNagle(bool bDisableNagle)
+void CSocket::Throw(const std::string ErrorMessage)
 {
-    int optval = (bDisableNagle ? 1 : 0);
-    if (setsockopt(m_Socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&optval, sizeof(optval)) == SOCKET_ERROR)
+    long    errval;
+    int FAR optlen = 4;
+    getsockopt(m_Socket, SOL_SOCKET, SO_ERROR, (char *)&errval, &optlen);
+    if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED)
+        throw false; // connection was closed
+    else
+        THROW_SOCKET_ERROR(ErrorMessage, errval);
+}
+
+void SetSocketOption(SOCKET socket, int level, int option, int value, const std::string &errorMessage)
+{
+    if (setsockopt(socket, level, option, (const char *)&value, sizeof(value)) == SOCKET_ERROR)
     {
         int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(("Failed to set the Nagle option"), LastError);
+        THROW_SOCKET_ERROR(errorMessage, LastError);
     }
+}
+
+void CSocket::SetNagle(bool bDisableNagle)
+{
+    SetSocketOption(m_Socket, IPPROTO_TCP, TCP_NODELAY, bDisableNagle ? 1 : 0, "Failed to set the Nagle option");
+}
+
+void CSocket::SetReuseAddress(bool bEnableReuseAddress)
+{
+    SetSocketOption(m_Socket, SOL_SOCKET, SO_REUSEADDR, bEnableReuseAddress ? 1 : 0, "Failed to set the reuse address option");
+}
+
+void CSocket::SetBroadcast(bool bEnableBroadcast)
+{
+    SetSocketOption(m_Socket, SOL_SOCKET, SO_BROADCAST, bEnableBroadcast ? 1 : 0, "Failed to set the broadcast option");
 }
 
 void CSocket::SetNonBlocking(bool bNonBlocking)
@@ -743,26 +754,6 @@ void CSocket::SetNonBlocking(bool bNonBlocking)
     {
         int LastError = WSAGetLastError();
         THROW_SOCKET_ERROR(("Failed to set non-blocking option"), LastError);
-    }
-}
-
-void CSocket::SetReuseAddress(bool bEnableReuseAddress)
-{
-    int on = (bEnableReuseAddress ? 1 : 0);
-    if (setsockopt(m_Socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&on, sizeof(on)) == SOCKET_ERROR)
-    {
-        int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(("Failed to set the reuse address option"), LastError);
-    }
-}
-
-void CSocket::SetBroadcast(bool bEnableBroadcast)
-{
-    int optval = (bEnableBroadcast ? 1 : 0);
-    if (setsockopt(m_Socket, SOL_SOCKET, SO_BROADCAST, (char *)&optval, sizeof(optval)) == SOCKET_ERROR)
-    {
-        int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(("Failed to set the broadcast option"), LastError);
     }
 }
 
@@ -780,7 +771,6 @@ int CSocket::GetMaxUDPMessageSize()
 
 bool CSocket::DataAvailable()
 {
-    long    errval;
     timeval timeout = {0, 0};
     fd_set  readfds, exceptfds;
 
@@ -799,57 +789,146 @@ bool CSocket::DataAvailable()
     selectVal = select(0, nullptr, nullptr, &exceptfds, &timeout);
     if (SOCKET_ERROR == selectVal || 0 < selectVal)
     {
-        int FAR optlen = 4;
-        getsockopt(m_Socket, SOL_SOCKET, SO_ERROR, (char *)&errval, &optlen);
-        if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED)
-            throw false; // connection was closed
-        else
-            THROW_SOCKET_ERROR(("An error occurred on the TCP network"), errval);
+        Throw("An error occurred on the TCP network");
     }
     return false;
 }
 
-void CSocket::ReadFeedBuffer()
+int CSocket::GetReadBufferSize()
 {
-    // check for data availability
-    bool     bDataAvail(false), bNetWorkError(false);
-    long FAR errval(0);
-    if (!DataAvailable())
+    u_long bytesAvailable = 0;
+    if (ioctlsocket(m_Socket, FIONREAD, &bytesAvailable) == SOCKET_ERROR)
     {
-        Sleep(1);
-        return;
+        Throw("Error getting read buffer size");
+    }
+    return static_cast<int>(bytesAvailable);
+}
+
+int CSocket::GetWriteBufferSize()
+{
+    DWORD idealSendBacklog = 0;
+    DWORD bytesReturned    = 0;
+
+    if (WSAIoctl(m_Socket, SIO_IDEAL_SEND_BACKLOG_QUERY, NULL, 0, &idealSendBacklog, sizeof(idealSendBacklog), &bytesReturned, NULL, NULL) == SOCKET_ERROR)
+    {
+        Throw("Error getting write buffer size");
     }
 
-    // read into our buffer and check connection
-    int rNumReceived = recv(m_Socket, ReceiveBuffer, RECEIVEBUFFERLENGTH, 0);
-    if ((rNumReceived == SOCKET_ERROR) || (rNumReceived == 0))
+    return static_cast<int>(idealSendBacklog);
+}
+
+void CSocket::GetSocketBufferSizes(int &recvBufSize, int &sendBufSize)
+{
+    int recvSize = sizeof(recvBufSize);
+    int sendSize = sizeof(sendBufSize);
+
+    if (getsockopt(m_Socket, SOL_SOCKET, SO_RCVBUF, (char *)&recvBufSize, &recvSize) == SOCKET_ERROR)
     {
-        int LastError = WSAGetLastError();
-        if (LastError == WSAECONNRESET || LastError == WSAENOTCONN || LastError == WSAECONNABORTED || (rNumReceived == 0))
-            throw false; // connection was closed
-        else
-            THROW_SOCKET_ERROR(("An error occurred trying to read data from the network"), LastError);
+        Throw("Error getting receive buffer size");
+    }
+
+    if (getsockopt(m_Socket, SOL_SOCKET, SO_SNDBUF, (char *)&sendBufSize, &sendSize) == SOCKET_ERROR)
+    {
+        Throw("Error getting send buffer size");
+    }
+}
+
+void CSocket::SetSocketBufferSizes(int newRecvSize, int newSendSize)
+{
+    if (setsockopt(m_Socket, SOL_SOCKET, SO_RCVBUF, (char *)&newRecvSize, sizeof(newRecvSize)) == SOCKET_ERROR)
+    {
+        std::cerr << "Error setting receive buffer size: " << WSAGetLastError() << std::endl;
     }
     else
     {
-        std::vector<std::uint8_t> appendBuffer(ReceiveBuffer, ReceiveBuffer + rNumReceived);
-        AppendBack(m_AccumulationBuffer, appendBuffer);
+        std::cout << "Receive buffer size set to: " << newRecvSize << " bytes" << std::endl;
     }
+
+    if (setsockopt(m_Socket, SOL_SOCKET, SO_SNDBUF, (char *)&newSendSize, sizeof(newSendSize)) == SOCKET_ERROR)
+    {
+        std::cerr << "Error setting send buffer size: " << WSAGetLastError() << std::endl;
+    }
+    else
+    {
+        std::cout << "Send buffer size set to: " << newSendSize << " bytes" << std::endl;
+    }
+}
+
+int CSocket::TCPReceiveChunk(TReceiveBuffer &context, int length, bool block)
+{
+    int rNumReceived = 0;
+    while (context.m_TotalReceived < length)
+    {
+        rNumReceived = recv(m_Socket, context.m_pBuffer + context.m_TotalReceived, context.m_BytesLeft, 0);
+
+        if ((rNumReceived == SOCKET_ERROR) || (rNumReceived == 0))
+        {
+            int LastError = WSAGetLastError();
+
+            if (WSAGetLastError() == WSAEWOULDBLOCK)
+            {
+                if (block)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Sleep for a short while (10 ms)
+                else
+                    return 0; // Non-blocking mode, return with partial data
+            }
+            else
+                Throw("An error occurred trying to read data from the network");
+        }
+        context.m_TotalReceived += rNumReceived;
+        context.m_BytesLeft -= rNumReceived;
+        if (!block)
+            return context.m_TotalReceived; // Non-blocking mode, return with partial data
+    }
+    return context.m_TotalReceived;
+}
+
+bool CSocket::TCPReceiveMessage(TReceiveBuffer &context)
+{
+    if (context.m_pBuffer == nullptr)
+    {
+        // Initialize the context for receiving the header
+        context.m_pBuffer       = reinterpret_cast<char *>(&m_MessageHeader);
+        context.m_BytesLeft     = m_MessageHeader.GetHeaderSize();
+        context.m_TotalReceived = 0;
+        context.m_MessageLength = 0;
+    }
+
+    // Receive the header first
+    if (context.m_MessageLength == 0)
+    {
+        if (TCPReceiveChunk(context, m_MessageHeader.GetHeaderSize(), false) == SOCKET_ERROR)
+            return false; // Error
+
+        if (context.m_TotalReceived < m_MessageHeader.GetHeaderSize())
+            return false; // Header not fully received in non-blocking mode
+
+        // Allocate buffer for the message
+        m_Data.resize(m_MessageHeader.GetPayloadSize());
+        context.m_pBuffer       = reinterpret_cast<char *>(m_Data.data());
+        context.m_BytesLeft     = m_MessageHeader.GetPayloadSize();
+        context.m_TotalReceived = 0;
+    }
+
+    // Receive the message
+    if (TCPReceiveChunk(context, context.m_MessageLength, false) == SOCKET_ERROR)
+    {
+        m_MessageHeader.Reset();
+        m_Data.clear();
+        context.Reset();
+        return false; // Error
+    }
+    if (context.m_TotalReceived == context.m_MessageLength)
+        context.m_bComplete = true;
+    return context.m_bComplete;
 }
 
 bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    if (m_AccumulationBuffer.empty())
-        return false; // nothing in the buffer
-
-    if (m_CurrentTelegramSize == 0 && m_AccumulationBuffer.size() >= TCPGRAM_HEADER_SIZE) // start of a new telegram
-        m_CurrentTelegramSize = GetSize(m_AccumulationBuffer);
-
-    if (m_AccumulationBuffer.size() >= m_CurrentTelegramSize) // new telegram ready
+    if (TCPReceiveMessage(m_ReceiveBuffer))
     {
-        std::vector<std::uint8_t> telegramData = RemoveFront(m_AccumulationBuffer, m_CurrentTelegramSize);
-        ReturnTCPGram.reset(new CTCPGram(telegramData));
-        m_CurrentTelegramSize = 0;
+        ReturnTCPGram.reset(new CTCPGram(m_MessageHeader, m_Data));
+        m_ReceiveBuffer.Reset();
         return true;
     }
     return false;
@@ -869,7 +948,8 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         case TCP_CLIENT:
         case TCP_SERVER:
         {
-            // try to send as much as possible
+            // write header
+            // write payload as much as possible
             int NumBytesWritten = send(m_Socket, reinterpret_cast<const char *>(rTCPGram->m_Data.data()), static_cast<int>(rTCPGram->m_Data.size()), 0);
             if (NumBytesWritten != SOCKET_ERROR)
             {
@@ -882,11 +962,7 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
             }
             else // if the connection was closed, then remove the socket from the array
             {
-                int LastError = WSAGetLastError();
-                if (LastError == WSAECONNRESET || LastError == WSAENOTCONN || LastError == WSAECONNABORTED)
-                    throw false; // connection was closed
-                else
-                    THROW_SOCKET_ERROR(("An error occurred trying to send data over the TCP network"), LastError);
+                Throw("An error occurred trying to send data over the TCP network");
             }
         };
         break;
@@ -902,8 +978,7 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
                                 (SOCKADDR *)&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
             if (rVal == SOCKET_ERROR)
             {
-                int LastError = WSAGetLastError();
-                THROW_SOCKET_ERROR(("An error occurred trying to send data over the UDP network"), LastError);
+                Throw("An error occurred trying to send data over the UDP network");
             }
             else
                 return (rVal == rTCPGram->m_Data.size());
@@ -911,27 +986,6 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         break;
     }
     return false;
-}
-
-void CSocket::AppendBack(std::vector<std::uint8_t> &mainBuffer, const std::vector<std::uint8_t> &appendBuffer)
-{
-    if (appendBuffer.empty())
-        return;
-
-    mainBuffer.insert(mainBuffer.end(), appendBuffer.begin(), appendBuffer.end());
-}
-
-std::vector<std::uint8_t> CSocket::RemoveFront(std::vector<std::uint8_t> &mainBuffer, unsigned long sizeToRemove)
-{
-    std::vector<std::uint8_t> returnBuffer;
-
-    if (sizeToRemove > mainBuffer.size() || sizeToRemove == 0)
-        return returnBuffer;
-
-    returnBuffer.assign(mainBuffer.begin(), mainBuffer.begin() + sizeToRemove);
-    mainBuffer.erase(mainBuffer.begin(), mainBuffer.begin() + sizeToRemove);
-
-    return returnBuffer;
 }
 
 //------------------------------------------------------------------------------------------------------------------
@@ -1374,7 +1428,6 @@ void CCommunicationThread::ThreadFunction()
             {
                 try
                 {
-                    pCurrentSocket->ReadFeedBuffer();
                     std::unique_ptr<CTCPGram> TCPGram;
                     bool                      bAvailable = pCurrentSocket->ReadExtractTelegram(TCPGram);
                     while (bAvailable)

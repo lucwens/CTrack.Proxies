@@ -74,6 +74,27 @@ enum E_COMMUNICATION_Mode
     TCP_CLIENT
 };
 
+struct TReceiveBuffer
+{
+  public:
+    TReceiveBuffer() { Reset(); }
+    void Reset()
+    {
+        m_pBuffer       = nullptr;
+        m_TotalReceived = 0;
+        m_BytesLeft     = 0;
+        m_MessageLength = 0;
+        m_bComplete     = false;
+    }
+
+  public:
+    char *m_pBuffer{nullptr};
+    int   m_TotalReceived{0};
+    int   m_BytesLeft{0};
+    int   m_MessageLength{0};
+    bool  m_bComplete{false};
+};
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 CSocket represents a single network connection and is responsible for extracting telegrams with ReadExtractTelegram
@@ -87,6 +108,7 @@ class CSocket
     CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string iUDPSendToAddress);
     virtual ~CSocket();
     SOCKET GetSocket() { return m_Socket; };
+    void   Throw(const std::string ErrorMessage);
 
   public: // socket manipulations
     void SetNagle(bool bDisableNagle = true);
@@ -95,32 +117,41 @@ class CSocket
     void SetBroadcast(bool bEnableBroadcast = true);
     int  GetMaxUDPMessageSize();
     void SetBlockWrite(bool ibBlockWrite = true) { m_bBlockWrite = ibBlockWrite; };
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    /*
+    Monitor amount of data on the stack
+    Buffer Type	Default Size	Maximum (Typical)	How to Adjust
+    Receive (SO_RCVBUF)	8 KB – 64 KB	2 MB – 16 MB (depends on system)	setsockopt()
+    Send (SO_SNDBUF)	8 KB – 64 KB	2 MB – 16 MB (depends on system)	setsockopt()
+    System Max	Controlled via registry (TcpWindowSize)	Several MB	Edit registry or netsh
+    */
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    int  GetReadBufferSize();
+    int  GetWriteBufferSize();
+    void GetSocketBufferSizes(int &recvBufSize, int &sendBufSize);
+    void SetSocketBufferSizes(int newRecvSize, int newSendSize);
 
   public:
-    virtual bool DataAvailable();  // returns true if data is available for reading, throws FALSE if connection was reset or CExceptionSocket for socket error
-    virtual void ReadFeedBuffer(); // appends read data, produces a CTCPGram when the complete package is received, throws FALSE if connection was reset or
-                                   // CExceptionSocket for socket error
+    virtual bool DataAvailable(); // returns true if data is available for reading, throws FALSE if connection was reset or CExceptionSocket for socket error
+    virtual int  TCPReceiveChunk(TReceiveBuffer &context, int length, bool block);
+    virtual bool TCPReceiveMessage(TReceiveBuffer &context);
     virtual bool ReadExtractTelegram(std::unique_ptr<CTCPGram> &); // extracts the oldest telegram from the internal buffer
     virtual void WriteSendReset();                                 // resets the write buffer index at the start of a new telegram
     virtual bool WriteSend(std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
                                                          // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
   protected:                                             // manipulation of internal buffers
-    virtual void                      AppendBack(std::vector<std::uint8_t> &mainBuffer, const std::vector<std::uint8_t> &appendBuffer);
-    virtual std::vector<std::uint8_t> RemoveFront(std::vector<std::uint8_t> &mainBuffer, unsigned long sizeToRemove);
-
-  protected: // socket and related
+  protected:                                             // socket and related
     SOCKET               m_Socket;
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     SOCKADDR_IN         *m_pSockAddress      = nullptr;
     struct sockaddr_in   m_UDPBroadCastAddr;
+    unsigned long        m_MaxUDPMessageSize = 0; // only useful for UDP to generate an exception when the datagram is bigger than allowed
 
-  protected: // read buffer
-    unsigned long m_CurrentTelegramSize =
-        0; // the size of a telegram is in the front of a message, that is set here when a new message is started for reception
-    std::vector<std::uint8_t> m_AccumulationBuffer; // buffer containing accumulated contents of the telegram
-  protected:                                        // write buffer
-    unsigned long m_TotalBytesWritten = 0;          // number of bytes written so far for the current TCPGram
-    unsigned long m_MaxUDPMessageSize = 0;          // only useful for UDP to generate an exception when the datagram is bigger than allowed
+  protected:                                   // read write buffers
+    T_MessageHeader   m_MessageHeader;         // header of the telegram
+    std::vector<char> m_Data;                  // data of the telegram
+    TReceiveBuffer    m_ReceiveBuffer;         // buffer for receiving data
+    unsigned long     m_TotalBytesWritten = 0; // number of bytes written so far for the current TCPGram            // write buffer
     bool m_bBlockWrite = false; // if true then the socket will not write, this is used so that we can send a configuration first before sending anything else
 };
 
