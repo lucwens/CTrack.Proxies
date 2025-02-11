@@ -44,6 +44,7 @@ CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 
 CTCPGram::CTCPGram(std::vector<double> &arDoubles)
 {
+    // we need to make a copy of the doubles here because we assume that the arDoubles will be re-used to set new data
     m_Destination      = ALL_DESTINATIONS;
     size_t PackageSize = static_cast<size_t>(sizeof(double) * arDoubles.size());
     m_MessageHeader.SetPayloadSize(PackageSize);
@@ -60,6 +61,15 @@ CTCPGram::CTCPGram(std::vector<char> &arBytes, unsigned char Code)
     m_MessageHeader.SetCode(Code);
     m_Data.resize(PackageSize);
     memcpy(m_Data.data(), arBytes.data(), PackageSize);
+}
+
+CTCPGram::CTCPGram(std::vector<char> &&arBytes, unsigned char Code)
+{
+    m_Destination      = ALL_DESTINATIONS;
+    size_t PackageSize = arBytes.size();
+    m_MessageHeader.SetPayloadSize(PackageSize);
+    m_MessageHeader.SetCode(Code);
+    m_Data = std::move(arBytes);
 }
 
 CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
@@ -111,6 +121,11 @@ const char *CTCPGram::GetText()
     if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
         return NULL;
     return reinterpret_cast<const char *>(m_Data.data());
+}
+
+std::vector<char> CTCPGram::GetData()
+{
+    return std::move(m_Data);
 }
 
 std::unique_ptr<TiXmlElement> CTCPGram::GetXML()

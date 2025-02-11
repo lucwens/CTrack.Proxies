@@ -40,10 +40,15 @@ int main(int argc, char *argv[])
     PrintInfo("v : simulate push validate button");
     PrintInfo("i : print info");
     PrintInfo("l : report last coordinates");
+    PrintInfo("b : send big TCP package");
 
     // startup server object
     CCommunicationObject    TCPServer;
     std::unique_ptr<Driver> driver = std::make_unique<Driver>();
+
+    TCPServer.SetOnConnectFunction([](size_t numConnections) { PrintInfo("connected : {}", numConnections); });
+    TCPServer.SetOnDisconnectFunction([](size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
@@ -75,6 +80,11 @@ int main(int argc, char *argv[])
                         }
                     };
                     break;
+                    case TCPGRAM_CODE_TEST_BIG:
+                    {
+                        std::vector<char> arChar = TCPGram->GetData();
+                        PrintInfo("Received a big packet of {} long values", arChar.size());
+                    };
                     default:
                         std::cout << "Unknown TCPgram received" << endl;
                         break;
@@ -183,6 +193,20 @@ int main(int argc, char *argv[])
                     case 'v':
                         driver->PressValidateButton();
                         break;
+                    case 'b':
+                    {
+                        size_t                     NumValues = 1000000;
+                        std::vector<unsigned long> arLong;
+                        arLong.resize(NumValues);
+                        std::generate_n(arLong.begin(), arLong.size(), [n = 1]() mutable { return n++; });
+
+                        std::vector<char> arChar;
+                        arChar.swap(*reinterpret_cast<std::vector<char> *>(&arLong));
+                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(std::move(arChar), TCPGRAM_CODE_TEST_BIG);
+                        TCPServer.PushSendPackage(TCPGRam);
+                        PrintInfo("Sending a big packet of {} long values", NumValues);
+                    };
+                    break;
                 }
             }
         }

@@ -51,9 +51,6 @@ struct T_MessageHeader
     unsigned char m_Code;
 };
 
-// decoding command XML's
-bool DecodeCommand(std::unique_ptr<TiXmlElement> &pXML, std::string &Command, std::map<std::string, std::string> &rParameters);
-
 // class CTCPGram can contain status,commands,  data
 class CTCPGram
 {
@@ -78,7 +75,15 @@ class CTCPGram
     explicit CTCPGram(TiXmlElement &rCommand, unsigned char Code);
     explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code);
     explicit CTCPGram(std::vector<double> &arDoubles);
-    explicit CTCPGram(std::vector<char> &arBytes, unsigned char Code);
+
+    // copy or move other std::vector<T>
+    //
+    // std::vector<unsigned long> arLong = {1,2,3};
+    // std::vector<char> arChar;
+    // arChar.swap(*reinterpret_cast<std::vector<char> *>(&arLong));
+    // use this technique only with std::vector since that contains continous memory
+    explicit CTCPGram(std::vector<char> &arBytes, unsigned char Code);  // makes a copy
+    explicit CTCPGram(std::vector<char> &&arBytes, unsigned char Code); // moves the data
 #ifdef _MANAGED
     CTCPGram(cliext::vector<double> arDoubles);
 #endif
@@ -94,6 +99,7 @@ class CTCPGram
     virtual unsigned char                 GetCode();
     virtual size_t                        GetSize();
     const char                           *GetText();
+    std::vector<char>                     GetData();
     virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
     virtual void                          Clear();
 

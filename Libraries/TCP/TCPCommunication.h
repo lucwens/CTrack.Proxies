@@ -182,6 +182,8 @@ class CCommunicationInterface
     bool                 ErrorOccurred();
     virtual std::string  GetError();
     virtual void         SetError(const std::string iFileName, int iLineNumber, const std::string iMessage);
+    void                 SetOnConnectFunction(ConnectResponder iFunction) { m_OnConnectFunction = iFunction; };
+    void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
 
   public:                           // CCommunicationParameters
     virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
@@ -222,6 +224,8 @@ class CCommunicationInterface
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
     std::recursive_mutex m_Mutex;       // critical section to be used with CSingleLock to protect data
+    ConnectResponder      m_OnConnectFunction{};
+    ConnectResponder     m_OnDisconnectFunction{};
 };
 
 //------------------------------------------------------------------------------------------------------------------

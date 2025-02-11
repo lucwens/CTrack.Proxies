@@ -713,10 +713,10 @@ CSocket::~CSocket()
 
 void CSocket::Throw(const std::string ErrorMessage)
 {
-    long    errval;
+    long    errval{0};
     int FAR optlen = 4;
     getsockopt(m_Socket, SOL_SOCKET, SO_ERROR, (char *)&errval, &optlen);
-    if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED)
+    if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED || errval == 0)
         throw false; // connection was closed
     else
         THROW_SOCKET_ERROR(ErrorMessage, errval);
@@ -1020,8 +1020,10 @@ void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommuni
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     m_setCommunicationObject.insert(&rCommunicationObject);
-    m_Port    = rCommunicationObject.GetPort();
-    m_PortUDP = rCommunicationObject.GetPortUDP();
+    m_Port                 = rCommunicationObject.GetPort();
+    m_PortUDP              = rCommunicationObject.GetPortUDP();
+    m_OnConnectFunction    = rCommunicationObject.m_OnConnectFunction;
+    m_OnDisconnectFunction = rCommunicationObject.m_OnDisconnectFunction;
 }
 
 void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rCommunicationObject)
@@ -1339,6 +1341,8 @@ void CCommunicationThread::ThreadFunction()
                             // callback for freshly connected sockets : send the configuration if the engine is running
                             PrintInfo("Client accepted at port " + std::to_string(PortNumber));
                             SocketAdd(ClientSocket, TCP_SERVER, &sincontrol, 0, true, false, (""));
+                            if (m_OnConnectFunction)
+                                m_OnConnectFunction(GetNumConnections());
                         }
                     }
                 };
@@ -1365,6 +1369,8 @@ void CCommunicationThread::ThreadFunction()
                         {
                             PrintInfo("TCP client connected to ", HostName, " on port ", PortNumber);
                             SocketAdd(MainSocket, TCP_CLIENT, &sincontrol, 0, false, false, (""));
+                            if (m_OnConnectFunction)
+                                m_OnConnectFunction(GetNumConnections());
                         }
                         else
                         {
@@ -1441,6 +1447,8 @@ void CCommunicationThread::ThreadFunction()
                 {
                     pCurrentSocket = SocketDeleteCurrent();
                     PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
+                    if (m_OnDisconnectFunction)
+                        m_OnDisconnectFunction(GetNumConnections());
                     if (CommunicationMode == TCP_CLIENT)
                     {
                         MainSocket = INVALID_SOCKET;
