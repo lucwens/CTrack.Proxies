@@ -72,18 +72,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
+    <IncludePath>$(IncludePath);C:\Program Files (x86)\BCGSoft\BCGControlBarPro\BCGCBPro;\Libraries\XML</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
+    <IncludePath>$(IncludePath);C:\Program Files (x86)\BCGSoft\BCGControlBarPro\BCGCBPro;\Libraries\XML</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <IncludePath>..\..\Libraries\Botan\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\Libraries\Botan\build\include;..\..\Libraries\XML;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
+    <IncludePath>..\..\Libraries\Botan\build\include;..\..\Libraries\XML;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

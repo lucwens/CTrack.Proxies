@@ -864,8 +864,7 @@ int CSocket::TCPReceiveChunk(TReceiveBuffer &context, int length, bool block)
         if ((rNumReceived == SOCKET_ERROR) || (rNumReceived == 0))
         {
             int LastError = WSAGetLastError();
-
-            if (WSAGetLastError() == WSAEWOULDBLOCK)
+            if (LastError == WSAEWOULDBLOCK)
             {
                 if (block)
                     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Sleep for a short while (10 ms)
@@ -883,54 +882,52 @@ int CSocket::TCPReceiveChunk(TReceiveBuffer &context, int length, bool block)
     return context.m_TotalReceived;
 }
 
-bool CSocket::TCPReceiveMessage(TReceiveBuffer &context)
+bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    if (context.m_pBuffer == nullptr)
+    if (m_ReceiveBuffer.m_pBuffer == nullptr)
     {
         // Initialize the context for receiving the header
-        context.m_pBuffer       = reinterpret_cast<char *>(&m_MessageHeader);
-        context.m_BytesLeft     = m_MessageHeader.GetHeaderSize();
-        context.m_TotalReceived = 0;
-        context.m_MessageLength = 0;
+        m_ReceiveBuffer.m_pBuffer       = reinterpret_cast<char *>(&m_MessageHeader);
+        m_ReceiveBuffer.m_BytesLeft     = m_MessageHeader.GetHeaderSize();
+        m_ReceiveBuffer.m_TotalReceived = 0;
+        m_ReceiveBuffer.m_MessageLength = 0;
     }
 
     // Receive the header first
-    if (context.m_MessageLength == 0)
+    if (m_ReceiveBuffer.m_MessageLength == 0)
     {
-        if (TCPReceiveChunk(context, m_MessageHeader.GetHeaderSize(), false) == SOCKET_ERROR)
+        if (TCPReceiveChunk(m_ReceiveBuffer, m_MessageHeader.GetHeaderSize(), false) == SOCKET_ERROR)
             return false; // Error
 
-        if (context.m_TotalReceived < m_MessageHeader.GetHeaderSize())
+        if (m_ReceiveBuffer.m_TotalReceived < m_MessageHeader.GetHeaderSize())
             return false; // Header not fully received in non-blocking mode
 
         // Allocate buffer for the message
         m_Data.resize(m_MessageHeader.GetPayloadSize());
-        context.m_pBuffer       = reinterpret_cast<char *>(m_Data.data());
-        context.m_BytesLeft     = m_MessageHeader.GetPayloadSize();
-        context.m_TotalReceived = 0;
+        m_ReceiveBuffer.m_pBuffer       = reinterpret_cast<char *>(m_Data.data());
+        m_ReceiveBuffer.m_BytesLeft     = m_MessageHeader.GetPayloadSize();
+        m_ReceiveBuffer.m_TotalReceived = 0;
     }
 
     // Receive the message
-    if (TCPReceiveChunk(context, context.m_MessageLength, false) == SOCKET_ERROR)
+    if (TCPReceiveChunk(m_ReceiveBuffer, m_ReceiveBuffer.m_MessageLength, false) == SOCKET_ERROR)
     {
         m_MessageHeader.Reset();
         m_Data.clear();
-        context.Reset();
+        m_ReceiveBuffer.Reset();
         return false; // Error
     }
-    if (context.m_TotalReceived == context.m_MessageLength)
-        context.m_bComplete = true;
-    return context.m_bComplete;
-}
 
-bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
-{
-    if (TCPReceiveMessage(m_ReceiveBuffer))
+    if (m_ReceiveBuffer.m_TotalReceived == m_ReceiveBuffer.m_MessageLength)
+        m_ReceiveBuffer.m_bComplete = true;
+
+    if (m_ReceiveBuffer.m_bComplete)
     {
         ReturnTCPGram.reset(new CTCPGram(m_MessageHeader, m_Data));
         m_ReceiveBuffer.Reset();
         return true;
     }
+
     return false;
 }
 
@@ -1004,7 +1001,9 @@ CCommunicationThread::CCommunicationThread()
     m_IterCurrentSocket = m_arSockets.begin();
 }
 
-CCommunicationThread::~CCommunicationThread() {}
+CCommunicationThread::~CCommunicationThread()
+{
+}
 
 void CCommunicationThread::SetQuit(bool ibQuit)
 {

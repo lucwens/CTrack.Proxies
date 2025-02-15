@@ -37,10 +37,10 @@ int DoubleArrayToText(std::vector<double> &rArray, std::string &Text);
 int TextToDoubleArray(std::vector<double> &rArray, const std::string &Text);
 
 void   MatrixToText(const std::vector<std::vector<double>> &rArray, std::string &Text);
-size_t TextToMatrix(std::vector<std::vector<double>> &rArray, const std::string &Text);
+void TextToMatrix(std::vector<std::vector<double>> &rArray, const std::string &Text);
 
 void   MatrixArrayToText(const std::vector < std::vector<std::vector<double>>> & rArray, std::string &Text);
-size_t TextToMatrixArray(std::vector < std::vector<std::vector<double>>> & rArray, const std::string &Text);
+void TextToMatrixArray(std::vector < std::vector<std::vector<double>>> & rArray, const std::string &Text);
 
 int StringArrayToText(std::vector<std::string> &StringArray, std::string &Text);
 int TextToStringArray(std::vector<std::string> &StringArray, const std::string &Text);

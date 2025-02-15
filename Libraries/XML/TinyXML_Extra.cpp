@@ -303,7 +303,7 @@ void MatrixToText(const std::vector<std::vector<double>> &iMatrix, std::string &
     Text = oss.str();
 }
 
-size_t TextToMatrix(std::vector<std::vector<double>> &rMatrix, const std::string &iText)
+void TextToMatrix(std::vector<std::vector<double>> &rMatrix, const std::string &iText)
 {
     std::istringstream rowStream(iText);
     std::string        Text;
@@ -333,8 +333,6 @@ size_t TextToMatrix(std::vector<std::vector<double>> &rMatrix, const std::string
             }
         }
     }
-
-    return numRows * numCols;
 }
 
 void MatrixArrayToText(const std::vector<std::vector<std::vector<double>>> &rMatrixArray, std::string &Text)
@@ -348,28 +346,22 @@ void MatrixArrayToText(const std::vector<std::vector<std::vector<double>>> &rMat
     Text = oss.str();
 }
 
-size_t TextToMatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
+void TextToMatrixArray(std::vector<std::vector<std::vector<double>>> &rMatrixArray, const std::string &Text)
 {
     std::istringstream matrixStream(Text);
     std::string        LineText;
     size_t             numMatrices = 0;
-    size_t             numElements = 0;
     rMatrixArray.clear();
     while (std::getline(matrixStream, LineText, '['))
     {
         std::vector<std::vector<double>> matrix;
-        size_t                           currentMatrixElements = TextToMatrix(matrix, LineText);
+        TextToMatrix(matrix, LineText);
         if (!matrix.empty())
         {
             numMatrices++;
             rMatrixArray.push_back(matrix);
-            if (currentMatrixElements > numElements)
-            {
-                numElements = currentMatrixElements;
-            }
         }
     }
-    return numMatrices * numElements;
 }
 
 int StringArrayToText(std::vector<std::string> &StringArray, std::string &Text)

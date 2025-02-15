@@ -134,12 +134,11 @@ class CSocket
   public:
     virtual bool DataAvailable(); // returns true if data is available for reading, throws FALSE if connection was reset or CExceptionSocket for socket error
     virtual int  TCPReceiveChunk(TReceiveBuffer &context, int length, bool block);
-    virtual bool TCPReceiveMessage(TReceiveBuffer &context);
     virtual bool ReadExtractTelegram(std::unique_ptr<CTCPGram> &); // extracts the oldest telegram from the internal buffer
     virtual void WriteSendReset();                                 // resets the write buffer index at the start of a new telegram
     virtual bool WriteSend(std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
                                                          // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
-  protected:                                             // manipulation of internal buffers
+                                                         // manipulation of internal buffers
   protected:                                             // socket and related
     SOCKET               m_Socket;
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
@@ -224,7 +223,7 @@ class CCommunicationInterface
     std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
                                         // when the engine is running
     std::recursive_mutex m_Mutex;       // critical section to be used with CSingleLock to protect data
-    ConnectResponder      m_OnConnectFunction{};
+    ConnectResponder     m_OnConnectFunction{};
     ConnectResponder     m_OnDisconnectFunction{};
 };
 

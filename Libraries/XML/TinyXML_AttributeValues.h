@@ -14,8 +14,13 @@
 #undef X
 #undef Y
 
-const bool XML_READ  = true;
-const bool XML_WRITE = false;
+#ifndef XML_WRITE
+#define XML_WRITE  false
+#endif
+
+#ifndef XML_READ
+#define XML_READ  true
+#endif
 
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, char *value, const int MaxStringLength, bool Read);
 bool GetSetAttribute(TiXmlElement *pSettings, const char *AttributeName, int &value, bool Read);
