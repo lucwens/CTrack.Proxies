@@ -13,10 +13,11 @@ CTCPGRam class
 */
 //------------------------------------------------------------------------------------------------------------------
 
-CTCPGram::CTCPGram(T_MessageHeader &messageHeader, std::vector<char> &dataBuffer)
+CTCPGram::CTCPGram(TMessageHeader &messageHeader, std::vector<char> &dataBuffer)
 {
     m_MessageHeader = messageHeader;
     m_Data          = std::move(dataBuffer);
+    m_MessageHeader.SetPayloadSize(m_Data.size());
     messageHeader.Reset();
 }
 

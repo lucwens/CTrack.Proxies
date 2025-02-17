@@ -29,7 +29,7 @@ int  FindAvailableTCPPortNumber(int startPort);
 Resolve Ip strings like "127.0.0.1", "\\mycomputer", "www.test.com" to an IP address
 */
 //--------------------------------------------------------------------------------------------------------------------------------------
-bool ResolveIP4_Address(const std::string HostName, std::string &IP_Number); // returns true on succes
+bool ResolveIP4_Address(const std::string &HostName, std::string &IP_Number); // returns true on succes
 
 typedef std::function<void()> StateResponder;   // function for state entry/run/exit
 typedef std::function<void()> CommandResponder; // function for CNode responders
@@ -74,25 +74,27 @@ enum E_COMMUNICATION_Mode
     TCP_CLIENT
 };
 
+enum class E_ReadMode
+{
+    FIXED_HEADER,
+    DELIMITER
+};
+
 struct TReceiveBuffer
 {
   public:
     TReceiveBuffer() { Reset(); }
-    void Reset()
+    bool IsComplete() { return m_BytesLeft == 0; }
+    bool IsInitialized() { return m_pBuffer != nullptr; };
+    void Reset(char *pBuffer = nullptr, int SizeToRead = 0)
     {
-        m_pBuffer       = nullptr;
-        m_TotalReceived = 0;
-        m_BytesLeft     = 0;
-        m_MessageLength = 0;
-        m_bComplete     = false;
+        m_pBuffer   = pBuffer;
+        m_BytesLeft = SizeToRead;
     }
 
   public:
     char *m_pBuffer{nullptr};
-    int   m_TotalReceived{0};
     int   m_BytesLeft{0};
-    int   m_MessageLength{0};
-    bool  m_bComplete{false};
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -105,18 +107,19 @@ a different way(e.g. delimiter at the end), then the function ReadExtractTelegra
 class CSocket
 {
   public:
-    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string iUDPSendToAddress);
+    CSocket(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, int iUDPReceivePort, bool iUDPBroadcast, const std::string &iUDPSendToAddress,
+            bool bDisableNagle = true);
     virtual ~CSocket();
     SOCKET GetSocket() { return m_Socket; };
-    void   Throw(const std::string ErrorMessage);
+    void   Throw(const std::string &ErrorMessage);
+    void   ResetBuffers();
 
   public: // socket manipulations
-    void SetNagle(bool bDisableNagle = true);
+    void DisableNagle(bool bDisableNagle = true);
     void SetNonBlocking(bool bNonBlocking = true);
     void SetReuseAddress(bool bEnableReuseAddress = true);
     void SetBroadcast(bool bEnableBroadcast = true);
     int  GetMaxUDPMessageSize();
-    void SetBlockWrite(bool ibBlockWrite = true) { m_bBlockWrite = ibBlockWrite; };
     //--------------------------------------------------------------------------------------------------------------------------------------
     /*
     Monitor amount of data on the stack
@@ -133,25 +136,29 @@ class CSocket
 
   public:
     virtual bool DataAvailable(); // returns true if data is available for reading, throws FALSE if connection was reset or CExceptionSocket for socket error
-    virtual int  TCPReceiveChunk(TReceiveBuffer &context, int length, bool block);
-    virtual bool ReadExtractTelegram(std::unique_ptr<CTCPGram> &); // extracts the oldest telegram from the internal buffer
-    virtual void WriteSendReset();                                 // resets the write buffer index at the start of a new telegram
+    virtual int  TCPReceiveChunk(TReceiveBuffer &context, bool block);
+    virtual bool ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram);
+    virtual void TCPSendChunk(const char *, int);
     virtual bool WriteSend(std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
                                                          // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
-                                                         // manipulation of internal buffers
   protected:                                             // socket and related
     SOCKET               m_Socket;
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     SOCKADDR_IN         *m_pSockAddress      = nullptr;
     struct sockaddr_in   m_UDPBroadCastAddr;
-    unsigned long        m_MaxUDPMessageSize = 0; // only useful for UDP to generate an exception when the datagram is bigger than allowed
+    bool                 m_bDisableNagle     = true; // if true : better latency , false : better throughput https://en.wikipedia.org/wiki/Nagle%27s_algorithm
+    unsigned long        m_MaxUDPMessageSize = 0;    // only useful for UDP to generate an exception when the datagram is bigger than allowed
 
-  protected:                                   // read write buffers
-    T_MessageHeader   m_MessageHeader;         // header of the telegram
-    std::vector<char> m_Data;                  // data of the telegram
-    TReceiveBuffer    m_ReceiveBuffer;         // buffer for receiving data
-    unsigned long     m_TotalBytesWritten = 0; // number of bytes written so far for the current TCPGram            // write buffer
-    bool m_bBlockWrite = false; // if true then the socket will not write, this is used so that we can send a configuration first before sending anything else
+  protected: // read write buffers
+    E_ReadMode        m_ReadMode = E_ReadMode::FIXED_HEADER;
+    std::vector<char> m_Data; // data of the telegram
+    // m_ReadMode == FIXED_HEADER
+    TMessageHeader    m_MessageHeader;           // header of the telegram
+    TReceiveBuffer    m_ReceiveBuffer;           // buffer for receiving data
+    bool              m_bHeaderReceived = false; // if true then the header has been received
+    // m_ReadMode == DELIMITER
+    std::vector<char> m_Delimiter       = {'\n'}; // Delimiter for variable-size messages
+    int               m_ChunkBufferSize = 1024;   // Read in chunks of 1024 bytes
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -160,9 +167,13 @@ CCommunicationInterface : class holding parameters, common parent for CCommunica
 This class also contains lists for incoming and outgoing telegrams and a list for newcomers. Newcomers are new client
 sockets that connect to a server socket. The newcomer list allows to send a welcome message or take other actions when a
 new client connects to a server.
-All data members have thread safe access (m_Lock)
+All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
+
+typedef std::function<void()>       StateResponder;
+typedef std::function<void(size_t)> ConnectResponder;
+
 class CCommunicationInterface
 {
     friend class CCommunicationThread;
@@ -180,7 +191,7 @@ class CCommunicationInterface
     bool                 IsServer();
     bool                 ErrorOccurred();
     virtual std::string  GetError();
-    virtual void         SetError(const std::string iFileName, int iLineNumber, const std::string iMessage);
+    virtual void         SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage);
     void                 SetOnConnectFunction(ConnectResponder iFunction) { m_OnConnectFunction = iFunction; };
     void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
 
@@ -208,11 +219,11 @@ class CCommunicationInterface
     std::string          m_HostName;                  // hostname, like "ctech-tower", "127.0.0.1" "localhost" "www.ctechmetrology.com"
     bool                 m_bUDPBroadCast = true;      // if false, m_IP4Address is used to send to
     bool                 m_bMakeBlocking = false;     // makes the socket blocking
-    bool                 m_bEnableNagle  = false;     // enables Nagle grouping of blocks
+    bool                 m_bDisableNagle = true;      // disables Nagle grouping of blocks to improve latency at the cost of througput
     float                m_TimeOut       = 0.5;       // time-out in seconds, only when blocking is activated
   protected:                                          // error handling
     bool              m_bErrorOccurred = false;       // set to true when an error occurred, further information in m_ErrorString
-    std::string       m_ErrorString;                  // error that caused our communication to stops
+    std::string       m_ErrorString;
     std::string       m_ErrorSourceFile;
     int               m_ErrorSourceLine = 0;
     std::atomic<bool> m_bInitialized    = false;
@@ -243,12 +254,12 @@ class CCommunicationObject : public CCommunicationInterface
     virtual ~CCommunicationObject();
 
   public: // open close state
-    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string iIpAddress = ("127.0.0.1"));
+    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string &iIpAddress = ("127.0.0.1"));
     virtual void Close();
 
   public: // from statemanager
-    virtual void SetError(const std::string iFileName, int iLineNumber, LPCTSTR iMessage) { ; };
-    virtual void SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) { ; };
+    virtual void SetError(const std::string &iFileName, int iLineNumber, LPCTSTR iMessage) { ; };
+    virtual void SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage) { ; };
     bool         IsConnected() { return m_TCPNumConnections > 0; };
     std::string  GetHost() { return GetHostName(); };
     void         CheckConnections();
@@ -266,7 +277,7 @@ class CCommunicationObject : public CCommunicationInterface
 
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
-                                  const std::string UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
+                                  const std::string &UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
 
   protected:
     std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
@@ -301,17 +312,16 @@ class CCommunicationThread : public CCommunicationInterface
     void   AddNewComer(CSocket *) override;
     size_t GetNumConnections() override;
     void   PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
-    void   SetError(const std::string iFileName, int iLineNumber, const std::string iMessage) override;
+    void   SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage) override;
 
   protected:
     void SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool bAddToNewComerList, bool UDPBroadcast,
-                   const std::string UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
-    CSocket *SocketFirst();                        // first in list, or NULL
-    CSocket *SocketNext();                         // next, can only be called after SocketFirst
-    CSocket *SocketDeleteCurrent();                // deletes current socket and return pointer to next socket
-    void     SocketDeleteAll();                    // deletes all sockets
-    void     SocketResetSend();                    // resets the write pointers of all sockets
-  public:                                          // thread management
+                   const std::string &UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
+    CSocket *SocketFirst();                         // first in list, or NULL
+    CSocket *SocketNext();                          // next, can only be called after SocketFirst
+    CSocket *SocketDeleteCurrent();                 // deletes current socket and return pointer to next socket
+    void     SocketDeleteAll();                     // deletes all sockets
+  public:                                           // thread management
     void ThreadFunction();
     void StartThread();
     void EndThread();

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     TCPServer.SetOnDisconnectFunction([](size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
 
     TCPServer.Open(TCP_SERVER, PortNumber);
-    PrintInfo("Server started on port " + std::to_string(PortNumber));
+    PrintInfo("Server started on port {}", PortNumber);
 
     bool bContinueLoop = true;
 

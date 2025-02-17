@@ -41,15 +41,15 @@ constexpr int ALL_DESTINATIONS                 = 0;
 //
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-__pragma(pack(push, 1)) struct T_MessageHeader
+__pragma(pack(push, 1)) struct TMessageHeader
 {
   public:
-    size_t        GetHeaderSize() { return sizeof(T_MessageHeader); }
-    size_t        GetPayloadSize() { return m_Size - sizeof(T_MessageHeader); }
+    size_t        GetHeaderSize() { return sizeof(TMessageHeader); }
+    size_t        GetPayloadSize() { return m_Size - sizeof(TMessageHeader); }
     unsigned char GetCode() { return m_Code; }
     char         *GetData() { return reinterpret_cast<char *>(this); }
     void          SetCode(unsigned char iCode) { m_Code = iCode; }
-    void          SetPayloadSize(size_t iSize) { m_Size = iSize + sizeof(T_MessageHeader); }
+    void          SetPayloadSize(size_t iSize) { m_Size = iSize + sizeof(TMessageHeader); }
     void          Reset()
     {
         m_Size = 0;
@@ -69,7 +69,7 @@ __pragma(pack(pop))
 
   public: // various
     explicit CTCPGram() = default;
-    explicit CTCPGram(T_MessageHeader &messageHeader, std::vector<char> &dataBuffer); // moves dataBuffer into m_Data
+    explicit CTCPGram(TMessageHeader &messageHeader, std::vector<char> &dataBuffer); // moves dataBuffer into m_Data
     explicit CTCPGram(std::vector<char> &dataBuffer);                                 // telegrams without header
     explicit CTCPGram(char *pBytes, size_t NumBytes, unsigned char Code);
     explicit CTCPGram(TiXmlElement &rCommand, unsigned char Code);
@@ -133,7 +133,7 @@ __pragma(pack(pop))
     virtual void                          Clear();
 
   public:
-    T_MessageHeader   m_MessageHeader;
+    TMessageHeader   m_MessageHeader;
     std::vector<char> m_Data;
     SOCKET            m_Destination = ALL_DESTINATIONS; // if 0 then all client sockets will get this telegram
     SOCKET            m_Source      = 0;
