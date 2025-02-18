@@ -118,7 +118,7 @@ __pragma(pack(pop))
 
   public:
     virtual void          EncodeText(const std::string &iText, unsigned char Code);
-    virtual void          EncodeDoubleArray(std::vector<double> &iDoubleArray, unsigned char Code, bool bCopyArray = true, bool DoNotSendHeader = false);
+    virtual void          EncodeDoubleArray(std::vector<double> &iDoubleArray, unsigned char Code, bool bCopyArray = true);
     virtual unsigned char GetCode();
     virtual void          SetCode(unsigned char iCode);
     virtual size_t        GetSize();

@@ -44,7 +44,7 @@ void CTCPGram::EncodeText(const std::string &iText, unsigned char Code)
     memcpy(m_Data.data(), iText.c_str(), PackageSize);
 }
 
-void CTCPGram::EncodeDoubleArray(std::vector<double> &iDoubleArray, unsigned char Code, bool bCopyArray, bool DoNotSendHeader)
+void CTCPGram::EncodeDoubleArray(std::vector<double> &iDoubleArray, unsigned char Code, bool bCopyArray)
 {
     auto NumChannels = iDoubleArray.size();
     if (bCopyArray)

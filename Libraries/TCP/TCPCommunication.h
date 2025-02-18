@@ -74,12 +74,6 @@ enum E_COMMUNICATION_Mode
     TCP_CLIENT
 };
 
-enum class E_ReadMode
-{
-    FIXED_HEADER,
-    DELIMITER
-};
-
 struct TReceiveBuffer
 {
   public:
@@ -115,6 +109,8 @@ class CSocket
     void   ResetBuffers();
 
   public: // socket manipulations
+    void SetUseHeader(bool bUseHeader = true) { m_bUseHeader = bUseHeader; };
+    bool GetUseHeader() { return m_bUseHeader; };
     void DisableNagle(bool bDisableNagle = true);
     void SetNonBlocking(bool bNonBlocking = true);
     void SetReuseAddress(bool bEnableReuseAddress = true);
@@ -150,13 +146,13 @@ class CSocket
     unsigned long        m_MaxUDPMessageSize = 0;    // only useful for UDP to generate an exception when the datagram is bigger than allowed
 
   protected: // read write buffers
-    E_ReadMode        m_ReadMode = E_ReadMode::FIXED_HEADER;
+    bool              m_bUseHeader = true;
     std::vector<char> m_Data; // data of the telegram
-    // m_ReadMode == FIXED_HEADER
+    // using header
     TMessageHeader    m_MessageHeader;           // header of the telegram
     TReceiveBuffer    m_ReceiveBuffer;           // buffer for receiving data
     bool              m_bHeaderReceived = false; // if true then the header has been received
-    // m_ReadMode == DELIMITER
+    // using delimiter
     std::vector<char> m_Delimiter       = {'\n'}; // Delimiter for variable-size messages
     int               m_ChunkBufferSize = 1024;   // Read in chunks of 1024 bytes
 };

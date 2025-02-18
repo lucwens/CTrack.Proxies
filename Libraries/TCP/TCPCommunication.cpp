@@ -902,7 +902,7 @@ bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
     if (!DataAvailable())
         return false;
 
-    if (m_ReadMode == E_ReadMode::FIXED_HEADER)
+    if (m_bUseHeader)
     {
         // Receive the header first
         if (!m_bHeaderReceived)
@@ -931,7 +931,7 @@ bool CSocket::ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram)
             }
         }
     }
-    else if (m_ReadMode == E_ReadMode::DELIMITER)
+    else // No header, just receive the message
     {
         std::vector<char> chunkBuffer(1024);
         if (!m_ReceiveBuffer.IsInitialized())
@@ -979,14 +979,15 @@ bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
         case TCP_SERVER:
         {
             // write header
-            if (m_ReadMode == E_ReadMode::FIXED_HEADER)
+            if (m_bUseHeader)
             {
                 TCPSendChunk(reinterpret_cast<const char *>(rTCPGram->m_MessageHeader.GetData()), rTCPGram->m_MessageHeader.GetHeaderSize());
             }
             TCPSendChunk(reinterpret_cast<const char *>(rTCPGram->m_Data.data()), static_cast<int>(rTCPGram->m_Data.size()));
-            if (m_ReadMode == E_ReadMode::DELIMITER)
+            if (!m_bUseHeader)
             {
-                TCPSendChunk(reinterpret_cast<const char *>(m_Delimiter.data()), static_cast<int>(m_Delimiter.size()));
+                if (m_Delimiter.size() > 0)
+                    TCPSendChunk(reinterpret_cast<const char *>(m_Delimiter.data()), static_cast<int>(m_Delimiter.size()));
             }
         };
         break;
@@ -1054,8 +1055,10 @@ void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommuni
 
 void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rCommunicationObject)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    m_setCommunicationObject.erase(&rCommunicationObject);
+    { // leave these brackets, otherwise a deadlock will occur on closing
+        std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+        m_setCommunicationObject.erase(&rCommunicationObject);
+    }
     if (CommunicationObjectGetNum() == 0)
     {
         EndThread();
@@ -1168,7 +1171,9 @@ void CCommunicationThread::StartThread()
 {
     if (!m_Thread.joinable())
     {
-        m_Thread = std::thread(&CCommunicationThread::ThreadFunction, this);
+        m_Thread               = std::thread(&CCommunicationThread::ThreadFunction, this);
+        std::string ThreadName = fmt::format("CCommunicationThread_{}", GetPort());
+        ThreadSetName(m_Thread, ThreadName.c_str());
     }
 }
 
@@ -1195,8 +1200,6 @@ void CCommunicationThread::ThreadFunction()
     try
     {
         SetQuit(false);
-        std::string ThreadName = fmt::format("CCommunicationThread_{}", GetPort());
-        SetThreadName(ThreadName);
 
         //--------------------------------------------------------------------------------------------------------
         // Initialize socket library
@@ -1392,7 +1395,7 @@ void CCommunicationThread::ThreadFunction()
                         {
                             int SocketError = WSAGetLastError();
                             if ((SocketError != WSAECONNREFUSED) && (SocketError != WSAEWOULDBLOCK) && (SocketError != WSAEALREADY))
-                                THROW_SOCKET_ERROR(("An error occurred trying to connect to the server"), SocketError);
+                                THROW_SOCKET_ERROR("An error occurred trying to connect to the server", SocketError);
                             else
                                 ::Sleep(1000); // don't check every microsecond
                         }
@@ -1402,9 +1405,9 @@ void CCommunicationThread::ThreadFunction()
             }
 
             //--------------------------------------------------------------------------------------------------------
-            // Sending data : loop over send data buffer, loop over connections until complete telegram is send, then get
-            // the next telegram, until all telegrams have been send
-            // if sending is not possible because of closed connection, remove the socket from arConnectionSocket
+            // Sending data : loop over send data buffer, loop over connections until complete telegram is send, then
+            // get the next telegram, until all telegrams have been send if sending is not possible because of closed
+            // connection, remove the socket from arConnectionSocket
             //--------------------------------------------------------------------------------------------------------
             std::unique_ptr<CTCPGram> TCPGram;
             bool                      bAvailable = GetSendPackage(TCPGram);
