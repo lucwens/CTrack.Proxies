@@ -14,6 +14,8 @@
 #ifdef CTRACK
 #include "Matrix.h"
 #include "XML.h"
+
+class CState;
 #endif
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -22,18 +24,31 @@ each type of data you want to send, the constructor is responsible for convertin
 */
 //--------------------------------------------------------------------------------------------------------------------------------------
 
-// Codes for tcpgrams
-constexpr unsigned char TCPGRAM_CODE_INVALID   = 0;         // invalid return
-constexpr unsigned char TCPGRAM_CODE_DOUBLES   = 1;         // array of doubles
-constexpr unsigned char TCPGRAM_CODE_COMMAND   = 2;         // xml containing command
-constexpr unsigned char TCPGRAM_CODE_STATUS    = 3;         // xml containing status
-constexpr unsigned char TCPGRAM_CODE_STRING    = 4;         // string
-constexpr unsigned char TCPGRAM_CODE_INTERRUPT = 4;         // string
-constexpr unsigned char TCPGRAM_CODE_WARNING   = 6;         // contains a warning
-constexpr unsigned char TCPGRAM_CODE_TEST_BIG  = 10;        // xml containing status
-constexpr unsigned char TCPGRAM_CODE_DONT_USE  = UCHAR_MAX; // contains a warning
+//------------------------------------------------------------------------------------------------------------------
+// These numbers represent the type of telegrams send by CTrack client program
+//------------------------------------------------------------------------------------------------------------------
+// #define TCP_TYPE_DATA          0 // numerical data BYTE:NumChannels | DOUBLE:Channel 1 |....
+// #define TCP_TYPE_COMMAND       1 // string containing information on the result of the executed command
+// #define TCP_TYPE_STATUS        2 // string containing status information
+// #define TCP_TYPE_CONFIGURATION 3 // ';' delimited string information containing channel names and units
+// #define TCP_TYPE_STRING        4 // text string, e.g. to start/stop logging
+// #define TCP_TYPE_EVENT         5 // string with feedback on the type of event that happened, an event occurs for example when the postprocess has finished
+// and data has been exported to //       // disk
 
-constexpr int ALL_DESTINATIONS                 = 0;
+// Codes for tcpgrams
+constexpr unsigned char TCPGRAM_CODE_DOUBLES       = 0;         // array of doubles
+constexpr unsigned char TCPGRAM_CODE_COMMAND       = 1;         // xml containing command
+constexpr unsigned char TCPGRAM_CODE_STATUS        = 2;         // xml containing status
+constexpr unsigned char TCPGRAM_CODE_CONFIGURATION = 3;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_STRING        = 4;         // string
+constexpr unsigned char TCPGRAM_CODE_EVENT         = 5;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6;         // string
+constexpr unsigned char TCPGRAM_CODE_WARNING       = 7;         // contains a warning
+constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
+constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
+constexpr unsigned char TCPGRAM_CODE_DONT_USE      = UCHAR_MAX; // contains a warning
+
+constexpr int ALL_DESTINATIONS                     = 0;
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -44,12 +59,12 @@ constexpr int ALL_DESTINATIONS                 = 0;
 __pragma(pack(push, 1)) struct TMessageHeader
 {
   public:
-    size_t        GetHeaderSize() { return sizeof(TMessageHeader); }
-    size_t        GetPayloadSize() { return m_Size - sizeof(TMessageHeader); }
+    std::uint32_t GetHeaderSize() { return sizeof(TMessageHeader); }
+    std::uint32_t GetPayloadSize() { return m_Size - sizeof(TMessageHeader); }
     unsigned char GetCode() { return m_Code; }
     char         *GetData() { return reinterpret_cast<char *>(this); }
     void          SetCode(unsigned char iCode) { m_Code = iCode; }
-    void          SetPayloadSize(size_t iSize) { m_Size = iSize + sizeof(TMessageHeader); }
+    void          SetPayloadSize(std::uint32_t iSize) { m_Size = iSize + sizeof(TMessageHeader); }
     void          Reset()
     {
         m_Size = 0;
@@ -57,8 +72,8 @@ __pragma(pack(push, 1)) struct TMessageHeader
     };
 
   protected:
-    size_t        m_Size{0}; // size includes the size of the header and the payload, legacy reasons
-    unsigned char m_Code;
+    std::uint32_t m_Size{0}; // size includes the size of the header and the payload, legacy reasons
+    unsigned char m_Code{0};
 };
 __pragma(pack(pop))
 
@@ -70,7 +85,7 @@ __pragma(pack(pop))
   public: // various
     explicit CTCPGram() = default;
     explicit CTCPGram(TMessageHeader &messageHeader, std::vector<char> &dataBuffer); // moves dataBuffer into m_Data
-    explicit CTCPGram(std::vector<char> &dataBuffer);                                 // telegrams without header
+    explicit CTCPGram(std::vector<char> &dataBuffer);                                // telegrams without header
     explicit CTCPGram(char *pBytes, size_t NumBytes, unsigned char Code);
     explicit CTCPGram(TiXmlElement &rCommand, unsigned char Code);
     explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code);
@@ -90,10 +105,18 @@ __pragma(pack(pop))
 #endif
 #ifdef CTRACK
     explicit CTCPGram::CTCPGram(CXML *ipXML, unsigned char Code);
-    explicit CTCPGram(HMatrix *phMatix, ChartIndex iIndex);
+    explicit CTCPGram(HMatrix &rhInput, SOCKET iDestination);    // sends channel information
+    explicit CTCPGram(ChartIndex FrameNumber, HMatrix &rhInput); // sends double data
+    explicit CTCPGram(CState *pState);
+    explicit CTCPGram(CString &CommandReturn);
+    explicit CTCPGram(const std::string &iProjectName, const std::string &iTestName);
+    explicit CTCPGram(std::unique_ptr<CTCPGram> &ReturnTCPGram);
+    virtual ~CTCPGram() = default;
+
+  public:
+    bool GetCommand(CString &rString);
     bool GetMm(Mm &rMatrix);
 #endif
-    virtual ~CTCPGram() { Clear(); }
 
   public: // make movable only
     explicit CTCPGram(CTCPGram &&rTCPGram) noexcept { m_Data = std::move(rTCPGram.m_Data); };
@@ -113,29 +136,26 @@ __pragma(pack(pop))
     void   SetDestination(SOCKET iDestination) { m_Destination = iDestination; };
     void   SetSource(SOCKET iSource) { m_Source = iSource; };
     SOCKET GetSource() { return m_Source; };
-    void   SetSendHeader(bool bSendHeader) { m_bSendHeader = true; };
-    bool   GetSendHeader() { return m_bSendHeader; };
 
   public:
-    virtual void          EncodeText(const std::string &iText, unsigned char Code);
-    virtual void          EncodeDoubleArray(std::vector<double> &iDoubleArray, unsigned char Code, bool bCopyArray = true);
-    virtual unsigned char GetCode();
-    virtual void          SetCode(unsigned char iCode);
-    virtual size_t        GetSize();
-    size_t                GetPayloadSize() { return m_MessageHeader.GetPayloadSize(); }
-    void                  SetPayloadSize(size_t iSize) { m_MessageHeader.SetPayloadSize(iSize); }
-    const char           *GetText();
-    std::vector<char>     GetData();
-    virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
-    virtual bool                          GetString(std::string &);
+    virtual void                          EncodeText(const std::string &iText, unsigned char Code);
+    virtual void                          EncodeDoubleArray(std::vector<double> &iDoubleArray);
     virtual bool                          GetDoubleQue(std::deque<double> &queDoubles);
     virtual bool                          GetDoubleArray(std::vector<double> &arDoubles);
+    virtual unsigned char                 GetCode();
+    virtual void                          SetCode(unsigned char iCode);
+    virtual size_t                        GetSize();
+    size_t                                GetPayloadSize() { return m_MessageHeader.GetPayloadSize(); }
+    void                                  SetPayloadSize(size_t iSize) { m_MessageHeader.SetPayloadSize(iSize); }
+    const char                           *GetText();
+    std::vector<char>                     GetData();
+    virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
+    virtual bool                          GetString(std::string &);
     virtual void                          Clear();
 
   public:
-    TMessageHeader   m_MessageHeader;
+    TMessageHeader    m_MessageHeader;
     std::vector<char> m_Data;
     SOCKET            m_Destination = ALL_DESTINATIONS; // if 0 then all client sockets will get this telegram
     SOCKET            m_Source      = 0;
-    bool              m_bSendHeader = true;
 };
