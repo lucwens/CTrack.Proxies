@@ -43,6 +43,7 @@ constexpr int MAX_DEBUG_TELEGRAMS = 500;
 
 #pragma comment(lib, "Iphlpapi.lib")
 
+std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> m_mapThreads;
 //------------------------------------------------------------------------------------------------------------------
 /*
 Supporting routines for the communication thread
@@ -596,31 +597,61 @@ bool CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
     m_Port              = iPort;
     m_PortUDP           = iPortUDP;
     m_HostName          = iIpAddress;
-
-    Close();
-    if (!m_pCommunicationThread)
+    if (!m_bOpened)
     {
         // when a communication object wants to open the communication channels, CCommunicationManager checks if there is already a thread running on the same
         // port, if yes then the communication object is added to the list of communication objects belonging to that port, if no, then we create a new thread
+        bool                                  bStartThread = false;
+        std::shared_ptr<CCommunicationThread> pCommunicationThread;
 
-        m_pCommunicationThread = std::make_shared<CCommunicationThread>();
-        m_pCommunicationThread->CommunicationObjectAdd(*this);
-        m_pCommunicationThread->StartThread();
-        m_pCommunicationThread->SetThreadName(m_ThreadName);
-    };
-    return true;
+        int  Port     = GetPort();
+        auto iterFind = m_mapThreads.find(Port);
+        if (iterFind == m_mapThreads.end())
+        {
+            // not connected yet, create a CCommunicationThread object, copy parameters and start a thread
+            pCommunicationThread.reset(new CCommunicationThread);
+            pCommunicationThread->CopyFrom(this);
+            m_mapThreads[Port] = pCommunicationThread;
+            bStartThread       = true;
+        }
+        else
+            pCommunicationThread = iterFind->second;
+
+        // add the rObject to the list of the
+        if (pCommunicationThread)
+        {
+            pCommunicationThread->CommunicationObjectAdd(*this);
+            SetCommunicationThread(pCommunicationThread);
+        }
+
+        if (bStartThread)
+            pCommunicationThread->StartThread();
+        m_bOpened = true;
+    }
+    return m_bOpened;
 }
 
-bool CCommunicationObject::Close()
+void CCommunicationObject::Close()
 {
-    // shut-down the communication thread
-    if (m_pCommunicationThread)
+    if (m_bOpened)
     {
-        m_pCommunicationThread->EndThread();
-        m_pCommunicationThread.reset();
-        return true;
-    };
-    return false;
+        int  Port     = GetPort();
+        auto iterFind = m_mapThreads.find(Port);
+        if (iterFind != m_mapThreads.end())
+        {
+            std::shared_ptr<CCommunicationThread> pCommunicationThread = iterFind->second;
+            if (pCommunicationThread)
+            {
+                pCommunicationThread->CommunicationObjectRemove(*this);
+                if (pCommunicationThread->CommunicationObjectGetNum() == 0)
+                {
+                    pCommunicationThread->EndThread();
+                    m_mapThreads.erase(iterFind);
+                }
+                m_bOpened = false;
+            }
+        }
+    }
 }
 
 CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,

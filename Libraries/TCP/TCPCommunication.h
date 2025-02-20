@@ -275,7 +275,7 @@ class CCommunicationObject : public CCommunicationInterface
 
   public: // open close state
     virtual bool Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string &iIpAddress = ("127.0.0.1"));
-    virtual bool Close();
+    virtual void Close();
 
   public: // to be used in CNode derivations
     void XML_ReadWrite(TiXmlElement *&, bool Read /* XML_WRITE XML_READ */);
