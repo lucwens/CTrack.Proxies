@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "TCPCommunication.h"
+#include "../Proxies/Libraries/TCP/TCPCommunication.h"
 #include "ProcessRoutines.h"
 #include "Print.h"
 
