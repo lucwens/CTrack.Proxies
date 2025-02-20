@@ -46,8 +46,8 @@ int main(int argc, char *argv[])
     CCommunicationObject    TCPServer;
     std::unique_ptr<Driver> driver = std::make_unique<Driver>();
 
-    TCPServer.SetOnConnectFunction([](size_t numConnections) { PrintInfo("connected : {}", numConnections); });
-    TCPServer.SetOnDisconnectFunction([](size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+    TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
+    TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);

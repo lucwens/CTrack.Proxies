@@ -478,26 +478,6 @@ void CCommunicationInterface::SetCommunicationMode(E_COMMUNICATION_Mode iMode)
     m_CommunicationMode = iMode;
 }
 
-void CCommunicationInterface::AddNewComer(CSocket *iSocket)
-{
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    m_arNewComers.push_back(iSocket);
-}
-
-CSocket *CCommunicationInterface::GetNewComer()
-{
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    CSocket                              *ReturnSocket = nullptr;
-    auto                                  iter         = m_arNewComers.begin();
-    if (iter != m_arNewComers.end())
-    {
-        ReturnSocket = *iter;
-        m_arNewComers.erase(iter);
-        return ReturnSocket;
-    }
-    return ReturnSocket;
-}
-
 #ifdef CTRACK_UI
 bool CCommunicationInterface::EditSettingsChanged()
 {
@@ -1093,8 +1073,8 @@ size_t CCommunicationThread::CommunicationObjectGetNum()
     return m_setCommunicationObject.size();
 }
 
-void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
-                                     bool bAddToNewComerList, bool UDPBroadcast, const std::string &UDPSendPort)
+void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort, bool UDPBroadcast,
+                                     const std::string &UDPSendPort)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     // a communication thread can have multiple ccommunicationObjects, which may have different SocketCreate methods, here we just take the first
@@ -1103,8 +1083,6 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
     {
         CSocket *pNewSocket = (*iter)->SocketCreate(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendPort);
         m_arSockets.push_back(pNewSocket);
-        if (bAddToNewComerList)
-            AddNewComer(pNewSocket);
     }
     else
         assert(false); // existing port
@@ -1151,15 +1129,6 @@ void CCommunicationThread::SocketDeleteAll()
     for (auto &arSocket : m_arSockets)
         delete arSocket;
     m_arSockets.clear();
-}
-
-void CCommunicationThread::AddNewComer(CSocket *iSocket)
-{
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    //
-    // do not store locally, copy all to CCommunicationObjects
-    for (auto iter : m_setCommunicationObject)
-        iter->AddNewComer(iSocket);
 }
 
 size_t CCommunicationThread::GetNumConnections()
@@ -1341,7 +1310,7 @@ void CCommunicationThread::ThreadFunction()
                     PrintError(ErrorMessage);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
-                SocketAdd(MainSocket, UDP, &sincontrol, PortNumber, false, bUDPBroadcast, HostName);
+                SocketAdd(MainSocket, UDP, &sincontrol, PortNumber, bUDPBroadcast, HostName);
                 PrintInfo("UDP available on port {}", PortNumber);
             };
             break;
@@ -1382,9 +1351,9 @@ void CCommunicationThread::ThreadFunction()
                         {
                             // callback for freshly connected sockets : send the configuration if the engine is running
                             PrintInfo("Client accepted at port " + std::to_string(PortNumber));
-                            SocketAdd(ClientSocket, TCP_SERVER, &sincontrol, 0, true, false, (""));
+                            SocketAdd(ClientSocket, TCP_SERVER, &sincontrol, 0, false, (""));
                             if (m_OnConnectFunction)
-                                m_OnConnectFunction(GetNumConnections());
+                                m_OnConnectFunction(ClientSocket, GetNumConnections());
                         }
                     }
                 };
@@ -1410,9 +1379,9 @@ void CCommunicationThread::ThreadFunction()
                         if (connect(MainSocket, (LPSOCKADDR)&sincontrol, sizeof(sincontrol)) != SOCKET_ERROR)
                         {
                             PrintInfo("TCP client connected to ", HostName, " on port ", PortNumber);
-                            SocketAdd(MainSocket, TCP_CLIENT, &sincontrol, 0, false, false, (""));
+                            SocketAdd(MainSocket, TCP_CLIENT, &sincontrol, 0, false, (""));
                             if (m_OnConnectFunction)
-                                m_OnConnectFunction(GetNumConnections());
+                                m_OnConnectFunction(MainSocket, GetNumConnections());
                         }
                         else
                         {
@@ -1456,7 +1425,7 @@ void CCommunicationThread::ThreadFunction()
                             pCurrentSocket->ResetBuffers();
                             PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
                             if (m_OnDisconnectFunction)
-                                m_OnDisconnectFunction(GetNumConnections());
+                                m_OnDisconnectFunction(pCurrentSocket->GetSocket(), GetNumConnections());
                             if (CommunicationMode == TCP_CLIENT)
                             {
                                 PrintWarning("TCP client disconnected from ", HostName, " on port ", PortNumber);
@@ -1491,12 +1460,16 @@ void CCommunicationThread::ThreadFunction()
                 }
                 catch (bool &) // disconnected, other exceptions are handled by outer routines
                 {
+                    SOCKET socket  = 0;
                     pCurrentSocket = SocketDeleteCurrent();
                     if (pCurrentSocket)
+                    {
+                        socket = pCurrentSocket->GetSocket();
                         pCurrentSocket->ResetBuffers();
+                    }
                     PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
                     if (m_OnDisconnectFunction)
-                        m_OnDisconnectFunction(GetNumConnections());
+                        m_OnDisconnectFunction(socket, GetNumConnections());
                     if (CommunicationMode == TCP_CLIENT)
                     {
                         MainSocket = INVALID_SOCKET;

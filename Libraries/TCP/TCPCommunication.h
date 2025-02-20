@@ -45,8 +45,8 @@ Resolve Ip strings like "127.0.0.1", "\\mycomputer", "www.test.com" to an IP add
 //--------------------------------------------------------------------------------------------------------------------------------------
 bool ResolveIP4_Address(const std::string &HostName, std::string &IP_Number); // returns true on succes
 
-typedef std::function<void()>       StateResponder; // function for state entry/run/exit
-typedef std::function<void(size_t)> ConnectResponder;
+typedef std::function<void()>               StateResponder; // function for state entry/run/exit
+typedef std::function<void(SOCKET, size_t)> ConnectResponder;
 
 #ifdef CTRACK
 typedef std::function<void(CNode *&)> CommandResponder; // function for CNode responders
@@ -207,11 +207,8 @@ class CCommunicationInterface
     void                 SetOnConnectFunction(ConnectResponder iFunction) { m_OnConnectFunction = iFunction; };
     void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
 
-  public:                           // CCommunicationParameters
-    virtual CSocket *GetNewComer(); // pops socket of oldest client that recently connected to our server, returns INVALID_SOCKET if no new sockets are
-                                    // available
-    virtual void     AddNewComer(CSocket *);
-    virtual size_t   GetNumConnections() { return 0; };
+  public: // CCommunicationParameters
+    virtual size_t GetNumConnections() { return 0; };
 
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
@@ -243,11 +240,9 @@ class CCommunicationInterface
   protected: // buffers
     std::list<std::unique_ptr<CTCPGram>> m_arSendBuffer;
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
-    std::list<CSocket *> m_arNewComers; // list of sockets that newly connected to our server socket, used to send a configuration to the newly connected socket
-                                        // when the engine is running
-    std::recursive_mutex m_Mutex;       // critical section to be used with CSingleLock to protect data
-    ConnectResponder     m_OnConnectFunction{};
-    ConnectResponder     m_OnDisconnectFunction{};
+    std::recursive_mutex                 m_Mutex; // critical section to be used with CSingleLock to protect data
+    ConnectResponder                     m_OnConnectFunction{};
+    ConnectResponder                     m_OnDisconnectFunction{};
 #ifdef CTRACK_UI
   public: // edit settings
     virtual void EditSettings(CPropertySheet *pPropertySheet = nullptr);
@@ -317,19 +312,18 @@ class CCommunicationThread : public CCommunicationInterface
     size_t CommunicationObjectGetNum();
 
   public: // CCommunicationParameters
-    void   AddNewComer(CSocket *) override;
     size_t GetNumConnections() override;
     void   PushReceivePackage(std::unique_ptr<CTCPGram> &) override;
     void   SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage) override;
 
   protected:
-    void SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool bAddToNewComerList, bool UDPBroadcast,
-                   const std::string &UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
-    CSocket *SocketFirst();                         // first in list, or NULL
-    CSocket *SocketNext();                          // next, can only be called after SocketFirst
-    CSocket *SocketDeleteCurrent();                 // deletes current socket and return pointer to next socket
-    void     SocketDeleteAll();                     // deletes all sockets
-  public:                                           // thread management
+    void     SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
+                       const std::string &UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);
+    CSocket *SocketFirst();                             // first in list, or NULL
+    CSocket *SocketNext();                              // next, can only be called after SocketFirst
+    CSocket *SocketDeleteCurrent();                     // deletes current socket and return pointer to next socket
+    void     SocketDeleteAll();                         // deletes all sockets
+  public:                                               // thread management
     void ThreadFunction();
     void SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
     void StartThread();
