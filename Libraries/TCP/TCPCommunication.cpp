@@ -1,3 +1,18 @@
+
+#ifdef CTRACK
+
+#include "stdafx.h"
+
+#include "TCPCommunication.h"
+#include "ProcessRoutines.h"
+#include "Print.h"
+
+#include <Icmpapi.h>
+#include <Ws2tcpip.h>
+#include <tlhelp32.h>
+
+#else
+
 #include "TCPCommunication.h"
 #include "../xml/TinyXML_AttributeValues.h"
 #include "../Utility/os.h"
@@ -13,10 +28,7 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 
-#pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Ws2_32.lib")
-
-constexpr int MAX_DEBUG_TELEGRAMS = 500;
 
 std::atomic<bool> Interrupted{false};
 
@@ -24,6 +36,13 @@ void InterruptSet(bool bValue)
 {
     Interrupted = bValue;
 }
+
+#endif
+
+constexpr int MAX_DEBUG_TELEGRAMS = 500;
+
+#pragma comment(lib, "Iphlpapi.lib")
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 Supporting routines for the communication thread
@@ -54,7 +73,7 @@ bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout)
         return false;
     }
 
-    ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
+    ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData) + 8;
     ReplyBuffer.resize(ReplySize);
 
     dwRetVal = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), nullptr, ReplyBuffer.data(), ReplySize, iTimeout);
@@ -198,8 +217,12 @@ std::string GetProcessNameByPID(DWORD pid)
         {
             if (pe32.th32ProcessID == pid)
             {
+#ifdef _UNICODE
                 std::wstring exeName = pe32.szExeFile;
                 processName          = WstringToString(exeName);
+#else
+                processName = pe32.szExeFile;
+#endif
                 break;
             }
         }
@@ -474,6 +497,47 @@ CSocket *CCommunicationInterface::GetNewComer()
     return ReturnSocket;
 }
 
+#ifdef CTRACK_UI
+bool CCommunicationInterface::EditSettingsChanged()
+{
+    if (m_pPropertyPage.get())
+    {
+        return (m_CommunicationMode != static_cast<E_COMMUNICATION_Mode>(m_pPropertyPage->m_ComboDataType) || m_Port != m_pPropertyPage->m_Port ||
+                m_bUDPBroadCast != m_pPropertyPage->m_bUDPBroadCast || m_HostName.c_str() != m_pPropertyPage->m_HostName ||
+                m_PortUDP != m_pPropertyPage->m_PortUDP || m_bDisableNagle != m_pPropertyPage->m_bDisableNagle);
+    }
+    return false;
+}
+
+void CCommunicationInterface::EditSettings(CPropertySheet *pDialog)
+{
+    if (pDialog)
+    {
+        if (m_pPropertyPage.get() == nullptr)
+            m_pPropertyPage.reset(new CDCommunicationPage);
+        pDialog->AddPage(m_pPropertyPage.get());
+        m_pPropertyPage->m_ComboDataType = static_cast<int>(m_CommunicationMode);
+        m_pPropertyPage->m_Port          = m_Port;
+        m_pPropertyPage->m_PortUDP       = m_PortUDP;
+        m_pPropertyPage->m_bUDPBroadCast = m_bUDPBroadCast;
+        m_pPropertyPage->m_HostName      = m_HostName.c_str();
+        m_pPropertyPage->m_bDisableNagle = m_bDisableNagle;
+    }
+    else
+    {
+        if (m_pPropertyPage.get() != nullptr)
+        {
+            m_CommunicationMode = static_cast<E_COMMUNICATION_Mode>(m_pPropertyPage->m_ComboDataType);
+            m_Port              = m_pPropertyPage->m_Port;
+            m_PortUDP           = m_pPropertyPage->m_PortUDP;
+            m_bUDPBroadCast     = m_pPropertyPage->m_bUDPBroadCast;
+            m_HostName          = m_pPropertyPage->m_HostName;
+            m_bDisableNagle     = m_pPropertyPage->m_bDisableNagle;
+        }
+    }
+}
+#endif
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 Communication interface class
@@ -493,8 +557,8 @@ CCommunicationObject::CCommunicationObject()
 {
     m_bErrorOccurred    = false;
     m_CommunicationMode = TCP_SERVER;
-    m_Port              = DEFAULT_TCP_PORT;
-    m_HostName          = DEFAULT_TCP_HOST;
+    m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
+    m_HostName          = STATEMANAGER_DEFAULT_TCP_HOST;
 }
 
 CCommunicationObject::~CCommunicationObject()
@@ -525,7 +589,7 @@ void CCommunicationObject::CopyFrom(CCommunicationObject *ipNode)
         CCommunicationInterface::CopyFrom(pCommunicationParameters);
 }
 
-void CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iPortUDP, const std::string &iIpAddress)
+bool CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iPortUDP, const std::string &iIpAddress)
 {
     // start the communication thread
     m_CommunicationMode = iTcpMode;
@@ -542,116 +606,41 @@ void CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
         m_pCommunicationThread = std::make_shared<CCommunicationThread>();
         m_pCommunicationThread->CommunicationObjectAdd(*this);
         m_pCommunicationThread->StartThread();
+        m_pCommunicationThread->SetThreadName(m_ThreadName);
     };
+    return true;
 }
 
-void CCommunicationObject::Close()
+bool CCommunicationObject::Close()
 {
     // shut-down the communication thread
     if (m_pCommunicationThread)
     {
         m_pCommunicationThread->EndThread();
         m_pCommunicationThread.reset();
+        return true;
     };
-}
-
-void CCommunicationObject::CheckConnections()
-{
-    size_t NewNumConnections = GetNumConnections();
-    if (NewNumConnections != m_TCPNumConnections)
-    {
-        CSocket *pNewSocket = GetNewComer(); // newcomers are only produced on server sockets
-        while (pNewSocket != nullptr)
-        {
-            // standard response of server to newly connecting client : send the configuration
-            // we only send the configuration when we are running
-            pNewSocket = GetNewComer();
-        }
-        m_TCPNumConnections = NewNumConnections;
-        // optional responder
-        if (m_TCPConnectChange)
-            m_TCPConnectChange(m_TCPNumConnections);
-    }
-}
-
-void CCommunicationObject::TCPReceiveRespond()
-{
-    std::unique_ptr<CTCPGram> Telegram;
-    bool                      bAvailable = GetReceivePackage(Telegram);
-    while (bAvailable)
-    {
-        unsigned short Code = Telegram->GetCode();
-        switch (Code)
-        {
-            case TCPGRAM_CODE_COMMAND:
-            {
-                std::unique_ptr<TiXmlElement> XML = Telegram->GetXML();
-                // 			CNode* pNode = GetNodeFactory()->CreateNodeFromXML(XML.get(), true);
-                // 			if (pNode)
-                // 			{
-                // 				CommandExecute(pNode);
-                // 			}
-                // 			else
-                PrintError("Failed converting the node from XML");
-            };
-            break;
-            case TCPGRAM_CODE_STATUS: // state changing is only allowed by the server, so normally we do not receive states here
-            {
-                std::unique_ptr<TiXmlElement> XML = Telegram->GetXML();
-                assert(XML.get() != NULL);
-                // 			std::string StateName = StripName(XML->Value());
-                // 			StateUpdate(StateName, XML);
-                // 			if (m_bTCPServer) // reflect our state change immediate if we are server, probably a client is resetting an error state
-                // 				TCPSendStatus(true);
-            };
-            break;
-        }
-        // next message
-        bAvailable = GetReceivePackage(Telegram);
-    }
-}
-
-void CCommunicationObject::Run()
-{
-    // this is all we do
-    CheckConnections(); // check if new clients are connecting
-    TCPReceiveRespond();
-    IdleRun();
-}
-
-void CCommunicationObject::IdleRun()
-{
-    // 		for (auto iter : m_IdleTaskmap)
-    // 		{
-    // 			iter.second->Execute();
-    // 		}
-    //
-    // 		// the API Innovo task wants to kill itself if it sees that no more messages pass through the message pump
-    // 		// if we kill it in the loop above, then the iteration runs broke
-    // 		for (auto& iter : m_IdleTaskToRemove)
-    // 		{
-    // 			auto iter_map = m_IdleTaskmap.find(iter);
-    // 			if (iter_map != m_IdleTaskmap.end())
-    // 			{
-    // 				m_IdleTaskmap.erase(iter_map);
-    // 				delete iter;
-    // 			}
-    // 		}
-    // 		m_IdleTaskToRemove.clear();
+    return false;
 }
 
 CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
                                             bool UDPBroadcast, const std::string &UDPSendAddress)
 {
-    return new CSocket(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendAddress);
+    return new CSocket(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendAddress, m_bDisableNagle);
+}
+
+void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunicationThread> &rCommunicationThread)
+{
+    m_pCommunicationThread = rCommunicationThread;
+    if (m_ThreadName.size() > 0)
+        rCommunicationThread->SetThreadName(m_ThreadName);
 }
 
 size_t CCommunicationObject::GetNumConnections()
 {
     if (m_pCommunicationThread)
-        return 1;
-    else
-        return 0;
+        return m_pCommunicationThread->GetNumConnections();
+    return 0;
 }
 
 void CCommunicationObject::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
@@ -971,8 +960,10 @@ void CSocket::TCPSendChunk(const char *pBuffer, int BufferSize)
     }
 }
 
-bool CSocket::WriteSend(std::unique_ptr<CTCPGram> &rTCPGram)
+bool CSocket::WriteSendTelegram(std::unique_ptr<CTCPGram> &rTCPGram)
 {
+    if (m_bBlockWrite)
+        return true;
     switch (m_CommunicationMode)
     {
         case TCP_CLIENT:
@@ -1023,8 +1014,8 @@ CCommunicationThread::CCommunicationThread()
 {
     m_bErrorOccurred    = false;
     m_CommunicationMode = TCP_SERVER;
-    m_Port              = DEFAULT_TCP_PORT;
-    m_HostName          = DEFAULT_TCP_HOST;
+    m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
+    m_HostName          = STATEMANAGER_DEFAULT_TCP_HOST;
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     m_IterCurrentSocket = m_arSockets.begin();
 }
@@ -1171,9 +1162,10 @@ void CCommunicationThread::StartThread()
 {
     if (!m_Thread.joinable())
     {
-        m_Thread               = std::thread(&CCommunicationThread::ThreadFunction, this);
-        std::string ThreadName = fmt::format("CCommunicationThread_{}", GetPort());
-        ThreadSetName(m_Thread, ThreadName.c_str());
+        m_Thread = std::thread(&CCommunicationThread::ThreadFunction, this);
+        if (m_ThreadName.empty())
+            m_ThreadName = fmt::format("CCommunicationThread_{}", GetPort());
+        ThreadSetName(m_Thread, m_ThreadName.c_str());
     }
 }
 
@@ -1240,7 +1232,7 @@ void CCommunicationThread::ThreadFunction()
                 if (MainSocket == INVALID_SOCKET)
                 {
                     int         LastError    = WSAGetLastError();
-                    std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName.c_str(), PortNumber);
+                    std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
                     THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 };
                 PrintInfo("TCP client on port {}", PortNumber);
@@ -1423,7 +1415,7 @@ void CCommunicationThread::ThreadFunction()
                         try
                         {
                             if (Destination == ALL_DESTINATIONS || Destination == pCurrentSocket->GetSocket())
-                                if (!pCurrentSocket->WriteSend(TCPGram)) // returns false if sending of the telegram was not completed yet
+                                if (!pCurrentSocket->WriteSendTelegram(TCPGram)) // returns false if sending of the telegram was not completed yet
                                     bAllSocketsCompleted = false;
                             pCurrentSocket = SocketNext();
                         }
@@ -1460,7 +1452,7 @@ void CCommunicationThread::ThreadFunction()
                     while (pCurrentSocket->ReadExtractTelegram(TCPGram))
                     {
                         if (TCPGram->GetCode() == TCPGRAM_CODE_INTERRUPT)
-                            InterruptSet();
+                            InterruptSet(true);
                         else
                             PushReceivePackage(TCPGram);
                     }
@@ -1469,6 +1461,8 @@ void CCommunicationThread::ThreadFunction()
                 catch (bool &) // disconnected, other exceptions are handled by outer routines
                 {
                     pCurrentSocket = SocketDeleteCurrent();
+                    if (pCurrentSocket)
+                        pCurrentSocket->ResetBuffers();
                     PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
                     if (m_OnDisconnectFunction)
                         m_OnDisconnectFunction(GetNumConnections());
@@ -1483,6 +1477,21 @@ void CCommunicationThread::ThreadFunction()
         PrintInfo("Closing thread for port : ", PortNumber);
 #endif
     }
+#ifdef CTRACK
+    catch (CExceptionCTrack &e)
+    {
+        std::string FileString = e.GetFile();
+        std::string Message    = e.GetMessage();
+        SetError(FileString, e.GetLine(), Message);
+    }
+    catch (CException *e)
+    {
+        TCHAR ErrorMessage[2001];
+        e->GetErrorMessage(ErrorMessage, 2000);
+        SetError("unknown", 0, ErrorMessage);
+        e->Delete();
+    }
+#endif
     catch (const std::exception &e)
     {
         SetError(__FILE__, __LINE__, e.what());

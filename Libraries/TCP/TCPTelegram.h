@@ -144,9 +144,9 @@ __pragma(pack(pop))
     virtual bool                          GetDoubleArray(std::vector<double> &arDoubles);
     virtual unsigned char                 GetCode();
     virtual void                          SetCode(unsigned char iCode);
-    virtual size_t                        GetSize();
-    size_t                                GetPayloadSize() { return m_MessageHeader.GetPayloadSize(); }
-    void                                  SetPayloadSize(size_t iSize) { m_MessageHeader.SetPayloadSize(iSize); }
+    virtual std::uint32_t                 GetSize();
+    std::uint32_t                         GetPayloadSize() { return m_MessageHeader.GetPayloadSize(); }
+    void                                  SetPayloadSize(std::uint32_t iSize) { m_MessageHeader.SetPayloadSize(iSize); }
     const char                           *GetText();
     std::vector<char>                     GetData();
     virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code

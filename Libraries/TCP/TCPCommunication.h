@@ -1,28 +1,42 @@
 #pragma once
 
+#ifdef CTRACK
+#include "../Proxies/Libraries/TCP/TCPTelegram.h"
+#else
 #include "TCPTelegram.h"
+#endif
+
 #include <list>
 #include <memory>
+#include <vector>
 #include <set>
 #include <atomic>
 #include <thread>
-#include <functional>
 #include <mutex>
+#include <functional>
 
-using namespace std;
+#ifdef CTRACK_UI
+#include "DCommunication.h"
+#endif
 
-#define DEFAULT_TCP_PORT 40000
-#define DEFAULT_TCP_HOST ("localhost")
+#ifdef CTRACK
+class CNode;
+class HMatrix;
+#endif
 
-void InterruptSet(bool bValue = true);
+#define STATEMANAGER_DEFAULT_TCP_PORT 40000
+#define STATEMANAGER_DEFAULT_TCP_HOST ("localhost")
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 Ping : check if a destination can be reached
+find an available port starting from a given port
 */
 //------------------------------------------------------------------------------------------------------------------
 
-bool Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout = 1000);
-int  FindAvailableTCPPortNumber(int startPort);
+bool               Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout = 1000);
+int                FindAvailableTCPPortNumber(int startPort);
+std::vector<DWORD> ListTcpConnectionsForApp(const std::string &appName);
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -31,10 +45,12 @@ Resolve Ip strings like "127.0.0.1", "\\mycomputer", "www.test.com" to an IP add
 //--------------------------------------------------------------------------------------------------------------------------------------
 bool ResolveIP4_Address(const std::string &HostName, std::string &IP_Number); // returns true on succes
 
-typedef std::function<void()> StateResponder;   // function for state entry/run/exit
-typedef std::function<void()> CommandResponder; // function for CNode responders
-typedef std::function<void(size_t)>
-    ConnectResponder; // function when the number of connections changed, new number of connections is passed as integer to function
+typedef std::function<void()>       StateResponder; // function for state entry/run/exit
+typedef std::function<void(size_t)> ConnectResponder;
+
+#ifdef CTRACK
+typedef std::function<void(CNode *&)> CommandResponder; // function for CNode responders
+#endif
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -116,6 +132,7 @@ class CSocket
     void SetReuseAddress(bool bEnableReuseAddress = true);
     void SetBroadcast(bool bEnableBroadcast = true);
     int  GetMaxUDPMessageSize();
+    void SetBlockWrite(bool ibBlockWrite = true) { m_bBlockWrite = ibBlockWrite; };
     //--------------------------------------------------------------------------------------------------------------------------------------
     /*
     Monitor amount of data on the stack
@@ -135,9 +152,10 @@ class CSocket
     virtual int  TCPReceiveChunk(TReceiveBuffer &context, bool block);
     virtual bool ReadExtractTelegram(std::unique_ptr<CTCPGram> &ReturnTCPGram);
     virtual void TCPSendChunk(const char *, int);
-    virtual bool WriteSend(std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
-                                                         // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
-  protected:                                             // socket and related
+    virtual bool WriteSendTelegram(
+        std::unique_ptr<CTCPGram> &); // continues writing packets of the CTCPGram, when the complete TCPGram has been transmitted, then true
+                                      // is returned, throws FALSE if connection was reset or CExceptionSocket for socket error
+  protected:                          // socket and related
     SOCKET               m_Socket;
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     SOCKADDR_IN         *m_pSockAddress      = nullptr;
@@ -155,6 +173,7 @@ class CSocket
     // using delimiter
     std::vector<char> m_Delimiter       = {'\n'}; // Delimiter for variable-size messages
     int               m_ChunkBufferSize = 1024;   // Read in chunks of 1024 bytes
+    bool m_bBlockWrite = false; // if true then the socket will not write, this is used so that we can send a configuration first before sending anything else
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -166,9 +185,6 @@ new client connects to a server.
 All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
-
-typedef std::function<void()>       StateResponder;
-typedef std::function<void(size_t)> ConnectResponder;
 
 class CCommunicationInterface
 {
@@ -232,11 +248,19 @@ class CCommunicationInterface
     std::recursive_mutex m_Mutex;       // critical section to be used with CSingleLock to protect data
     ConnectResponder     m_OnConnectFunction{};
     ConnectResponder     m_OnDisconnectFunction{};
+#ifdef CTRACK_UI
+  public: // edit settings
+    virtual void EditSettings(CPropertySheet *pPropertySheet = nullptr);
+    virtual bool EditSettingsChanged();
+
+  protected:
+    std::unique_ptr<CDCommunicationPage> m_pPropertyPage;
+#endif
 };
 
 //------------------------------------------------------------------------------------------------------------------
 /*
-CCommunicationTCP manages 1 (UDP,Client) or multiple sockets(SERVER)
+CCommunicationObject manages 1 (UDP,Client) or multiple sockets(SERVER)
 It is also responsible for converting incoming data from the sockets to telegrams
 So if a different protocol requires a different way of doing this, derive from this and override
 */
@@ -250,18 +274,8 @@ class CCommunicationObject : public CCommunicationInterface
     virtual ~CCommunicationObject();
 
   public: // open close state
-    virtual void Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string &iIpAddress = ("127.0.0.1"));
-    virtual void Close();
-
-  public: // from statemanager
-    virtual void SetError(const std::string &iFileName, int iLineNumber, LPCTSTR iMessage) { ; };
-    virtual void SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage) { ; };
-    bool         IsConnected() { return m_TCPNumConnections > 0; };
-    std::string  GetHost() { return GetHostName(); };
-    void         CheckConnections();
-    virtual void TCPReceiveRespond();
-    void         Run();
-    void         IdleRun();
+    virtual bool Open(E_COMMUNICATION_Mode iTcpMode = TCP_SERVER, int iPort = 40000, int iPortUDP = 0, const std::string &iIpAddress = ("127.0.0.1"));
+    virtual bool Close();
 
   public: // to be used in CNode derivations
     void XML_ReadWrite(TiXmlElement *&, bool Read /* XML_WRITE XML_READ */);
@@ -274,16 +288,14 @@ class CCommunicationObject : public CCommunicationInterface
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
                                   const std::string &UDPSendPort); // CSocket* ipSocket,bool bAddToNewComerList = false);public: // get set ip4 related stuff
+    void             SetCommunicationThread(std::shared_ptr<CCommunicationThread> &rCommunicationThread);
+    void             SetThreadName(const std::string &iName) { m_ThreadName = iName; };
 
   protected:
     std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
-    std::mutex  m_LockThreadRunning; // critical section owned by CCommunicationThread during its life, used to check when the thread has finished
-    std::string m_ThreadName;
-
-  protected: // added from statemanager
-    size_t           m_TCPNumConnections{0};
-    ConnectResponder m_TCPConnectChange;
-    bool             m_bTCPServer{true};
+    std::mutex                            m_LockThreadRunning;
+    bool                                  m_bOpened = false;
+    std::string                           m_ThreadName;
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -319,6 +331,7 @@ class CCommunicationThread : public CCommunicationInterface
     void     SocketDeleteAll();                     // deletes all sockets
   public:                                           // thread management
     void ThreadFunction();
+    void SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
     void StartThread();
     void EndThread();
     void SetQuit(bool ibQuit = true);

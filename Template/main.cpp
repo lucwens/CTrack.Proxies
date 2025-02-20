@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
                         PrintInfo("Received a big packet of {} long values", arChar.size());
                     };
                     default:
-                        std::cout << "Unknown TCPgram received" << endl;
+                        std::cout << "Unknown TCPgram received" << std::endl;
                         break;
                 }
             }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
                 PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    std::cout << "Quit" << std::endl;
                     bContinueLoop = false;
                 }
                 if (Command == TAG_HANDSHAKE)
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    std::cout << "Quit" << std::endl;
                     bContinueLoop = false;
                 }
 
@@ -175,8 +175,8 @@ int main(int argc, char *argv[])
                     {
                         double AcquisitionRate(1.0);
                         Command = TAG_COMMAND_CHECKINIT;
-                        std::cout << "Enter the measurement frequency" << endl;
-                        cin >> AcquisitionRate;
+                        std::cout << "Enter the measurement frequency" << std::endl;
+                        std::cin >> AcquisitionRate;
                         TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
                         if (TCP_XML_Input)
                         {

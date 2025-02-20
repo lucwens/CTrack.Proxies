@@ -172,7 +172,7 @@ void CTCPGram::SetCode(unsigned char iCode)
     m_MessageHeader.SetCode(iCode);
 }
 
-size_t CTCPGram::GetSize()
+std::uint32_t CTCPGram::GetSize()
 {
     return m_MessageHeader.GetPayloadSize();
 }
