@@ -133,13 +133,15 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-                //                 for (auto &value : driver->m_arDoubles)
-                //                 {
-                //                     std::cout << value << " ";
-                //                 };
-                //                 std::cout << endl;
-                //                 std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
-                //                 TCPServer.PushSendPackage(TCPGRam);
+                std::string ValueString, FullLine;
+                for (auto &value : driver->m_arDoubles)
+                {
+                    ValueString = fmt::format("{:10.3f}", value);
+                    FullLine += ValueString + " ";
+                };
+                PrintInfo(FullLine);
+                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
+                TCPServer.PushSendPackage(TCPGRam);
             }
 
             //------------------------------------------------------------------------------------------------------------------
