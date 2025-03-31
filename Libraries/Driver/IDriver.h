@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../XML/tinyxml.h"
+#include <tinyxml.h>
 
 #include <map>
 #include <string>

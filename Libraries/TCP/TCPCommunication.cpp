@@ -27,6 +27,7 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 #include <icmpapi.h>
+#include <algorithm>
 
 #pragma comment(lib, "Ws2_32.lib")
 

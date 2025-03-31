@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tinyxml.h"
+#include <tinyxml.h>
 
 // ----------------------------------------------------------------------
 // STDOUT dump and indenting utility functions

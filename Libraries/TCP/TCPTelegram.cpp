@@ -2,13 +2,15 @@
 #ifdef CTRACK
 #include "stdafx.h"
 #include "DeviceOutputTCP.h"
+#include "../version.h"
+#else
+#include "../../version.h"
 #endif
 
 #include "TCPTelegram.h"
 #include "../XML/TinyXML_AttributeValues.h"
-#include "Print.h"
-#include "../version.h"
-#include "StringUtilities.h"
+#include "../Utility/Print.h"
+#include "../Utility/StringUtilities.h"
 #include <fmt/format.h>
 
 //------------------------------------------------------------------------------------------------------------------

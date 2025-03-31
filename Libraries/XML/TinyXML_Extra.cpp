@@ -598,17 +598,25 @@ void SetText(TiXmlElement *pElement, const std::string &newtext)
     }
 }
 
-TiXmlElement *RemoveElement(TiXmlElement *removeThis)
+class FriendXMLNode : public TiXmlElement
 {
-    TiXmlNode *pParentNode = removeThis->Parent();
+    friend TiXmlElement *RemoveElement(TiXmlElement *removeThis);
+};
 
-    if (removeThis->next)
-        removeThis->next->prev = removeThis->prev;
+TiXmlElement *RemoveElement(TiXmlElement *i_removeThis)
+{
+    FriendXMLNode *removeThis      = (FriendXMLNode *)i_removeThis;
+    FriendXMLNode *pParentNode     = (FriendXMLNode *)removeThis->Parent();
+    FriendXMLNode *removeThis_next = (FriendXMLNode *)removeThis->next;
+    FriendXMLNode *removeThis_prev = (FriendXMLNode *)removeThis->prev;
+
+    if (removeThis_next)
+        removeThis_next->prev = removeThis->prev;
     else if (pParentNode)
         pParentNode->lastChild = removeThis->prev;
 
     if (removeThis->prev)
-        removeThis->prev->next = removeThis->next;
+        removeThis_prev->next = removeThis->next;
     else if (pParentNode)
         pParentNode->firstChild = removeThis->next;
 

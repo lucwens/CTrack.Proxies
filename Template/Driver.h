@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Libraries/Driver/IDriver.h"
-#include "../Libraries/XML/tinyxml.h"
+#include <tinyxml.h>
 
 #include <map>
 #include <string>

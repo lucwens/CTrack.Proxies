@@ -67,11 +67,11 @@ void dump_to_stdout(TiXmlNode *pParent, unsigned int indent)
 
     switch (t)
     {
-        case TiXmlNode::DOCUMENT:
+        case TiXmlNode::TINYXML_DOCUMENT:
             printf("Document");
             break;
 
-        case TiXmlNode::ELEMENT:
+        case TiXmlNode::TINYXML_ELEMENT:
             printf("Element [%s]", pParent->Value());
             num = dump_attribs_to_stdout(pParent->ToElement(), indent + 1);
             switch (num)
@@ -88,20 +88,20 @@ void dump_to_stdout(TiXmlNode *pParent, unsigned int indent)
             }
             break;
 
-        case TiXmlNode::COMMENT:
+        case TiXmlNode::TINYXML_COMMENT:
             printf("Comment: [%s]", pParent->Value());
             break;
 
-        case TiXmlNode::UNKNOWN:
+        case TiXmlNode::TINYXML_UNKNOWN:
             printf("Unknown");
             break;
 
-        case TiXmlNode::TEXT:
+        case TiXmlNode::TINYXML_TEXT:
             pText = pParent->ToText();
             printf("Text: [%s]", pText->Value());
             break;
 
-        case TiXmlNode::DECLARATION:
+        case TiXmlNode::TINYXML_DECLARATION:
             printf("Declaration");
             break;
         default:

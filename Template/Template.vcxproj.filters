@@ -28,9 +28,6 @@
     <Filter Include="Libraries\XML">
       <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libraries\XML\Additional">
-      <UniqueIdentifier>{bdcc5903-fc9d-4dbc-8387-0286efe67b57}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Documentation">
       <UniqueIdentifier>{def92487-9f98-48ed-9585-ae7922b656f7}</UniqueIdentifier>
     </Filter>
@@ -42,19 +39,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\XML\tinystr.cpp">
-      <Filter>Libraries\XML</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\tinyxml.cpp">
-      <Filter>Libraries\XML</Filter>
-    </ClCompile>
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
-      <Filter>Libraries\XML</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp">
-      <Filter>Libraries\XML</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp">
       <Filter>Libraries\XML</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\os.cpp">
@@ -62,15 +47,6 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp">
       <Filter>Libraries\TCP</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
-      <Filter>Libraries\XML\Additional</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
-      <Filter>Libraries\XML\Additional</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\XML\XML.cpp">
-      <Filter>Libraries\XML\Additional</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp">
       <Filter>Libraries\Utility</Filter>
@@ -90,16 +66,19 @@
     <ClCompile Include="..\Libraries\Utility\FileReader.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\XML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
       <Filter>Libraries\TCP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\tinystr.h">
-      <Filter>Libraries\XML</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\tinyxml.h">
-      <Filter>Libraries\XML</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
       <Filter>Libraries\XML</Filter>
@@ -112,18 +91,6 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
       <Filter>Libraries\TCP</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
-      <Filter>Libraries\XML\Additional</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
-      <Filter>Libraries\XML\Additional</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
-      <Filter>Libraries\XML\Additional</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\XML\XML.h">
-      <Filter>Libraries\XML\Additional</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\errorHandling.h">
       <Filter>Libraries\Utility</Filter>
@@ -148,6 +115,18 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\FileReader.h">
       <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\XML.h">
+      <Filter>Libraries\XML</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
