@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\..\Libraries\XML\tinyxml.h"
+#include <tinyxml.h>
 #include <deque>
 #include <winsock2.h>
 #include <memory>

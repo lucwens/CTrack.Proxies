@@ -6,7 +6,7 @@
 
 #include "TCPTelegram.h"
 #include "../XML/TinyXML_AttributeValues.h"
-#include "../Utility/Print.h"
+#include "Print.h"
 #include "../version.h"
 
 //------------------------------------------------------------------------------------------------------------------
