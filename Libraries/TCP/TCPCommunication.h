@@ -133,15 +133,6 @@ class CSocket
     void SetBroadcast(bool bEnableBroadcast = true);
     int  GetMaxUDPMessageSize();
     void SetBlockWrite(bool ibBlockWrite = true) { m_bBlockWrite = ibBlockWrite; };
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    /*
-    Monitor amount of data on the stack
-    Buffer Type	Default Size	Maximum (Typical)	How to Adjust
-    Receive (SO_RCVBUF)	8 KB – 64 KB	2 MB – 16 MB (depends on system)	setsockopt()
-    Send (SO_SNDBUF)	8 KB – 64 KB	2 MB – 16 MB (depends on system)	setsockopt()
-    System Max	Controlled via registry (TcpWindowSize)	Several MB	Edit registry or netsh
-    */
-    //--------------------------------------------------------------------------------------------------------------------------------------
     int  GetReadBufferSize();
     int  GetWriteBufferSize();
     void GetSocketBufferSizes(int &recvBufSize, int &sendBufSize);
