@@ -7,6 +7,7 @@
 #include "TCPTelegram.h"
 #include "../XML/TinyXML_AttributeValues.h"
 #include "../Utility/Print.h"
+#include "../version.h"
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -285,7 +286,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     CConfiguration *pConfiguration = StateManager.GetConfiguration();
     CString         ConfigName     = pConfiguration->GetName();
     CString         VersionString;
-    VersionString.Format(_T("%d.%d.%d.%d"), MAJOR, MINOR, REV, BUILD);
+    VersionString.Format(_T("%s_%s"), GIT_TAG,GIT_HASH);
     GetSetAttribute(pXML, ATTRIB_MEAS_FREQ, MeasFreq, /*Read*/ false);
     GetSetAttribute(pXML, ATTRIB_CONFIG_FILE, ConfigName, /*Read*/ false);
     GetSetAttribute(pXML, ATTRIB_VERSION, VersionString, /*Read*/ false);
