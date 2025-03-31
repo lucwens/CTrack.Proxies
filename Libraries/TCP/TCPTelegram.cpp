@@ -8,6 +8,8 @@
 #include "../XML/TinyXML_AttributeValues.h"
 #include "Print.h"
 #include "../version.h"
+#include "StringUtilities.h"
+#include <fmt/format.h>
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -178,12 +180,14 @@ std::uint32_t CTCPGram::GetSize()
     return m_MessageHeader.GetPayloadSize();
 }
 
-const char *CTCPGram::GetText()
+std::string CTCPGram::GetText()
 {
+    std::string   ReturnString;
     unsigned char DataType = GetCode();
     if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
         return NULL;
-    return reinterpret_cast<const char *>(m_Data.data());
+    ReturnString.assign(m_Data.begin(), m_Data.end());
+    return ReturnString;
 }
 
 std::vector<char> CTCPGram::GetData()
@@ -196,24 +200,21 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
     std::unique_ptr<TiXmlElement> ReturnXML;
 
     // get the oldest telegram and remove from the receive buffer
-    const char *pXMLString = GetText();
-    if (pXMLString != nullptr)
+    std::string   XMLString = GetText();
+    TiXmlDocument doc;
+    if (XMLString.size() != 0)
     {
-        TiXmlDocument doc;
-        if (strlen(pXMLString) != 0)
+        doc.Parse(XMLString.c_str());
+        if (doc.Error())
         {
-            doc.Parse(pXMLString);
-            if (doc.Error())
-            {
-                std::string ErrorDescription = fmt::format("TCP Error ({},{}): the XML contents could not be decoded :{} \n{}", doc.ErrorRow(), doc.ErrorCol(),
-                                                           doc.ErrorDesc(), pXMLString);
-                throw std::exception(ErrorDescription.c_str());
-            }
+            std::string ErrorDescription =
+                fmt::format("TCP Error ({},{}): the XML contents could not be decoded :{} \n{}", doc.ErrorRow(), doc.ErrorCol(), doc.ErrorDesc(), XMLString);
+            throw std::exception(ErrorDescription.c_str());
         }
-        TiXmlElement *pXML = doc.FirstChildElement();
-        RemoveElement(pXML); // remove from doc, otherwise doc's destructor will kill our XML
-        ReturnXML.reset(pXML);
     }
+    TiXmlElement *pXML = doc.FirstChildElement();
+    RemoveElement(pXML); // remove from doc, otherwise doc's destructor will kill our XML
+    ReturnXML.reset(pXML);
     return ReturnXML;
 }
 
@@ -284,9 +285,8 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     TiXmlElement   *pXML           = new TiXmlElement(TAG_CONFIGURATION);
     double          MeasFreq       = StateManager.GetMeasurementFrequency();
     CConfiguration *pConfiguration = StateManager.GetConfiguration();
-    CString         ConfigName     = pConfiguration->GetName();
-    CString         VersionString;
-    VersionString.Format(_T("%s_%s"), GIT_TAG,GIT_HASH);
+    std::string     ConfigName     = pConfiguration->GetName();
+    std::string     VersionString  = fmt::format("{}_{}", GIT_TAG, GIT_HASH);
     GetSetAttribute(pXML, ATTRIB_MEAS_FREQ, MeasFreq, /*Read*/ false);
     GetSetAttribute(pXML, ATTRIB_CONFIG_FILE, ConfigName, /*Read*/ false);
     GetSetAttribute(pXML, ATTRIB_VERSION, VersionString, /*Read*/ false);
@@ -302,7 +302,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
             {
                 CString Name;
                 CString Unit     = pInputChannel->GetUnit(false); // TODO : UNIT
-                int     Encoding = pInputChannel->GetEncoding();
+                int         Encoding = pInputChannel->GetEncoding();
                 pInputChannel->GetPath(Name);
                 TiXmlElement *pXMLChannel = new TiXmlElement(TAG_CHANNEL);
                 GetSetAttribute(pXMLChannel, ATTRIB_NAME, Name, /*Read*/ false);
@@ -317,7 +317,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     EncodeText(XMLText, TCPGRAM_CODE_CONFIGURATION);
 }
 
-CTCPGram::CTCPGram(CString &CommandReturn)
+CTCPGram::CTCPGram(std::string &CommandReturn)
 {
     EncodeText(std::string(CommandReturn), TCPGRAM_CODE_COMMAND);
 }
@@ -363,16 +363,14 @@ CTCPGram::CTCPGram(const std::string &iProjectName, const std::string &iTestName
     EncodeText(ExtraMessage, TCPGRAM_CODE_EVENT);
 }
 
-bool CTCPGram::GetCommand(CString &rString)
+bool CTCPGram::GetCommand(std::string &rString)
 {
     unsigned char Code = GetCode();
 
     if (Code != TCPGRAM_CODE_COMMAND)
         return false;
 
-    rString.Empty();
-    rString = GetText();
-    rString.MakeLower();
+    rString = ToLowerCase(GetText());
     return true;
 }
 

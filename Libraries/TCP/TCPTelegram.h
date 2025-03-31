@@ -108,13 +108,13 @@ __pragma(pack(pop))
     explicit CTCPGram(HMatrix &rhInput, SOCKET iDestination);    // sends channel information
     explicit CTCPGram(ChartIndex FrameNumber, HMatrix &rhInput); // sends double data
     explicit CTCPGram(CState *pState);
-    explicit CTCPGram(CString &CommandReturn);
+    explicit CTCPGram(std::string &CommandReturn);
     explicit CTCPGram(const std::string &iProjectName, const std::string &iTestName);
     explicit CTCPGram(std::unique_ptr<CTCPGram> &ReturnTCPGram);
     virtual ~CTCPGram() = default;
 
   public:
-    bool GetCommand(CString &rString);
+    bool GetCommand(std::string &rString);
     bool GetMm(Mm &rMatrix);
 #endif
 
@@ -147,7 +147,7 @@ __pragma(pack(pop))
     virtual std::uint32_t                 GetSize();
     std::uint32_t                         GetPayloadSize() { return m_MessageHeader.GetPayloadSize(); }
     void                                  SetPayloadSize(std::uint32_t iSize) { m_MessageHeader.SetPayloadSize(iSize); }
-    const char                           *GetText();
+    std::string                           GetText();
     std::vector<char>                     GetData();
     virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
     virtual bool                          GetString(std::string &);
