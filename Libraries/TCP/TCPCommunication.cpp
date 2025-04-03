@@ -1483,11 +1483,9 @@ void CCommunicationThread::ThreadFunction()
 #endif
     }
 #ifdef CTRACK
-    catch (CExceptionCTrack &e)
+    catch (const std::exception &e)
     {
-        std::string FileString = e.GetFile();
-        std::string Message    = e.GetMessage();
-        SetError(FileString, e.GetLine(), Message);
+        SetError(__FILE__, __LINE__, e.what());
     }
     catch (CException *e)
     {
@@ -1497,10 +1495,6 @@ void CCommunicationThread::ThreadFunction()
         e->Delete();
     }
 #endif
-    catch (const std::exception &e)
-    {
-        SetError(__FILE__, __LINE__, e.what());
-    }
     catch (...)
     {
         SetError(__FILE__, __LINE__, "An unknown error occurred");
