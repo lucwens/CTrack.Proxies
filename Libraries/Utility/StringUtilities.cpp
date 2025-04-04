@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 #include "StringUtilities.h"
 
 #include <algorithm>
@@ -8,7 +7,6 @@
 #include <codecvt>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <Windows.h>
 
 std::string ToUpperCase(const std::string &input)

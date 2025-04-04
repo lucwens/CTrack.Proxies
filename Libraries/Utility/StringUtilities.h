@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <fmt/format.h>
 
 std::wstring StringToWString(const std::string &str);
