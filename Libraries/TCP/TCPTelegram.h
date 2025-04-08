@@ -104,7 +104,7 @@ __pragma(pack(pop))
     CTCPGram(cliext::vector<double> arDoubles);
 #endif
 #ifdef CTRACK
-    explicit CTCPGram::CTCPGram(CXML *ipXML, unsigned char Code);
+    explicit CTCPGram(CXML *ipXML, unsigned char Code);
     explicit CTCPGram(HMatrix &rhInput, SOCKET iDestination);    // sends channel information
     explicit CTCPGram(ChartIndex FrameNumber, HMatrix &rhInput); // sends double data
     explicit CTCPGram(CState *pState);
