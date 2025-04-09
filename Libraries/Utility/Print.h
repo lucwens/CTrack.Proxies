@@ -10,58 +10,58 @@
 extern std::mutex printMutex;
 
 // Helper function to set console text color
-void SetConsoleColor(WORD color);
+void SetConsoleBackgroundColor(WORD color);
+void SetConsoleTextColor(WORD color);
 void DebugPrintShowHideConsole(bool bShow);
 
-std::string GetDateTimeString();
 void        PrintTimeStamp();
 
 // PrintInfo function
 template <typename... Args> void Print(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintInfo function
 template <typename... Args> void PrintInfo(const std::string &format, Args &&...args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+    SetConsoleTextColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintWarning function
 template <typename... Args> void PrintWarning(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintError function
 template <typename... Args> void PrintError(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_INTENSITY);
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_INTENSITY);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintCommand function
 template <typename... Args> void PrintCommand(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+    SetConsoleTextColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
+    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
