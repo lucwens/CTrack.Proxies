@@ -1,4 +1,3 @@
-#pragma once
 
 #include "Print.h"
 #include "Logging.h"
@@ -8,7 +7,6 @@
 #include <iomanip>
 #include <sstream>
 #include <chrono>
-
 
 std::mutex printMutex;
 

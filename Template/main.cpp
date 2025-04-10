@@ -5,6 +5,7 @@
 #include "../Libraries/Utility/errorHandling.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
+#include "../Libraries/Utility/Logging.h"
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
@@ -22,6 +23,7 @@
 
 int main(int argc, char *argv[])
 {
+    InitLogging();
     //
     // parse port
     unsigned short                PortNumber(40001);

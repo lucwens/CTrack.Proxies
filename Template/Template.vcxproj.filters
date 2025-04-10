@@ -75,6 +75,9 @@
     <ClCompile Include="..\Libraries\XML\XML.cpp">
       <Filter>Libraries\XML</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Logging.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
@@ -127,6 +130,9 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\XML.h">
       <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Logging.h">
+      <Filter>Libraries\Utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
