@@ -15,7 +15,7 @@ enum class LogSeverity
     LOG_FATAL
 };
 
-void InitLogging();
+void InitLogging(const std::string mode);
 
 boost::json::object CreateJSON(LogSeverity severity, const std::string Message);
 std::string         GetJsonLogString(boost::json::object &iMessageJSON, bool pretty = true);
@@ -29,7 +29,7 @@ void LogError(const std::string iMessage);
 std::string SeverityToString(LogSeverity severity);
 double      GetDurationInSeconds(); // this is how long the program is running
 std::string GetTimeStampString(int NumDecimals = 3, char TimeSeparator = ':', bool IncludeDuration = true);
-std::string GetLogFileName(const std::string Extension);
+std::string GetLogFileName(const std::string Extension, const std::string mode = "UI");
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 /*

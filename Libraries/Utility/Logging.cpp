@@ -104,32 +104,32 @@ std::filesystem::path getExecutableDirectory()
     return std::filesystem::path(path).parent_path();
 }
 
-std::string GenerateLogFileName()
+std::string GenerateLogFileName(const std::string mode)
 {
     const std::filesystem::path relLogPath = REL_DIR_LOG;
     std::filesystem::path       exePath    = std::filesystem::absolute(GetExecutablePath());
     std::string                 appName    = exePath.stem().string();
     std::filesystem::path       logDir     = exePath.parent_path() / relLogPath;
     std::filesystem::create_directories(logDir);
-    std::string timeString  = GetTimeStampString(0, '_', false); 
-    std::string logFileName = fmt::format("{}{}{}.", logDir.string(), appName, timeString);
+    std::string timeString  = GetTimeStampString(0, '_', false);
+    std::string logFileName = fmt::format("{}{}_{}_{}.", logDir.string(), appName, timeString, mode);
 
     return logFileName;
 }
 
-std::string GetLogFileName(const std::string Extension)
+std::string GetLogFileName(const std::string Extension, const std::string mode)
 {
     std::string ReturnString;
     if (g_LogFileBaseName.empty())
     {
-        g_LogFileBaseName = GenerateLogFileName();
+        g_LogFileBaseName = GenerateLogFileName(mode);
     }
     return g_LogFileBaseName + Extension;
 }
 
-void InitLogging()
+void InitLogging(const std::string mode)
 {
-    std::string log_file      = GetLogFileName(LogExtension);
+    std::string log_file      = GetLogFileName( LogExtension,mode );
     std::string VersionString = fmt::format("{} {} {}", GIT_TAG, BUILD_DATE, GIT_HASH);
     Log(LogSeverity::LOG_INFO, VersionString);
 }
