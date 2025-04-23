@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Libraries/XML/tinyxml.h"
 #include <cliext/vector>
 #include <cliext/map>
 #include <memory>

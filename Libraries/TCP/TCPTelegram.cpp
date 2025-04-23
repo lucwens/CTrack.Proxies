@@ -4,7 +4,7 @@
 #include "DeviceOutputTCP.h"
 #include "../version.h"
 #else
-#include "../../version.h"
+#include "../../../version.h"
 #endif
 
 #include "TCPTelegram.h"

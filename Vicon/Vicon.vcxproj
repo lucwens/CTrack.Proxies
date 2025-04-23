@@ -80,12 +80,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <IncludePath>..\..\Libraries\Botan\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <IncludePath>..\..\Libraries\Botan\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -130,7 +130,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,8 +152,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32;DISABLE_HANDSHAKE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -168,16 +170,14 @@
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Utility\FileReader.cpp" />
+    <ClCompile Include="..\Libraries\Utility\Logging.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp" />
     <ClCompile Include="..\Libraries\Utility\os.cpp" />
     <ClCompile Include="..\Libraries\Utility\Print.cpp" />
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp" />
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
@@ -195,20 +195,19 @@
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
+    <ClInclude Include="..\Libraries\Utility\FileReader.h" />
+    <ClInclude Include="..\Libraries\Utility\Logging.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkError.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h" />
     <ClInclude Include="..\Libraries\Utility\os.h" />
     <ClInclude Include="..\Libraries\Utility\Print.h" />
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h" />
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
-    <ClInclude Include="..\Libraries\XML\tinystr.h" />
-    <ClInclude Include="..\Libraries\XML\tinyxml.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
     <ClInclude Include="DriverVicon.h" />
-    <ClInclude Include="Header.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf" />

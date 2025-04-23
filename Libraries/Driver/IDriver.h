@@ -16,5 +16,6 @@ class IDriver
     virtual std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &)    = 0;
     virtual std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &) = 0;
     virtual bool                          Run()                                            = 0;
+    virtual bool                          GetValues(std::vector<double> &values)           = 0;
     virtual std::unique_ptr<TiXmlElement> ShutDown()                                       = 0;
 };

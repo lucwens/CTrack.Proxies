@@ -14,6 +14,7 @@ class DriverVicon : public IDriver
     std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &) override;
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &) override;
     bool                          Run() override;
+    bool                          GetValues(std::vector<double> &values) override;
     std::unique_ptr<TiXmlElement> ShutDown() override;
 
   public:

@@ -123,6 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>Default</LanguageStandard>
+      <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,6 +138,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>Default</LanguageStandard>
+      <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -154,10 +156,6 @@
     <ClCompile Include="..\Libraries\Utility\Print.cpp" />
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp" />
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinystr.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxml.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxmlerror.cpp" />
-    <ClCompile Include="..\Libraries\XML\tinyxmlparser.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
@@ -177,8 +175,6 @@
     <ClInclude Include="..\Libraries\Utility\Print.h" />
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h" />
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h" />
-    <ClInclude Include="..\Libraries\XML\tinystr.h" />
-    <ClInclude Include="..\Libraries\XML\tinyxml.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />

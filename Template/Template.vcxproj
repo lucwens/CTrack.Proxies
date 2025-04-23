@@ -81,12 +81,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <IncludePath>..\..\Libraries\Botan\build\include;..\..\Libraries\XML;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <IncludePath>..\..\Libraries\Botan\build\include;..\..\Libraries\XML;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

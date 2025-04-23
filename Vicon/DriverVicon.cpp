@@ -309,6 +309,16 @@ bool DriverVicon::Run()
     return m_bRunning;
 }
 
+bool DriverVicon::GetValues(std::vector<double> &values)
+{
+    if (m_bRunning)
+    {
+        values = m_arValues;
+        return true;
+    }
+    return false;
+}
+
 std::unique_ptr<TiXmlElement> DriverVicon::ShutDown()
 {
     bool Result = true;

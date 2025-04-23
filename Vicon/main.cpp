@@ -4,6 +4,8 @@
 #include "../Libraries/Utility/errorHandling.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
+#include "../Libraries/Utility/Logging.h"
+#include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
                     };
                     break;
                     default:
-                        std::cout << "Unknown TCPgram received" << endl;
+                        PrintInfo("Unknown TCPgram received");
                         break;
                 }
             }
@@ -89,7 +91,7 @@ int main(int argc, char *argv[])
                 PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    PrintInfo("Quit");
                     bContinueLoop = false;
                 }
                 if (Command == TAG_HANDSHAKE)
@@ -117,7 +119,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    PrintInfo("Quit");
                     bContinueLoop = false;
                 }
 
@@ -133,15 +135,24 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver->Run())
             {
-                std::string ValueString, FullLine;
-                for (auto &value : driver->m_arDoubles)
+                std::string         ValueString, FullLine;
+                std::vector<double> arValues;
+                if (driver->GetValues(arValues))
                 {
-                    ValueString = fmt::format("{:10.3f}", value);
-                    FullLine += ValueString + " ";
-                };
-                PrintInfo(FullLine);
-                std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(driver->m_arDoubles);
-                TCPServer.PushSendPackage(TCPGRam);
+                    std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(arValues);
+                    TCPServer.PushSendPackage(TCPGRam);
+
+                    for (auto &value : arValues)
+                    {
+                        ValueString = fmt::format("{:10.3f}", value);
+                        FullLine += ValueString + " ";
+                    };
+                    PrintInfo(FullLine);
+                }
+                else
+                {
+                    PrintError("No values received");
+                }
             }
 
             //------------------------------------------------------------------------------------------------------------------

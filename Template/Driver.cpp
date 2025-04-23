@@ -269,6 +269,16 @@ bool Driver::Run()
     return m_bRunning;
 }
 
+bool Driver::GetValues(std::vector<double>& values) 
+{
+    if (m_bRunning)
+    {
+        values = m_arDoubles;
+        return true;
+    }
+    return false;
+}
+
 std::unique_ptr<TiXmlElement> Driver::ShutDown()
 {
     bool                          Result = true;
