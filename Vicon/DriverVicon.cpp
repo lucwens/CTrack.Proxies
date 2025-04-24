@@ -96,6 +96,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                     {
                         SerialString = std::to_string(CameraIDResult.CameraId);
                     }
+                    FeedBack.append("\n");
                     std::string CameraFeedBack = fmt::format("\n{} {}", CameraName, SerialString);
                     FeedBack.append(CameraFeedBack);
 

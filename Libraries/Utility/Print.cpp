@@ -12,12 +12,13 @@ std::mutex printMutex;
 
 void SetConsoleBackgroundColor(WORD color)
 {
-    HANDLE                     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
-    WORD newColor = (csbi.wAttributes & 0x0F) | (color << 4);
-    SetConsoleTextAttribute(hConsole, newColor);
+    //     HANDLE                     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    //     CONSOLE_SCREEN_BUFFER_INFO csbi;
+    //     GetConsoleScreenBufferInfo(hConsole, &csbi);
+    //     WORD newColor = (csbi.wAttributes & 0x0F) | (color << 4);
+    //     SetConsoleTextAttribute(hConsole, newColor);
 }
+
 void SetConsoleTextColor(WORD color)
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -37,5 +38,5 @@ void DebugPrintShowHideConsole(bool bShow)
 
 void PrintTimeStamp()
 {
-    std::cout << GetTimeStampString();
+    std::cout << GetTimeStampString() << " ";
 }
