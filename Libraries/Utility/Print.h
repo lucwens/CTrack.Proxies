@@ -20,10 +20,8 @@ void        PrintTimeStamp();
 template <typename... Args> void Print(const std::string &format, Args... args)
 {
     std::lock_guard<std::mutex> lock(printMutex);
-    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
     PrintTimeStamp();
     fmt::print(format + "\n", std::forward<Args>(args)...);               // fmt handles formatting
-    SetConsoleTextColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); // Reset to default color
 }
 
 // PrintInfo function

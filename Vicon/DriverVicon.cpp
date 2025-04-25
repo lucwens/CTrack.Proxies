@@ -78,7 +78,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         if (CameraCountResult.Result == VICONSDK::Result::Success)
         {
             bPresent    = true;
-            FeedBack    = fmt::format("SDK Version {}:{}:{}:{}\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
+            FeedBack    = fmt::format("SDK Version {}:{}:{}:{}\r\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
                                       CameraCountResult.CameraCount);
             CameraCount = CameraCountResult.CameraCount;
             for (unsigned int i = 0; i < CameraCountResult.CameraCount; i++)
@@ -96,8 +96,8 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
                     {
                         SerialString = std::to_string(CameraIDResult.CameraId);
                     }
-                    FeedBack.append("\n");
-                    std::string CameraFeedBack = fmt::format("\n{} {}", CameraName, SerialString);
+                    FeedBack.append("\r\n");
+                    std::string CameraFeedBack = fmt::format("{} {}", CameraName, SerialString);
                     FeedBack.append(CameraFeedBack);
 
                     VICONSDK::Output_GetCameraGlobalTranslation    CameraPos = m_Client.GetCameraGlobalTranslation(CameraName);
@@ -145,6 +145,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
     GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
 
     GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
+    PrintInfo(FeedBack);
     return ReturnXML;
 }
 
