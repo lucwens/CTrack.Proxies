@@ -214,6 +214,12 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
     bool                          Result    = true;
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
     GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
+
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELNAMES, m_arChannelNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELTYPES, m_arChannelTypes, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DNAMES, m_arMatrix3DNames, XML_READ);
+    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DINDICES, m_arMatrix3DChannelIndex, XML_READ);
+
     m_bRunning           = true;
     m_LastFrameNumber    = 0;
     m_InitialFrameNumber = 0;
@@ -222,6 +228,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
     {
         Result = false;
     }
+    m_arValues.resize(m_arChannelNames.size(), 0);
 
     GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return ReturnXML;
@@ -231,7 +238,6 @@ bool DriverVicon::Run()
 {
     if (m_bRunning)
     {
-        m_arValues.clear();
         auto FrameResult = m_Client.GetFrame();
         if (FrameResult.Result == VICONSDK::Result::Success)
         {
@@ -245,10 +251,11 @@ bool DriverVicon::Run()
                     m_InitialFrameNumber = m_LastFrameNumber;
                 }
 
-                VICONSDK::Output_GetFrameRate Rate         = m_Client.GetFrameRate();
-                VICONSDK::Output_GetTimecode  timecode     = m_Client.GetTimecode();
-                double                        RelativeTime = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
-                m_arValues.push_back(RelativeTime);
+                VICONSDK::Output_GetFrameRate Rate            = m_Client.GetFrameRate();
+                VICONSDK::Output_GetTimecode  timecode        = m_Client.GetTimecode();
+                double                        RelativeTime    = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
+                m_arValues[0]                                 = m_LastFrameNumber;
+                m_arValues[1]                                 = RelativeTime;
 
                 // get 6DOF data
                 VICONSDK::Output_GetSubjectCount subjectCount = m_Client.GetSubjectCount();

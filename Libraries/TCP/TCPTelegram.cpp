@@ -65,17 +65,12 @@ void CTCPGram::EncodeDoubleArray(std::vector<double> &iDoubleArray)
 
 CTCPGram::CTCPGram(cliext::vector<double> arDoubles)
 {
-    size_t NumDoubles  = arDoubles.size();
+    size_t NumChannels = arDoubles.size();
     size_t PackageSize = sizeof(double) * NumChannels + sizeof(std::uint16_t);
     m_MessageHeader.SetPayloadSize(PackageSize);
     m_MessageHeader.SetCode(Code);
     m_Data.resize(PackageSize);
 
-    std::uint16_t NumChannels = iDoubleArray.size();
-    size_t        PackageSize = sizeof(double) * NumChannels + sizeof(std::uint16_t);
-    m_MessageHeader.SetPayloadSize(PackageSize);
-    m_MessageHeader.SetCode(Code);
-    m_Data.resize(PackageSize);
     memcpy(m_Data.data(), &NumChannels, sizeof(std::uint16_t));
 
     double *pDouble = reinterpret_cast<double *>(m_Data.data() + sizeof(std::uint16_t));
@@ -304,7 +299,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
             {
                 CString Name;
                 CString Unit     = pInputChannel->GetUnit(false); // TODO : UNIT
-                int         Encoding = pInputChannel->GetEncoding();
+                int     Encoding = pInputChannel->GetEncoding();
                 pInputChannel->GetPath(Name);
                 TiXmlElement *pXMLChannel = new TiXmlElement(TAG_CHANNEL);
                 GetSetAttribute(pXMLChannel, ATTRIB_NAME, Name, /*Read*/ false);
