@@ -230,6 +230,7 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
     }
     m_arValues.resize(m_arChannelNames.size(), 0);
 
+
     GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return ReturnXML;
 }
@@ -245,6 +246,7 @@ bool DriverVicon::Run()
             VICONSDK::Output_GetHardwareFrameNumber hardwareFrameNumber = m_Client.GetHardwareFrameNumber();
             if (m_LastFrameNumber != currentFrameNumber.FrameNumber)
             {
+                m_arValues.clear();
                 m_LastFrameNumber = currentFrameNumber.FrameNumber;
                 if (m_InitialFrameNumber == 0)
                 {
@@ -254,8 +256,8 @@ bool DriverVicon::Run()
                 VICONSDK::Output_GetFrameRate Rate            = m_Client.GetFrameRate();
                 VICONSDK::Output_GetTimecode  timecode        = m_Client.GetTimecode();
                 double                        RelativeTime    = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
-                m_arValues[0]                                 = m_LastFrameNumber;
-                m_arValues[1]                                 = RelativeTime;
+                m_arValues.push_back(m_LastFrameNumber);
+                m_arValues.push_back(RelativeTime);
 
                 // get 6DOF data
                 VICONSDK::Output_GetSubjectCount subjectCount = m_Client.GetSubjectCount();
@@ -267,14 +269,11 @@ bool DriverVicon::Run()
                     {
                         m_arValues.push_back(globalTranslation.Translation[i]);
                     }
-#ifdef DISABLE_HANDSHAKE
-                    PrintInfo("6DOF:{} {:.2f} {:.2f} {:.2f}", SubjectName, globalTranslation.Translation[0], globalTranslation.Translation[1],
-                              globalTranslation.Translation[2]);
-#endif
 
                     VICONSDK::Output_GetSegmentGlobalRotationMatrix globalRotationMatrix = m_Client.GetSegmentGlobalRotationMatrix(SubjectName, SubjectName);
-                    for (int i = 0; i < 9; i++)
-                        m_arValues.push_back(globalRotationMatrix.Rotation[i]);
+                    for (int r = 0; r < 3; r++)
+                        for (int c=0;c<3;c++)
+                            m_arValues.push_back(globalRotationMatrix.Rotation[r+c*3]);
 
                     // get the marker information for this 6DOF
                     unsigned int MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
@@ -287,10 +286,6 @@ bool DriverVicon::Run()
                         {
                             m_arValues.push_back(markerGlobalPosition.Translation[i]);
                         }
-#ifdef DISABLE_HANDSHAKE
-                        PrintInfo("6DOF 3D:{} {:.2f} {:.2f} {:.2f}", MarkerName, markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
-                                  markerGlobalPosition.Translation[2]);
-#endif
                     }
                 }
 
@@ -301,10 +296,6 @@ bool DriverVicon::Run()
                     VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalPosition = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
                     for (int i = 0; i < 3; i++)
                         m_arValues.push_back(markerGlobalPosition.Translation[i]);
-#ifdef DISABLE_HANDSHAKE
-                    PrintInfo("Unlabeled : {:.2f} {:.2f} {:.2f}", markerGlobalPosition.Translation[0], markerGlobalPosition.Translation[1],
-                              markerGlobalPosition.Translation[2]);
-#endif
                 }
             }
         }
