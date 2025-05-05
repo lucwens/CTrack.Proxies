@@ -35,8 +35,8 @@ std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<Ti
 
 std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
 {
+    std::string                   Result;
     std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
-    std::string                   Result    = ATTRIB_RESULT_OK;
     std::vector<std::string>      SerialNumbers, IPAddresses;
     GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_SERIAL, SerialNumbers, true);
     GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, true);

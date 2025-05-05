@@ -68,13 +68,13 @@ CTCPGram::CTCPGram(cliext::vector<double> arDoubles)
     size_t NumChannels = arDoubles.size();
     size_t PackageSize = sizeof(double) * NumChannels + sizeof(std::uint16_t);
     m_MessageHeader.SetPayloadSize(PackageSize);
-    m_MessageHeader.SetCode(Code);
+    m_MessageHeader.SetCode(TCPGRAM_CODE_DOUBLES);
     m_Data.resize(PackageSize);
 
     memcpy(m_Data.data(), &NumChannels, sizeof(std::uint16_t));
 
     double *pDouble = reinterpret_cast<double *>(m_Data.data() + sizeof(std::uint16_t));
-    for (size_t c = 0; c < NumDoubles; c++)
+    for (size_t c = 0; c < NumChannels; c++)
         pDouble[c] = arDoubles[c];
 }
 

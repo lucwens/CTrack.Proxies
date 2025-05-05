@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include <cliext/vector>
 #include <cliext/map>
 #include <memory>

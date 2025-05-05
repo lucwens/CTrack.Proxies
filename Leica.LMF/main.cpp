@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
                     };
                     break;
                     default:
-                        std::cout << "Unknown TCPgram received" << endl;
+                        PrintInfo ("Unknown TCPgram received" );
                         break;
                 }
             }
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
                 PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    PrintInfo("Quit");
                     bContinueLoop = false;
                 }
                 if (Command == TAG_HANDSHAKE)
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_COMMAND_QUIT)
                 {
-                    std::cout << "Quit" << endl;
+                    PrintInfo("Quit");
                     bContinueLoop = false;
                 }
 
@@ -129,11 +129,12 @@ int main(int argc, char *argv[])
             //------------------------------------------------------------------------------------------------------------------
             if (driver.Run())
             {
+                std::string valueString;
                 for each (double value in driver.m_doublesArray)
                 {
-                    std::cout << value << " ";
+                    valueString += fmt::format(" {:.3f} ",value);
                 }
-                std::cout << endl;
+                PrintInfo(valueString);
 #ifdef _MANAGED
                 std::unique_ptr<CTCPGram> TCPGRam;
                 TCPGRam.reset(new CTCPGram(driver.m_doublesArray));
@@ -164,8 +165,8 @@ int main(int argc, char *argv[])
                     {
                         double AcquisitionRate(1.0);
                         Command = TAG_COMMAND_CHECKINIT;
-                        std::cout << "Enter the measurement frequency" << endl;
-                        cin >> AcquisitionRate;
+                        PrintCommand("Enter the measurement frequency");
+                        std::cin >> AcquisitionRate;
                         TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
                         if (TCP_XML_Input)
                         {

@@ -16,7 +16,7 @@ class Driver : public IDriver
     std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
     bool                          Run() override;
-    bool                          GetValues(std::array<double>& values) override;
+    bool                          GetValues(std::vector<double>& values) override;
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
