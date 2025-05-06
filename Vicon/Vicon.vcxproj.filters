@@ -19,9 +19,6 @@
     <Filter Include="Libraries\TCP">
       <UniqueIdentifier>{8b7851d4-f3c3-49e1-9225-8c7463b8b0ae}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libraries\Driver">
-      <UniqueIdentifier>{5307f8f1-df4a-41a6-9785-b09b4e33b014}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Documentation">
       <UniqueIdentifier>{14836a83-5afc-4661-b00a-88ca64f18762}</UniqueIdentifier>
     </Filter>
@@ -91,9 +88,6 @@
     </ClInclude>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\Driver\IDriver.h">
-      <Filter>Libraries\Driver</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
       <Filter>Libraries\XML</Filter>

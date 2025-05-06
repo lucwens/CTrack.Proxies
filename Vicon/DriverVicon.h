@@ -1,21 +1,20 @@
 #pragma once
 
-#include "../Libraries/Driver/IDriver.h"
 #include "DataStreamClient.h"
 
 namespace VICONSDK = ViconDataStreamSDK::CPP;
 
-class DriverVicon : public IDriver
+class DriverVicon
 {
   public:
     DriverVicon()          = default;
     virtual ~DriverVicon() = default;
-    std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &) override;
-    std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &) override;
-    std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &) override;
-    bool                          Run() override;
-    bool                          GetValues(std::vector<double> &values) override;
-    std::unique_ptr<TiXmlElement> ShutDown() override;
+    std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &);
+    std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
+    std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
+    bool                          Run();
+    bool                          GetValues(std::vector<double> &values);
+    std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
     bool Connect();

@@ -22,9 +22,6 @@
     <Filter Include="Libraries\Utility">
       <UniqueIdentifier>{6be3e0a0-de50-4e07-bddb-7b624a68d314}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Libraries\Driver">
-      <UniqueIdentifier>{5307f8f1-df4a-41a6-9785-b09b4e33b014}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Libraries\XML">
       <UniqueIdentifier>{2f6642e2-bcf6-49d5-ac26-84175b976104}</UniqueIdentifier>
     </Filter>
@@ -109,9 +106,6 @@
     </ClInclude>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\Driver\IDriver.h">
-      <Filter>Libraries\Driver</Filter>
     </ClInclude>
     <ClInclude Include="Driver.h">
       <Filter>Source Files</Filter>

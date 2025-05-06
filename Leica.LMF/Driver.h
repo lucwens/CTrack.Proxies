@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../Libraries/Driver/IDriver.h"
-
+#include <tinyxml.h>
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
 
-class Driver : public IDriver
+class Driver 
 {
   public:
     Driver()  = default;
@@ -15,8 +14,8 @@ class Driver : public IDriver
     std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &);
     std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
-    bool                          Run() override;
-    bool                          GetValues(std::vector<double>& values) override;
+    bool                          Run() ;
+    bool                          GetValues(std::vector<double>& values) ;
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:

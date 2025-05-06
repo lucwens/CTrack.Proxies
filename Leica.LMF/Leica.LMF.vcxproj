@@ -167,7 +167,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
-    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorHandling.h" />

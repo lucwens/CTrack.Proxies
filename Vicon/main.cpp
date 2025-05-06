@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     // startup server object
     CCommunicationObject     TCPServer;
-    std::unique_ptr<IDriver> driver = std::make_unique<DriverVicon>();
+    std::unique_ptr<DriverVicon> driver = std::make_unique<DriverVicon>();
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
