@@ -12,3 +12,14 @@ std::string  TrimWhitespaces(const std::string &input);
 std::string  ReplaceAll(const std::string &str, const std::string &from, const std::string &to);
 void         ParseCommand(const std::string &input, std::string &command, std::vector<std::string> &parameters);
 bool         IsNumber(const std::string &str);
+
+#ifdef _MANAGED
+
+#include <string>
+#include <msclr/marshal_cppstd.h>
+
+inline std::string ToStdString(System::String ^ managedStr)
+{
+    return msclr::interop::marshal_as<std::string>(managedStr);
+}
+#endif
