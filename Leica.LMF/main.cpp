@@ -8,6 +8,7 @@
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include "../Libraries/Utility/Logging.h"
 
 #ifndef _DEBUG
 #include "../../CTrack_Data/ProxyHandshake.h"
@@ -20,6 +21,7 @@
 
 int main(int argc, char *argv[])
 {
+    InitLogging("");
     //
     // parse port
     unsigned short                PortNumber(40014);
@@ -74,8 +76,7 @@ int main(int argc, char *argv[])
                     };
                     break;
                     default:
-                        PrintInfo ("Unknown TCPgram received" );
-                        break;
+                        PrintError("Unknown TCPgram received ");
                 }
             }
 
@@ -130,14 +131,14 @@ int main(int argc, char *argv[])
             if (driver.Run())
             {
                 std::string valueString;
-                for each (double value in driver.m_doublesArray)
+                for each (double value in driver.m_arDoubles)
                 {
-                    valueString += fmt::format(" {:.3f} ",value);
+                    valueString += fmt::format(" {:.3f} ", value);
                 }
                 PrintInfo(valueString);
 #ifdef _MANAGED
                 std::unique_ptr<CTCPGram> TCPGRam;
-                TCPGRam.reset(new CTCPGram(driver.m_doublesArray));
+                TCPGRam.reset(new CTCPGram(driver.m_arDoubles));
                 TCPServer.PushSendPackage(TCPGRam);
 #endif
             }
@@ -183,10 +184,12 @@ int main(int argc, char *argv[])
         catch (const std::exception &e)
         {
             PrintError("An error occurred : %s", e.what());
+            TCPServer.PushSendPackage(std::make_unique<CTCPGram>(e));
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
+            TCPServer.PushSendPackage(std::make_unique<CTCPGram>(std::exception("An unknown error occurred")));
         }
     }
     PrintInfo("Closing server");

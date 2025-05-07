@@ -11,6 +11,7 @@
 #include "../XML/TinyXML_AttributeValues.h"
 #include "../Utility/Print.h"
 #include "../Utility/StringUtilities.h"
+#include "../XML/proxyKeywords.h"
 #include <fmt/format.h>
 
 //------------------------------------------------------------------------------------------------------------------
@@ -133,10 +134,7 @@ CTCPGram::CTCPGram(const std::vector<char> &arBytes, unsigned char Code)
 
 CTCPGram::CTCPGram(const std::string &string, unsigned char Code)
 {
-    m_Data.assign(string.begin(), string.end());
-    size_t PackageSize = m_Data.size();
-    m_MessageHeader.SetPayloadSize(PackageSize);
-    m_MessageHeader.SetCode(Code);
+    EncodeText(string, Code);
 }
 
 CTCPGram::CTCPGram(std::vector<char> &&arBytes, unsigned char Code)
@@ -153,6 +151,13 @@ CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
     if (rCommand)
         XMLText = XMLToString((rCommand.get()));
     EncodeText(XMLText, Code);
+}
+
+CTCPGram::CTCPGram(const std::exception &e)
+{
+    std::unique_ptr<TiXmlElement> xml     = std::make_unique<TiXmlElement>(TAG_ERROR);
+    std::string                   XMLText = e.what();
+    EncodeText(XMLText, TCPGRAM_CODE_ERROR);
 }
 
 void CTCPGram::CopyFrom(std::unique_ptr<CTCPGram> &rFrom)
@@ -279,14 +284,14 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
 {
     //
     // create an XML for the channels and units
-    TiXmlElement   *pXML           = new TiXmlElement(TAG_CONFIGURATION);
-    double          MeasFreq       = StateManager.GetMeasurementFrequency();
-    CConfiguration *pConfiguration = StateManager.GetConfiguration();
-    std::string     ConfigName     = pConfiguration->GetName();
-    std::string     VersionString  = fmt::format("{}_{}", GIT_TAG, GIT_HASH);
-    GetSetAttribute(pXML, ATTRIB_MEAS_FREQ, MeasFreq, /*Read*/ false);
-    GetSetAttribute(pXML, ATTRIB_CONFIG_FILE, ConfigName, /*Read*/ false);
-    GetSetAttribute(pXML, ATTRIB_VERSION, VersionString, /*Read*/ false);
+    std::unique_ptr<TiXmlElement> pXML           = std::make_unique<TiXmlElement>(TAG_CONFIGURATION);
+    double                        MeasFreq       = StateManager.GetMeasurementFrequency();
+    CConfiguration               *pConfiguration = StateManager.GetConfiguration();
+    std::string                   ConfigName     = pConfiguration->GetName();
+    std::string                   VersionString  = fmt::format("{}_{}", GIT_TAG, GIT_HASH);
+    GetSetAttribute(pXML.get(), ATTRIB_MEAS_FREQ, MeasFreq, /*Read*/ false);
+    GetSetAttribute(pXML.get(), ATTRIB_CONFIG_FILE, ConfigName, /*Read*/ false);
+    GetSetAttribute(pXML.get(), ATTRIB_VERSION, VersionString, /*Read*/ false);
 
     for (int c = 0; c < rhInput.Cols(); c++)
     {
@@ -310,7 +315,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
         }
     }
 
-    std::string XMLText = XML_To_String(pXML);
+    std::string XMLText = XML_To_String(pXML.get());
     EncodeText(XMLText, TCPGRAM_CODE_CONFIGURATION);
 }
 

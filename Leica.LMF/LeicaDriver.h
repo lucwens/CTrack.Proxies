@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include <tinyxml.h>
 #include <cliext/vector>
 #include <cliext/map>
 #include <memory>
@@ -33,6 +33,7 @@ ref class CLeicaLMFDriver
     std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
     bool                          Run();
+    bool                          GetValues(std::vector<double> &values);
     std::unique_ptr<TiXmlElement> ShutDown();
 
   public:
@@ -40,8 +41,8 @@ ref class CLeicaLMFDriver
                        std::vector<std::string> &Types, std::vector<std::string> &Comments);
 
   protected:
-    LMF::Tracker::Tracker ^ ConnectTo(const std::string &DeviceSerial, const std::string &IPAddress);
-    void RegisterEvents(LMF::Tracker::Tracker ^ LMFTracker);
+    bool ConnectTo(const std::string &IPAddress);
+    void RegisterEvents();
 
   protected: // event handlers
     void OnErrorArrived(LMF::Tracker::Tracker ^ sender, LMF::Tracker::ErrorHandling::LmfError ^ error);
@@ -59,8 +60,9 @@ ref class CLeicaLMFDriver
     static void OnPowerSourceChanged(LMF::Tracker::BasicTypes::EnumTypes::ReadOnlyPowerSourceValue ^ sender, LMF::Tracker::Enums::EPowerSource newValue);
     /* */
   public:
-    cliext::vector<double> m_doublesArray;
+    cliext::vector<double> m_arDoubles;
+    bool                   m_bRunning = false;
 
   protected:
-    cliext::map<System::String ^, LMF::Tracker::Tracker ^> m_mapLMFTracker;
+    LMF::Tracker::Tracker ^ m_LMFTracker = nullptr;
 };

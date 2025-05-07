@@ -17,6 +17,14 @@ constexpr char const *ATTRIB_CHALLENGE                          = "challenge";
 
 //------------------------------------------------------------------------------------------------------------------
 /*
+ERROR and WARNING
+*/
+//------------------------------------------------------------------------------------------------------------------
+constexpr char const *TAG_ERROR                                 = "ERROR";
+constexpr char const *TAG_WARNING                               = "WARNING";
+
+//------------------------------------------------------------------------------------------------------------------
+/*
 LIST OF DATA
 */
 //------------------------------------------------------------------------------------------------------------------
@@ -115,12 +123,12 @@ enum ERunState
     STATE_ERROR
 };
 
-constexpr char const *TAG_STATE_ERROR      = "ERROR";
+// constexpr char const *TAG_STATE_ERROR      = "ERROR";
 constexpr char const *ATTRIB_STATE         = "state";
+constexpr char const *ATTRIB_MESSAGE       = "message";
 constexpr char const *STATE_STRING_IDLE    = "IDLE";
 constexpr char const *STATE_STRING_RUNNING = "RUNNING";
 constexpr char const *STATE_STRING_ERROR   = "ERROR";
-constexpr char const *ATTRIB_MESSAGE       = "message";
 
 //------------------------------------------------------------------------------------------------------------------
 /*

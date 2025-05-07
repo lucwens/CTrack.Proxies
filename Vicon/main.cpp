@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     PrintInfo("l : report last coordinates");
 
     // startup server object
-    CCommunicationObject     TCPServer;
+    CCommunicationObject         TCPServer;
     std::unique_ptr<DriverVicon> driver = std::make_unique<DriverVicon>();
 
     TCPServer.Open(TCP_SERVER, PortNumber);
@@ -141,13 +141,6 @@ int main(int argc, char *argv[])
                 {
                     std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(arValues);
                     TCPServer.PushSendPackage(TCPGRam);
-
-                    for (auto &value : arValues)
-                    {
-                        ValueString = fmt::format("{:10.3f}", value);
-                        FullLine += ValueString + " ";
-                    };
-                    PrintInfo(FullLine);
                 }
                 else
                 {

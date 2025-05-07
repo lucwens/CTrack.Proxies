@@ -44,6 +44,7 @@ constexpr unsigned char TCPGRAM_CODE_STRING        = 4;         // string
 constexpr unsigned char TCPGRAM_CODE_EVENT         = 5;         // contains an event
 constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6;         // string
 constexpr unsigned char TCPGRAM_CODE_WARNING       = 7;         // contains a warning
+constexpr unsigned char TCPGRAM_CODE_ERROR         = 8;         // contains a warning
 constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
 constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
 constexpr unsigned char TCPGRAM_CODE_DONT_USE      = UCHAR_MAX; // contains a warning
@@ -90,6 +91,7 @@ __pragma(pack(pop))
     explicit CTCPGram(TiXmlElement &rCommand, unsigned char Code);
     explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code);
     explicit CTCPGram(std::vector<double> &arDoubles);
+    explicit CTCPGram(const std::exception &);
 
     // copy or move other std::vector<T>
     //
