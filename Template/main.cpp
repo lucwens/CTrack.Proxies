@@ -210,16 +210,37 @@ int main(int argc, char *argv[])
                         PrintInfo("Sending a big packet of {} long values", NumValues);
                     };
                     break;
+                    case 'e':
+                    {
+                        throw(std::exception("Fucking Hell"));
+                    };
+                    break;
+                    case 'w':
+                    {
+                        std::unique_ptr<TiXmlElement> TCP_XML_Event;
+                        std::string                   EventMessage = "running hot";
+                        std::string                   EventType    = "warning";
+                        TCP_XML_Event                              = std::make_unique<TiXmlElement>(TAG_EVENT);
+                        GetSetAttribute(TCP_XML_Event.get(), ATTRIB_EVENT_TYPE, EventType, XML_WRITE);
+                        GetSetAttribute(TCP_XML_Event.get(), ATTRIB_EVENT_MESSAGE, EventMessage, XML_WRITE);
+                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(TCP_XML_Event, TCPGRAM_CODE_EVENT);
+                        TCPServer.PushSendPackage(TCPGRam);
+                    };
+                    break;
                 }
             }
         }
         catch (const std::exception &e)
         {
             PrintError("An error occurred : {}", e.what());
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(e);
+            TCPServer.PushSendPackage(TCPGRam);
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>("An unknown error occurred", TCPGRAM_CODE_ERROR);
+            TCPServer.PushSendPackage(TCPGRam);
         }
     }
     PrintInfo("Closing server");
