@@ -378,7 +378,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
     {
         if (ReturnTCPGram->GetCode() == TCPGRAM_CODE_ERROR)
         {
-            SetError(__FILE__, __LINE__, "Error in telegram");
+            throw ReturnTCPGram->GetException();
         }
     }
     return bReturn;    

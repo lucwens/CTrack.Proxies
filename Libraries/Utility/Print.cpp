@@ -38,5 +38,5 @@ void DebugPrintShowHideConsole(bool bShow)
 
 void PrintTimeStamp()
 {
-    std::cout << GetTimeStampString() << " ";
+    std::cout << CTrack::GetTimeStampString() << " ";
 }

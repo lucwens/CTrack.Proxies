@@ -21,7 +21,7 @@
 
 int main(int argc, char *argv[])
 {
-    InitLogging("");
+    CTrack::InitLogging("");
     //
     // parse port
     unsigned short                PortNumber(40014);

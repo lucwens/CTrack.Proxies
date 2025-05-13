@@ -21,6 +21,7 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     std::vector<int>                              Ports             = {5000};
     std::vector<std::vector<std::vector<double>>> CameraPositions;
 
+    throw std::runtime_error("HardwareDetect not implemented");
     // position sub trackers
     for (int i = 0; i < 2; i++)
     {

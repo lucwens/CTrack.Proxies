@@ -37,23 +37,26 @@ each type of data you want to send, the constructor is responsible for convertin
 // and data has been exported to //       // disk
 
 // Codes for tcpgrams
-constexpr unsigned char TCPGRAM_CODE_DOUBLES       = 0;         // array of doubles
-constexpr unsigned char TCPGRAM_CODE_COMMAND       = 1;         // xml containing command
-constexpr unsigned char TCPGRAM_CODE_STATUS        = 2;         // xml containing status
-constexpr unsigned char TCPGRAM_CODE_CONFIGURATION = 3;         // contains an event
-constexpr unsigned char TCPGRAM_CODE_STRING        = 4;         // string
-constexpr unsigned char TCPGRAM_CODE_EVENT         = 5;         // contains an event
-constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6;         // interrupt
-constexpr unsigned char TCPGRAM_CODE_ERROR         = 7;         // contains an error
-constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
-constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
-constexpr unsigned char TCPGRAM_CODE_DONT_USE      = UCHAR_MAX; // contains a warning
+constexpr unsigned char TCPGRAM_CODE_DOUBLES        = 0;         // array of doubles
+constexpr unsigned char TCPGRAM_CODE_COMMAND        = 1;         // xml containing command
+constexpr unsigned char TCPGRAM_CODE_STATUS         = 2;         // xml containing status
+constexpr unsigned char TCPGRAM_CODE_CONFIGURATION  = 3;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_STRING         = 4;         // string
+constexpr unsigned char TCPGRAM_CODE_EVENT          = 5;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_INTERRUPT      = 6;         // interrupt
+constexpr unsigned char TCPGRAM_CODE_ERROR          = 7;         // contains an error
+constexpr unsigned char TCPGRAM_CODE_TEST_BIG       = 10;        // test message with big payload
+constexpr unsigned char TCPGRAM_CODE_INVALID        = 100;       // invalid return
+constexpr unsigned char TCPGRAM_CODE_DONT_USE       = UCHAR_MAX; // contains a warning
 
-const std::set<unsigned char> TCPGRAM_CODE_ALL = {TCPGRAM_CODE_DOUBLES,  TCPGRAM_CODE_COMMAND, TCPGRAM_CODE_STATUS,    TCPGRAM_CODE_CONFIGURATION,
-                                                      TCPGRAM_CODE_STRING,   TCPGRAM_CODE_EVENT,   TCPGRAM_CODE_INTERRUPT, TCPGRAM_CODE_ERROR,
-                                                      TCPGRAM_CODE_TEST_BIG, TCPGRAM_CODE_INVALID};
+const std::set<unsigned char> TCPGRAM_CODE_ALL      = {TCPGRAM_CODE_DOUBLES,  TCPGRAM_CODE_COMMAND, TCPGRAM_CODE_STATUS,    TCPGRAM_CODE_CONFIGURATION,
+                                                       TCPGRAM_CODE_STRING,   TCPGRAM_CODE_EVENT,   TCPGRAM_CODE_INTERRUPT, TCPGRAM_CODE_ERROR,
+                                                       TCPGRAM_CODE_TEST_BIG, TCPGRAM_CODE_INVALID};
 
-constexpr int ALL_DESTINATIONS                     = 0;
+const std::set<unsigned char> TCPGRAM_CODE_HAS_TEXT = {TCPGRAM_CODE_COMMAND, TCPGRAM_CODE_STATUS, TCPGRAM_CODE_CONFIGURATION,
+                                                       TCPGRAM_CODE_STRING,  TCPGRAM_CODE_EVENT,  TCPGRAM_CODE_ERROR};
+
+constexpr int ALL_DESTINATIONS                      = 0;
 
 //--------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -158,6 +161,7 @@ __pragma(pack(pop))
     virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
     virtual bool                          GetString(std::string &);
     virtual void                          Clear();
+    virtual std::exception                GetException();
 
   public:
     TMessageHeader    m_MessageHeader;
