@@ -163,6 +163,8 @@ namespace CTrack
                 return "[WARN]";
             case LogSeverity::LOG_ERROR:
                 return "[ERROR]";
+            case LogSeverity::LOG_DEBUG:
+                return "[DEBUG]";
             case LogSeverity::LOG_FATAL:
                 return "[FATAL]";
             default:
