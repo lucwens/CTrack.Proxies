@@ -501,6 +501,10 @@ namespace CTrack
     void CLogging::fatal(std::string_view message, const source_location_t &loc)
     {
         log(LogSeverity::LOG_FATAL, message, loc);
+        if (m_logFile.is_open())
+        {
+            m_logFile.close();
+        }
     }
 
     // --- Configuration method implementations ---

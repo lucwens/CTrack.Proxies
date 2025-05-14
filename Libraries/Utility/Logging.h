@@ -1,33 +1,39 @@
 #pragma once
 
+#include <boost/json.hpp>
+#include <chrono>
+#include <cstdint> // For std::uint_least32_t
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <mutex>
+#include <optional>
+#include <source_location>
+#include <stdexcept>
 #include <string>
 #include <string_view>
-#include <mutex>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-#include <filesystem>
-#include <optional>
 #include <system_error>
-#include <stdexcept>
-#include <cstdint> // For std::uint_least32_t
 
-// Boost.JSON headers
-#include <boost/json.hpp>
-
-// --- Conditional Source Location (Polyfill for C++17) ---
-// Check for C++20 std::source_location support (though we'll use polyfill for C++17 target)
-#if defined(__cpp_lib_source_location) && __cpp_lib_source_location >= 201907L
-#include <source_location>
-// If C++20 is available, one could alias std::source_location.
-// However, to ensure C++17 compatibility as per LogTesting.cpp, we'll use the polyfill.
-#endif
-
+// --- Logging Macros (adapted from LogTesting.cpp) ---
+#define LOG_INFO(message)                        CTrack::CLogging::getInstance().info(message, MAKE_SOURCE_LOCATION())
+#define LOG_WARNING(message)                     CTrack::CLogging::getInstance().warning(message, MAKE_SOURCE_LOCATION())
+#define LOG_WARNING_EX(exception)                CTrack::CLogging::getInstance().warning(exception, MAKE_SOURCE_LOCATION())
+#define LOG_ERROR_MSG(message)                   CTrack::CLogging::getInstance().error(message, MAKE_SOURCE_LOCATION()) // Renamed from LOG_ERROR
+#define LOG_ERROR_EX(exception)                  CTrack::CLogging::getInstance().error(exception, MAKE_SOURCE_LOCATION())
+#define LOG_ERROR_CODE(message, code)            CTrack::CLogging::getInstance().error(message, code, MAKE_SOURCE_LOCATION())
+#define LOG_ERROR_STDCODE(message, stdErrorCode) CTrack::CLogging::getInstance().error(message, stdErrorCode, MAKE_SOURCE_LOCATION())
+#define LOG_DEBUG(message)                       CTrack::CLogging::getInstance().debug(message, MAKE_SOURCE_LOCATION())
+#define LOG_FATAL(message)                       CTrack::CLogging::getInstance().fatal(message, MAKE_SOURCE_LOCATION())
+#define LOG_ERROR_MSG_SRC_LINE(errorCode, file, line, message)                                                                                                 \
+    CTrack::CLogging::getInstance().error(message, errorCode, CTrack::source_location_polyfill(file, "", line)) // For backward compatibility
 
 namespace CTrack
 {
     void        InitLogging(const std::string mode);
     std::string GetTimeStampString(int NumDecimals = 3, char TimeSeparator = ':', bool IncludeDuration = true);
+    std::string GenerateLogFileName(const std::string mode);
+    std::string GetLogFileName(const std::string Extension, const std::string mode = "UI");
+
     // Fallback for C++17 or when std::source_location is not available
     // (Adapted from LogTesting.cpp)
     struct source_location_polyfill
@@ -48,9 +54,6 @@ namespace CTrack
         [[nodiscard]] constexpr const char         *function_name() const noexcept { return function_name_; }
     };
     using source_location_t = CTrack::source_location_polyfill;
-
-// Macro to get the current source location using the polyfill
-// __func__ is standard C++11. MSVC also supports __FUNCTION__.
 #define MAKE_SOURCE_LOCATION() CTrack::source_location_polyfill(__FILE__, __func__, static_cast<std::uint_least32_t>(__LINE__))
 
     // Original constants from Logging.h
@@ -63,7 +66,7 @@ namespace CTrack
         LOG_INFO,
         LOG_WARNING,
         LOG_ERROR,
-        LOG_FATAL, // From original Logging.h
+        LOG_FATAL,
         LOG_DEBUG
     };
 
@@ -139,17 +142,6 @@ namespace CTrack
         std::string   m_logFileBaseName; // From original global g_LogFileBaseName concept
         std::string   m_currentLogFilePath;
     };
-
-// --- Logging Macros (adapted from LogTesting.cpp) ---
-#define LOG_INFO(message)                        CTrack::CLogging::getInstance().info(message, MAKE_SOURCE_LOCATION())
-#define LOG_WARNING(message)                     CTrack::CLogging::getInstance().warning(message, MAKE_SOURCE_LOCATION())
-#define LOG_WARNING_EX(exception)                CTrack::CLogging::getInstance().warning(exception, MAKE_SOURCE_LOCATION())
-#define LOG_ERROR_MSG(message)                   CTrack::CLogging::getInstance().error(message, MAKE_SOURCE_LOCATION()) // Renamed from LOG_ERROR
-#define LOG_ERROR_EX(exception)                  CTrack::CLogging::getInstance().error(exception, MAKE_SOURCE_LOCATION())
-#define LOG_ERROR_CODE(message, code)            CTrack::CLogging::getInstance().error(message, code, MAKE_SOURCE_LOCATION())
-#define LOG_ERROR_STDCODE(message, stdErrorCode) CTrack::CLogging::getInstance().error(message, stdErrorCode, MAKE_SOURCE_LOCATION())
-#define LOG_DEBUG(message)                       CTrack::CLogging::getInstance().debug(message, MAKE_SOURCE_LOCATION())
-#define LOG_FATAL(message)                       CTrack::CLogging::getInstance().fatal(message, MAKE_SOURCE_LOCATION())
 
     // --- Retaining CPrintLogRecord from original Logging.h ---
     // This class seems to use a separate PrintInfo mechanism, so it's kept as is.

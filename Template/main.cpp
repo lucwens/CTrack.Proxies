@@ -235,12 +235,14 @@ int main(int argc, char *argv[])
             PrintError("An error occurred : {}", e.what());
             std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(e);
             TCPServer.PushSendPackage(TCPGRam);
+            Command.clear();
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
             std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>("An unknown error occurred", TCPGRAM_CODE_ERROR);
             TCPServer.PushSendPackage(TCPGRam);
+            Command.clear();
         }
     }
     PrintInfo("Closing server");
