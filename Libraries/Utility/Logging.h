@@ -29,9 +29,8 @@
 
 namespace CTrack
 {
-    void        InitLogging(const std::string mode);
+    void        InitLogging(const std::string AppID);
     std::string GetTimeStampString(int NumDecimals = 3, char TimeSeparator = ':', bool IncludeDuration = true);
-    std::string GenerateLogFileName(const std::string mode);
     std::string GetLogFileName(const std::string Extension, const std::string mode = "UI");
 
     // Fallback for C++17 or when std::source_location is not available

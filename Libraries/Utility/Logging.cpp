@@ -3,10 +3,11 @@
 #include "Print.h" // For PrintInfo used by CPrintLogRecord
 
 // Standard library includes
-#include <iostream> 
-#include <sstream>  
-#include <vector>  
-#include <fmt/core.h> 
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <regex>
+#include <fmt/core.h>
 
 // Windows-specific for GetModuleFileName
 #if defined(_WIN32) || defined(_WIN64)
@@ -111,41 +112,82 @@ namespace CTrack
         return std::filesystem::path(path).parent_path();
     }
 
-    std::string GenerateLogFileName(const std::string mode)
+    std::string GenerateLogFileName(const std::string AppID, const std::string Extension, bool makeWildcard)
     {
         const std::filesystem::path relLogPath = REL_DIR_LOG;
         std::filesystem::path       exePath    = std::filesystem::absolute(GetExecutablePath());
         std::string                 appName    = exePath.stem().string();
         std::filesystem::path       logDir     = exePath.parent_path() / relLogPath;
         std::filesystem::create_directories(logDir);
-        std::string timeString  = GetTimeStampString(0, '_', false);
-        std::string logFileName = fmt::format("{}{}_{}_{}.", logDir.string(), appName, timeString, mode);
+        std::string timeString = GetTimeStampString(0, '_', false);
+        if (makeWildcard)
+            timeString = ".*";
+        std::string logFileName = fmt::format("{}{}_{}_{}.{}", logDir.string(), appName, timeString, AppID, Extension);
 
         return logFileName;
     }
 
-    std::string GetLogFileName(const std::string Extension, const std::string mode)
+    std::string GetLogFileName(const std::string Extension, const std::string AppID)
     {
         std::string ReturnString;
         if (g_LogFileBaseName.empty())
         {
-            g_LogFileBaseName = GenerateLogFileName(mode);
+            g_LogFileBaseName = GenerateLogFileName(AppID, Extension, false);
         }
-        return g_LogFileBaseName + Extension;
+        return g_LogFileBaseName;
     }
 
-    void InitLogging(const std::string mode)
+    namespace fs = std::filesystem;
+
+    void DeleteOldLogs(const std::string &FullPathMask, int days_old)
     {
-        std::string log_file      = GetLogFileName(LogExtension, mode);
+        fs::path    fullPath  = FullPathMask;
+        std::string dir       = fullPath.parent_path().string();
+        std::string file_mask = fullPath.filename().string();
+        std::regex  mask(file_mask, std::regex::icase | std::regex::ECMAScript);
+        auto        now = std::chrono::system_clock::now();
+        for (const auto &entry : fs::recursive_directory_iterator(dir))
+        {
+            if (fs::is_regular_file(entry))
+            {
+                const auto       &path     = entry.path();
+                const std::string filename = path.filename().string();
+
+                if (std::regex_match(filename, mask))
+                {
+                    auto ftime = fs::last_write_time(path);
+                    auto sctp  = std::chrono::system_clock::now() - (fs::file_time_type::clock::now() - ftime);
+                    auto age   = std::chrono::duration_cast<std::chrono::hours>(now - sctp).count() / 24;
+
+                    if (age >= days_old)
+                    {
+                        try
+                        {
+                            fs::remove(path);
+                        }
+                        catch (const fs::filesystem_error &e)
+                        {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void InitLogging(const std::string AppID)
+    {
+        // remove old log files
+        std::string LogFileWildCard = GenerateLogFileName(AppID, LogExtension, true);
+        DeleteOldLogs(LogFileWildCard,7);
+
+        // create a new log file
+        std::string LogFilePath = GetLogFileName(LogExtension, AppID);
+        CTrack::CLogging::getInstance().enableFileOutput(true, LogFilePath);
+
+        // register our version
         std::string VersionString = fmt::format("{} {} {}", GIT_TAG, BUILD_DATE, GIT_HASH);
         LOG_INFO(VersionString);
     }
-    
-
-    // --- Static member initialization (if any) ---
-    // (Not needed for this singleton implementation)
-
-    // --- Helper function implementations ---
 
     std::string_view SeverityToString(LogSeverity level)
     {
@@ -429,7 +471,7 @@ namespace CTrack
             catch (const std::exception &e)
             {
                 // Fallback to console if JSON serialization fails
-                PrintError("INTERNAL LOGGER ERROR: Failed to serialize JSON for file: {}",e.what());
+                PrintError("INTERNAL LOGGER ERROR: Failed to serialize JSON for file: {}", e.what());
             }
         }
     }
@@ -552,7 +594,7 @@ namespace CTrack
                 }
                 catch (const std::filesystem::filesystem_error &fs_ex)
                 {
-                    PrintError("LOGGER ERROR: Could not create log directory: {} - {}",filepathObj.parent_path().string(),fs_ex.what());
+                    PrintError("LOGGER ERROR: Could not create log directory: {} - {}", filepathObj.parent_path().string(), fs_ex.what());
                     // Optionally, could try to log to current directory as a fallback
                 }
             }
