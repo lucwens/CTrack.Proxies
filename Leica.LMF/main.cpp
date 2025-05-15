@@ -2,7 +2,7 @@
 #include "LeicaDriver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
-#include "../Libraries/Utility/errorHandling.h"
+#include "../Libraries/Utility/errorException.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/StringUtilities.h"

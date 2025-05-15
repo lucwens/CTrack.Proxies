@@ -4,6 +4,7 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/utility/FileReader.h"
 #include "../Libraries/utility/Print.h"
+#include "../Libraries/Utility/errorException.h"
 #include <cmath>
 #include <thread>
 #include <chrono>
@@ -21,7 +22,6 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
     std::vector<int>                              Ports             = {5000};
     std::vector<std::vector<std::vector<double>>> CameraPositions;
 
-    throw std::runtime_error("HardwareDetect not implemented");
     // position sub trackers
     for (int i = 0; i < 2; i++)
     {
@@ -158,6 +158,7 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
 
     std::string XMLString = XMLToString(ReturnXML.get());
 
+    THROW_ERROR("Config detect serious problem");
     return ReturnXML;
 }
 

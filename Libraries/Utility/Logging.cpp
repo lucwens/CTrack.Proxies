@@ -178,11 +178,12 @@ namespace CTrack
     {
         // remove old log files
         std::string LogFileWildCard = GenerateLogFileName(AppID, LogExtension, true);
-        DeleteOldLogs(LogFileWildCard,7);
+        DeleteOldLogs(LogFileWildCard, 7);
 
         // create a new log file
         std::string LogFilePath = GetLogFileName(LogExtension, AppID);
         CTrack::CLogging::getInstance().enableFileOutput(true, LogFilePath);
+        CTrack::CLogging::getInstance().setMinLogLevel(LogSeverity::LOG_INFO);
 
         // register our version
         std::string VersionString = fmt::format("{} {} {}", GIT_TAG, BUILD_DATE, GIT_HASH);
@@ -238,25 +239,53 @@ namespace CTrack
         // The above is tricky. A safer approach for shutdown logging is often explicit.
         // For now, just ensure the file is closed.
 
-        std::scoped_lock lock(m_logMutex); // Protect access to m_logFile
-        if (m_logFile.is_open())
-        {
-            // Optionally write a final "shutting down" message directly to the file stream
-            // to avoid calling full logInternal during destruction.
-            if (m_fileOutputEnabled)
-            {
-                boost::json::object shutdownMsg;
-                shutdownMsg["timestamp"] = getCurrentTimestampISO8601();
-                shutdownMsg["level"]     = "INFO";
-                shutdownMsg["message"]   = "Logger shutting down.";
-                m_logFile << boost::json::serialize(shutdownMsg) << std::endl;
-            }
-            m_logFile.flush();
-            m_logFile.close();
-        }
         // if (m_consoleOutputEnabled && !main_instance_destroyed) { // Example of console shutdown message
         //    std::cout << getCurrentTimestampISO8601() << " [INFO] Logger shutting down." << std::endl;
         // }
+    }
+
+    bool CLogging::logFileOpen()
+    {
+        if (m_fileOutputEnabled)
+        {
+            if (!m_logFile.is_open())
+            {
+                std::filesystem::path filepathObj(m_currentLogFilePath);
+                if (filepathObj.has_parent_path())
+                {
+                    try
+                    {
+                        if (!std::filesystem::exists(filepathObj.parent_path()))
+                        {
+                            std::filesystem::create_directories(filepathObj.parent_path());
+                        }
+                    }
+                    catch (const std::filesystem::filesystem_error &fs_ex)
+                    {
+                        PrintError("LOGGER ERROR: Could not create log directory: {} - {}", filepathObj.parent_path().string(), fs_ex.what());
+                        // Optionally, could try to log to current directory as a fallback
+                    }
+                }
+
+                m_logFile.open(m_currentLogFilePath, std::ios_base::app); // Open in append mode
+                if (!m_logFile.is_open())
+                {
+                    PrintError("LOGGER ERROR: Could not open log file: {}");
+                    m_fileOutputEnabled = false; // Disable if opening failed
+                    return false;
+                }
+            }
+        }
+        return m_logFile.is_open();
+    }
+
+    void CLogging::logFileClose()
+    {
+        if (m_logFile.is_open())
+        {
+            m_logFile.flush();
+            m_logFile.close();
+        }
     }
 
     void CLogging::initialize(const std::string &mode, const std::string &appVersionInfo)
@@ -388,7 +417,6 @@ namespace CTrack
         }
 
         std::scoped_lock lock(m_logMutex);
-
         std::string timestampStr = getCurrentTimestampISO8601();
 
         // Console Output (Plain Text)
@@ -421,7 +449,7 @@ namespace CTrack
         }
 
         // File Output (JSON)
-        if (m_fileOutputEnabled && m_logFile.is_open())
+        if (m_fileOutputEnabled && logFileOpen())
         {
             boost::json::object jsonLogEntry;
             jsonLogEntry["timestamp"] = timestampStr;
@@ -473,6 +501,7 @@ namespace CTrack
                 // Fallback to console if JSON serialization fails
                 PrintError("INTERNAL LOGGER ERROR: Failed to serialize JSON for file: {}", e.what());
             }
+            logFileClose();
         }
     }
 
@@ -576,42 +605,6 @@ namespace CTrack
             }
 
             m_currentLogFilePath = actualFilepath; // Store the path being used
-
-            if (m_logFile.is_open())
-            {
-                m_logFile.close();
-            }
-
-            std::filesystem::path filepathObj(actualFilepath);
-            if (filepathObj.has_parent_path())
-            {
-                try
-                {
-                    if (!std::filesystem::exists(filepathObj.parent_path()))
-                    {
-                        std::filesystem::create_directories(filepathObj.parent_path());
-                    }
-                }
-                catch (const std::filesystem::filesystem_error &fs_ex)
-                {
-                    PrintError("LOGGER ERROR: Could not create log directory: {} - {}", filepathObj.parent_path().string(), fs_ex.what());
-                    // Optionally, could try to log to current directory as a fallback
-                }
-            }
-
-            m_logFile.open(actualFilepath, std::ios_base::app); // Open in append mode
-            if (!m_logFile.is_open())
-            {
-                PrintError("LOGGER ERROR: Could not open log file: {}");
-                m_fileOutputEnabled = false; // Disable if opening failed
-            }
-        }
-        else
-        { // if !enable
-            if (m_logFile.is_open())
-            {
-                m_logFile.close();
-            }
         }
     }
 

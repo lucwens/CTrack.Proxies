@@ -172,7 +172,7 @@
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
-    <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
+    <ClInclude Include="..\Libraries\Utility\errorException.h" />
     <ClInclude Include="..\Libraries\Utility\FileReader.h" />
     <ClInclude Include="..\Libraries\Utility\Logging.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkError.h" />

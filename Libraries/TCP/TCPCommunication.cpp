@@ -17,7 +17,7 @@
 #include "../xml/TinyXML_AttributeValues.h"
 #include "../Utility/os.h"
 #include "../Utility/Print.h"
-#include "../Utility/ErrorHandling.h"
+#include "../Utility/errorException.h"
 #include "../Utility/StringUtilities.h"
 
 #include <ws2tcpip.h>

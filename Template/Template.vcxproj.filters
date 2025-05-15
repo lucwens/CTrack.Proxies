@@ -92,7 +92,7 @@
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
       <Filter>Libraries\TCP</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\Utility\errorHandling.h">
+    <ClInclude Include="..\Libraries\Utility\errorException.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\NetworkError.h">

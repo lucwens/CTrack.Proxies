@@ -40,9 +40,9 @@ each type of data you want to send, the constructor is responsible for convertin
 constexpr unsigned char TCPGRAM_CODE_DOUBLES        = 0;         // array of doubles
 constexpr unsigned char TCPGRAM_CODE_COMMAND        = 1;         // xml containing command
 constexpr unsigned char TCPGRAM_CODE_STATUS         = 2;         // xml containing status
-constexpr unsigned char TCPGRAM_CODE_CONFIGURATION  = 3;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_CONFIGURATION  = 3;         // xml containing a configuration
 constexpr unsigned char TCPGRAM_CODE_STRING         = 4;         // string
-constexpr unsigned char TCPGRAM_CODE_EVENT          = 5;         // contains an event
+constexpr unsigned char TCPGRAM_CODE_EVENT          = 5;         // contains an event, can be a warning 
 constexpr unsigned char TCPGRAM_CODE_INTERRUPT      = 6;         // interrupt
 constexpr unsigned char TCPGRAM_CODE_ERROR          = 7;         // contains an error
 constexpr unsigned char TCPGRAM_CODE_TEST_BIG       = 10;        // test message with big payload

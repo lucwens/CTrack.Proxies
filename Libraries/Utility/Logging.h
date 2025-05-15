@@ -118,6 +118,9 @@ namespace CTrack
         CLogging();
         ~CLogging();
 
+        bool logFileOpen();
+        void logFileClose();
+
         // Core internal logging method
         void logInternal(LogSeverity              level,
                          const source_location_t &location, // Use the alias

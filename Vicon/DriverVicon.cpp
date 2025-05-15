@@ -2,6 +2,7 @@
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
+#include "../Libraries/Utility/errorException.h"
 #include "DriverVicon.h"
 
 #include <iostream>
