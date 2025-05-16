@@ -25,10 +25,6 @@ class CMessage : public CNode
     void CopyFrom(CNode *) override;
 
   public: // accessors
-    std::unique_ptr<TiXmlElement> GetPayloadXML();
-    void                          SetPayloadXML(std::unique_ptr<TiXmlElement> &val);
-    CString                       GetPayload();
-    void                          SetPayload(CString val);
 
   protected:
     std::string m_ID;         // text containing the carried information
