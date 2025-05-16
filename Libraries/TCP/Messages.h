@@ -1,5 +1,4 @@
 #pragma once
-#include "Node_Base.h"
 #include <nlohmann/json.hpp>
 
 // Alias for convenience
@@ -13,16 +12,14 @@ enum class MessageType
     Warning
 };
 
-class CMessage : public CNode
+class CMessage 
 {
-    CMessage();
 
   public:
+    CMessage();
     virtual ~CMessage();
 
   public: // serialization
-    bool XML_ReadWrite(TiXmlElement *&pXML, bool Read /* XML_WRITE XML_READ */, bool bCheckOtherNodes) override;
-    void CopyFrom(CNode *) override;
 
   public: // accessors
 
