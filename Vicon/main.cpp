@@ -1,7 +1,6 @@
 
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
-#include "../Libraries/Utility/errorHandling.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/Logging.h"
