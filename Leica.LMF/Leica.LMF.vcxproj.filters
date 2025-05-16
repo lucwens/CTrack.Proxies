@@ -74,6 +74,9 @@
     <ClCompile Include="..\Libraries\Utility\Logging.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Messages.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
@@ -132,6 +135,9 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\Logging.h">
       <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Messages.h">
+      <Filter>Libraries\TCP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

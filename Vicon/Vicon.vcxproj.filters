@@ -78,6 +78,9 @@
     <ClCompile Include="DriverVicon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Messages.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
@@ -130,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="DriverVicon.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Messages.h">
+      <Filter>Libraries\TCP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
