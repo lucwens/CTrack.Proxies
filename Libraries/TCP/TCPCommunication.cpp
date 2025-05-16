@@ -19,6 +19,7 @@
 #include "../Utility/Print.h"
 #include "../Utility/errorException.h"
 #include "../Utility/StringUtilities.h"
+#include "../Utility/logging.h"
 
 #include <ws2tcpip.h>
 #include <iostream>
@@ -359,7 +360,8 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
     {
         for (auto Iter = m_arReceiveBuffer.begin(); Iter != m_arReceiveBuffer.end(); ++Iter)
         {
-            if (CodeSet.count((*Iter)->GetCode()) > 0)
+            auto Code = (*Iter)->GetCode();
+            if (CodeSet.count(Code) > 0)
             {
                 ReturnTCPGram = std::move(*Iter);
                 m_arReceiveBuffer.erase(Iter);
@@ -372,16 +374,23 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
 
 bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, const unsigned char Code)
 {
-    std::set<unsigned char> CodeSet = {TCPGRAM_CODE_ERROR,Code};
-    bool                    bReturn = GetReceivePackage(ReturnTCPGram, CodeSet);
-    if (bReturn)
+    std::set<unsigned char> CodeSet = {TCPGRAM_CODE_ERROR,TCPGRAM_CODE_EVENT,Code};
+    bool                    bReceived = GetReceivePackage(ReturnTCPGram, CodeSet);
+    if (bReceived)
     {
-        if (ReturnTCPGram->GetCode() == TCPGRAM_CODE_ERROR)
+        switch (ReturnTCPGram->GetCode())
         {
-            throw ReturnTCPGram->GetException();
+            case TCPGRAM_CODE_ERROR:
+                throw ReturnTCPGram->GetException();
+                break;
+            case TCPGRAM_CODE_EVENT:
+                LOG_WARNING(ReturnTCPGram->GetText());
+                PrintWarning(ReturnTCPGram->GetText());
+            default:
+                break;
         }
     }
-    return bReturn;    
+    return bReceived;    
 }
 
 bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)

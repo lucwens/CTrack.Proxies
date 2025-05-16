@@ -158,7 +158,6 @@ std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement>
 
     std::string XMLString = XMLToString(ReturnXML.get());
 
-    THROW_ERROR("Config detect serious problem");
     return ReturnXML;
 }
 

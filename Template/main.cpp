@@ -45,6 +45,9 @@ int main(int argc, char *argv[])
     PrintInfo("l : report last coordinates");
     PrintInfo("b : send big TCP package");
 
+    SetConsoleTabText("Template");
+    SetConsoleTabBackgroundColor(GREEN);
+
     // startup server object
     CCommunicationObject    TCPServer;
     std::unique_ptr<Driver> driver = std::make_unique<Driver>();
@@ -225,6 +228,7 @@ int main(int argc, char *argv[])
                         GetSetAttribute(TCP_XML_Event.get(), ATTRIB_EVENT_MESSAGE, EventMessage, XML_WRITE);
                         std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(TCP_XML_Event, TCPGRAM_CODE_EVENT);
                         TCPServer.PushSendPackage(TCPGRam);
+                        PrintWarning(EventMessage);
                     };
                     break;
                 }

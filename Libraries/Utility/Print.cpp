@@ -25,6 +25,20 @@ void SetConsoleTextColor(WORD color)
     SetConsoleTextAttribute(hConsole, color);
 }
 
+void SetConsoleTabText(const char *newTitle)
+{
+    std::cout << "\033]0;" << newTitle << "\007";
+    std::cout.flush(); // Ensure the sequence is sent immediately
+}
+
+void SetConsoleTabBackgroundColor(int Color) 
+{
+    //
+    std::string Code = fmt::format("\033[2;15;{},|", Color);
+    std::cout << Code;
+    std::cout.flush();
+}
+
 void DebugPrintShowHideConsole(bool bShow)
 {
     HWND hWnd = GetConsoleWindow();

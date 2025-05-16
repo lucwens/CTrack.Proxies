@@ -183,6 +183,7 @@ namespace CTrack
         // create a new log file
         std::string LogFilePath = GetLogFileName(LogExtension, AppID);
         CTrack::CLogging::getInstance().enableFileOutput(true, LogFilePath);
+        CTrack::CLogging::getInstance().enableConsoleOutput(false);
         CTrack::CLogging::getInstance().setMinLogLevel(LogSeverity::LOG_INFO);
 
         // register our version
