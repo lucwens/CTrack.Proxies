@@ -17,8 +17,6 @@ const std::string MessageTypeCommandReturn = "CommandReturn";
 const std::string MessageTypeEvent         = "Event";
 const std::string MessageTypeWarning       = "Warning";
 
-
-
 inline void to_json(json &j, const MessageType &messageType)
 {
     switch (messageType)
@@ -41,7 +39,6 @@ inline void to_json(json &j, const MessageType &messageType)
     }
 }
 
-// 2. Convert JSON to MessageType (e.g., from a string)
 inline void from_json(const json &j, MessageType &messageType)
 {
     if (j.is_string())
@@ -68,6 +65,7 @@ class CMessage
 {
 
   public:
+    CMessage() = default;
     CMessage(const std::string &ID, const MessageType &messageType);
     virtual ~CMessage();
 
@@ -76,12 +74,15 @@ class CMessage
     virtual void        Deserialize(const std::string &data);
 
   public: // accessors
-    const std::string &GetID();
-    const void         SetID(const std::string &id);
-    MessageType        GetType();
-    void               SetType(MessageType type);
-    json              &GetParameters();
+    std::string GetID() const;
+    void        SetID(const std::string &id);
+    MessageType GetType() const;
+    void        SetType(MessageType type);
+    json       &GetParameters();
 
   protected:
     json m_Parameters; // parameters can be accessed as a JSON object
 };
+
+const std::string KeyWordID   = "ID";   // ID of the message
+const std::string KeyWordType = "Type"; // Type of the message

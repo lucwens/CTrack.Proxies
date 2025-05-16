@@ -2,6 +2,7 @@
 #include "Driver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
+#include "../Libraries/TCP/Messages.h"
 #include "../Libraries/Utility/errorException.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
@@ -24,6 +25,62 @@
 int main(int argc, char *argv[])
 {
     CTrack::InitLogging("");
+    SetConsoleTabText("Template");
+    SetConsoleTabBackgroundColor(GREEN);
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+
+    auto respondFunction = [](CMessage &i_message)
+    {
+        auto LambdaPrintKeyValue = [](CMessage &message, const std::string &key)
+        {
+            std::string value;
+
+            if (message.GetParameters().contains(key) && !message.GetParameters()[key].is_null())
+            {
+                value = message.GetParameters()[key].get<std::string>();
+                PrintInfo("{} : {}", key, value);
+            }
+            else
+            {
+                PrintError("Key {} : not found", key);
+            }
+        };
+        std::cout << "Count : " << i_message.GetParameters().size() << std::endl;
+        LambdaPrintKeyValue(i_message, KeyWordID);
+        LambdaPrintKeyValue(i_message, "Test");
+    };
+
+    // This is the engine side that sends a command
+    CMessage Message("HardwareDetect", MessageType::Command);
+    respondFunction(Message);
+    Message.GetParameters()["Test"] = "TestValue";
+    respondFunction(Message);
+    auto sendString = Message.Serialize();
+    respondFunction(Message);
+
+    // this is the proxy side that receives the command and deserializes it
+    CMessage Message2;
+    respondFunction(Message2);
+    Message2.Deserialize(sendString);
+    respondFunction(Message2);
+
+    std::map<std::string, std::function<void(CMessage &)>> responderMap;
+
+    responderMap["HardwareDetect"] = respondFunction;
+
+    auto CommandName               = Message.GetID();
+    if (responderMap.find(CommandName) != responderMap.end())
+    {
+        responderMap[Message.GetID()](Message2);
+    }
+    else
+    {
+        std::cout << "No function found for this message" << std::endl;
+    }
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+
     //
     // parse port
     unsigned short                PortNumber(40001);
@@ -44,9 +101,6 @@ int main(int argc, char *argv[])
     PrintInfo("i : print info");
     PrintInfo("l : report last coordinates");
     PrintInfo("b : send big TCP package");
-
-    SetConsoleTabText("Template");
-    SetConsoleTabBackgroundColor(GREEN);
 
     // startup server object
     CCommunicationObject    TCPServer;

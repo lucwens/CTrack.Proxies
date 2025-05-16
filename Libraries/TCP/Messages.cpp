@@ -1,8 +1,6 @@
 #include "Messages.h"
 #include "../Utility/Print.h"
 
-const std::string KeyWordID   = "ID";   // ID of the message
-const std::string KeyWordType = "Type"; // Type of the message
 
 CMessage::CMessage(const std::string &ID, const MessageType &messageType)
 {
@@ -33,7 +31,7 @@ void CMessage::Deserialize(const std::string &data)
     };
 }
 
-const std::string &CMessage::GetID()
+ std::string CMessage::GetID() const
 {
     if (m_Parameters.contains(KeyWordID))
     {
@@ -45,7 +43,7 @@ const std::string &CMessage::GetID()
     }
 }
 
-const void CMessage::SetID(const std::string &id)
+ void CMessage::SetID(const std::string &id) 
 {
     if (m_Parameters.contains(KeyWordID))
     {
@@ -57,7 +55,7 @@ const void CMessage::SetID(const std::string &id)
     }
 }
 
-MessageType CMessage::GetType()
+MessageType CMessage::GetType() const
 {
     if (m_Parameters.contains(KeyWordType))
     {
