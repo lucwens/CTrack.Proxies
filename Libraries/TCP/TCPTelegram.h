@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Message.h"
+
 #include <tinyxml.h>
 #include <deque>
 #include <winsock2.h>
@@ -93,6 +95,7 @@ __pragma(pack(pop))
     explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code);
     explicit CTCPGram(std::vector<double> &arDoubles);
     explicit CTCPGram(const std::exception &);
+    explicit CTCPGram(const CTrack::Message &); 
 
     // copy or move other std::vector<T>
     //
@@ -154,6 +157,7 @@ __pragma(pack(pop))
     std::vector<char>                     GetData();
     virtual std::unique_ptr<TiXmlElement> GetXML(); // returned pointer must be deleted by receiving code
     virtual bool                          GetString(std::string &);
+    bool                                  GetMessage(CTrack::Message &);
     virtual void                          Clear();
     virtual std::exception                GetException();
 

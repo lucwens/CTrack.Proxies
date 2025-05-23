@@ -160,6 +160,11 @@ CTCPGram::CTCPGram(const std::exception &e)
     EncodeText(XMLText, TCPGRAM_CODE_ERROR);
 }
 
+CTCPGram::CTCPGram(const CTrack::Message & message)
+{
+    EncodeText(message.Serialize(), TCPGRAM_CODE_MESSAGE);
+}
+
 void CTCPGram::CopyFrom(std::unique_ptr<CTCPGram> &rFrom)
 {
     m_Destination   = rFrom->m_Destination;
@@ -186,10 +191,19 @@ std::string CTCPGram::GetText()
 {
     std::string   ReturnString;
     unsigned char DataType = GetCode();
-    if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
-        return NULL;
+    if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS && DataType != TCPGRAM_CODE_MESSAGE)
+        return "";
     ReturnString.assign(m_Data.begin(), m_Data.end());
     return ReturnString;
+}
+
+bool CTCPGram::GetString(std::string &rString)
+{
+    unsigned char DataType = GetCode();
+    if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS && DataType != TCPGRAM_CODE_MESSAGE)
+        return false;
+    rString = GetText();
+    return true;
 }
 
 std::vector<char> CTCPGram::GetData()
@@ -220,12 +234,12 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
     return ReturnXML;
 }
 
-bool CTCPGram::GetString(std::string &rString)
+
+bool CTCPGram::GetMessage(CTrack::Message &message)
 {
-    unsigned char DataType = GetCode();
-    if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
+    if (GetCode() != TCPGRAM_CODE_MESSAGE)
         return false;
-    rString = GetText();
+    message.Deserialize(GetText());
     return true;
 }
 
