@@ -2,8 +2,10 @@
 
 #ifdef CTRACK
 #include "../Proxies/Libraries/TCP/TCPTelegram.h"
+#include "../Proxies/Libraries/TCP/MessageResponder.h"
 #else
 #include "TCPTelegram.h"
+#include "MessageResponder.h"
 #endif
 
 #include <list>
@@ -177,7 +179,7 @@ All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
 
-class CCommunicationInterface
+class CCommunicationInterface : public CTrack::MessageResponder
 {
     friend class CCommunicationThread;
 

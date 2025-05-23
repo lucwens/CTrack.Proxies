@@ -21,12 +21,12 @@ namespace CTrack
         }
 
         // Allow copy constructor and copy assignment operator
-        Message(const Message &)       = default;
+        Message(const Message &)            = default;
         Message &operator=(const Message &) = default;
 
         // Allow move constructor and move assignment operator
-        Message(Message &&)            = default;
-        Message &operator=(Message &&) = default;
+        Message(Message &&)                 = default;
+        Message &operator=(Message &&)      = default;
 
         explicit Message(json raw) : data_(std::move(raw)) {}
 

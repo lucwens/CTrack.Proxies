@@ -20,16 +20,16 @@ namespace CTrack
         ~Subscription();
         Subscription()                                = default;
         // Enable move/copy semantics for use in containers
-        Subscription(const Subscription &)            = default;
+        Subscription(const Subscription &)            = delete;
+        Subscription &operator=(const Subscription &) = delete;
         Subscription(Subscription &&)                 = default;
-        Subscription &operator=(const Subscription &) = default;
         Subscription &operator=(Subscription &&)      = default;
 
         void Unsubscribe();
 
       private:
         std::weak_ptr<MessageResponder> router_;
-        std::string           messageID_;
-        HandlerID             handlerID_ = 0;
+        std::string                     messageID_;
+        HandlerID                       handlerID_ = 0;
     };
 } // namespace CTrack
