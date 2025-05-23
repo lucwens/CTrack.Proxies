@@ -1,8 +1,12 @@
 #pragma once
 
+// next lines are because of defines in Julia 
+#undef strtoull
+#undef strtoll
 #include <nlohmann/json.hpp>
 #include <string>
 #include <utility>
+
 
 namespace CTrack
 {
