@@ -185,9 +185,9 @@ std::uint32_t CTCPGram::GetSize()
 std::string CTCPGram::GetText()
 {
     std::string   ReturnString;
-    unsigned char code = GetCode();
-    if (TCPGRAM_CODE_HAS_TEXT.count(code) == 0)
-        return "no text available";
+    unsigned char DataType = GetCode();
+    if (DataType != TCPGRAM_CODE_COMMAND && DataType != TCPGRAM_CODE_STATUS)
+        return NULL;
     ReturnString.assign(m_Data.begin(), m_Data.end());
     return ReturnString;
 }

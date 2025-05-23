@@ -204,9 +204,7 @@ class CCommunicationInterface
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
         std::unique_ptr<CTCPGram> &); // thrd: pops the oldest package from the start of the list, the returned CTCPGram needs to be destroyed afterwards
-    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> & ,
-                                   const std::set<unsigned char> &CodeSet = TCPGRAM_CODE_ALL); 
-    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code); 
+    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code = TCPGRAM_CODE_DONT_USE); 
                                                                                 // CTCPGram needs to be destroyed afterwards
     virtual bool GetLastReceivePackage(std::unique_ptr<CTCPGram> &);            // only last, most recent package, others are deleted
     virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);                  // Object: pushes a new send package to the end of the list

@@ -152,7 +152,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Libraries\TCP\Messages.cpp" />
+    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp" />
+    <ClCompile Include="..\Libraries\TCP\Request.cpp" />
+    <ClCompile Include="..\Libraries\TCP\Subscription.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
     <ClCompile Include="..\Libraries\Utility\FileReader.cpp" />
@@ -171,7 +173,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
-    <ClInclude Include="..\Libraries\TCP\Messages.h" />
+    <ClInclude Include="..\Libraries\TCP\Message.h" />
+    <ClInclude Include="..\Libraries\TCP\MessageResponder.h" />
+    <ClInclude Include="..\Libraries\TCP\Request.h" />
+    <ClInclude Include="..\Libraries\TCP\Subscription.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\errorException.h" />

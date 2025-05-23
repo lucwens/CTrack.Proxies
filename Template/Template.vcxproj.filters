@@ -28,6 +28,9 @@
     <Filter Include="Documentation">
       <UniqueIdentifier>{def92487-9f98-48ed-9585-ae7922b656f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\TCP\Message">
+      <UniqueIdentifier>{c10e850a-c476-4721-a8b7-dec1a60bc327}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
@@ -75,8 +78,14 @@
     <ClCompile Include="..\Libraries\Utility\Logging.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\TCP\Messages.cpp">
-      <Filter>Libraries\TCP</Filter>
+    <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Request.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -131,8 +140,17 @@
     <ClInclude Include="..\Libraries\Utility\Logging.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\TCP\Messages.h">
-      <Filter>Libraries\TCP</Filter>
+    <ClInclude Include="..\Libraries\TCP\Request.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\MessageResponder.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Message.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscription.h">
+      <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

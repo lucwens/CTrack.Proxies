@@ -350,7 +350,7 @@ void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
     }
 }
 
-bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, const std::set<unsigned char> &CodeSet)
+bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char Code)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
 #ifdef _DEBUG
@@ -358,39 +358,26 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
 #endif
     if (!m_arReceiveBuffer.empty())
     {
-        for (auto Iter = m_arReceiveBuffer.begin(); Iter != m_arReceiveBuffer.end(); ++Iter)
+        // iterate from front to back, check for valid code
+        auto Iter = m_arReceiveBuffer.begin();
+        while (Iter != m_arReceiveBuffer.end())
         {
-            auto Code = (*Iter)->GetCode();
-            if (CodeSet.count(Code) > 0)
+            bool bValidCode = true;
+            if (Code != TCPGRAM_CODE_DONT_USE)
+            {
+                if ((*Iter)->GetCode() != Code)
+                    bValidCode = false;
+            }
+            if (bValidCode)
             {
                 ReturnTCPGram = std::move(*Iter);
                 m_arReceiveBuffer.erase(Iter);
                 return true;
             }
+            Iter++;
         }
     }
     return false;
-}
-
-bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, const unsigned char Code)
-{
-    std::set<unsigned char> CodeSet = {TCPGRAM_CODE_ERROR,TCPGRAM_CODE_EVENT,Code};
-    bool                    bReceived = GetReceivePackage(ReturnTCPGram, CodeSet);
-    if (bReceived)
-    {
-        switch (ReturnTCPGram->GetCode())
-        {
-            case TCPGRAM_CODE_ERROR:
-                throw ReturnTCPGram->GetException();
-                break;
-            case TCPGRAM_CODE_EVENT:
-                LOG_WARNING(ReturnTCPGram->GetText());
-                PrintWarning(ReturnTCPGram->GetText());
-            default:
-                break;
-        }
-    }
-    return bReceived;    
 }
 
 bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
@@ -407,6 +394,7 @@ bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &R
     }
     return false;
 }
+
 
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
