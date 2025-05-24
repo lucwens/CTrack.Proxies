@@ -369,18 +369,16 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
         std::unique_ptr<CTCPGram> &pTCPGram = (*Iter);
 
         // handle message telegrams on the fly as well
-        if (ReturnTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
+        if (pTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
         {
             CTrack::Message message;
-            if (ReturnTCPGram->GetMessage(message))
+            if (pTCPGram->GetMessage(message))
             {
                 m_pMessageResponder->RespondToMessage(message);
                 m_arReceiveBuffer.erase(Iter);
             }
-        }
-
-        // look for the main requrested telegram type
-        if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
+        } 
+        else if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
         {
             ReturnTCPGram = std::move(pTCPGram);
             m_arReceiveBuffer.erase(Iter);

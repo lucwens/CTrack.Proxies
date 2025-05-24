@@ -239,7 +239,7 @@ bool CTCPGram::GetMessage(CTrack::Message &message)
 {
     if (GetCode() != TCPGRAM_CODE_MESSAGE)
         return false;
-    message.Deserialize(GetText());
+    message = CTrack::Message::Deserialize(GetText());
     return true;
 }
 
