@@ -314,6 +314,11 @@ CCommunicationParameters
 */
 //------------------------------------------------------------------------------------------------------------------
 
+CCommunicationInterface::CCommunicationInterface()
+{
+    m_pMessageResponder = std::make_shared<CTrack::MessageResponder>();
+}
+
 void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
 {
     if (ipFrom)
@@ -350,51 +355,41 @@ void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
     }
 }
 
-bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char Code)
+bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char CodeFilter)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
-    if (!m_arReceiveBuffer.empty())
+
+    // go through the telegrams in the receive buffer until we find a valid telegram
+    auto Iter = m_arReceiveBuffer.begin();
+    while (Iter != m_arReceiveBuffer.end())
     {
-        // iterate from front to back, check for valid code
-        auto Iter = m_arReceiveBuffer.begin();
-        while (Iter != m_arReceiveBuffer.end())
+        std::unique_ptr<CTCPGram> &pTCPGram = (*Iter);
+
+        // handle message telegrams on the fly as well
+        if (ReturnTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
         {
-            bool bValidCode = true;
-            if (Code != TCPGRAM_CODE_DONT_USE)
+            CTrack::Message message;
+            if (ReturnTCPGram->GetMessage(message))
             {
-                if ((*Iter)->GetCode() != Code)
-                    bValidCode = false;
-            }
-            if (bValidCode)
-            {
-                ReturnTCPGram = std::move(*Iter);
+                m_pMessageResponder->RespondToMessage(message);
                 m_arReceiveBuffer.erase(Iter);
-                return true;
             }
-            Iter++;
         }
+
+        // look for the main requrested telegram type
+        if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
+        {
+            ReturnTCPGram = std::move(pTCPGram);
+            m_arReceiveBuffer.erase(Iter);
+            return true;
+        }
+        Iter++;
     }
     return false;
 }
-
-bool CCommunicationInterface::GetLastReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
-{
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-#ifdef _DEBUG
-    RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
-#endif
-    if (!m_arReceiveBuffer.empty())
-    {
-        ReturnTCPGram = std::move(m_arReceiveBuffer.front());
-        m_arReceiveBuffer.pop_front();
-        return true;
-    }
-    return false;
-}
-
 
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {

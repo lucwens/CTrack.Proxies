@@ -220,15 +220,8 @@ int main(int argc, char *argv[])
                     break;
                     case 'w':
                     {
-                        std::unique_ptr<TiXmlElement> TCP_XML_Event;
-                        std::string                   EventMessage = "running hot";
-                        std::string                   EventType    = "warning";
-                        TCP_XML_Event                              = std::make_unique<TiXmlElement>(TAG_EVENT);
-                        GetSetAttribute(TCP_XML_Event.get(), ATTRIB_EVENT_TYPE, EventType, XML_WRITE);
-                        GetSetAttribute(TCP_XML_Event.get(), ATTRIB_EVENT_MESSAGE, EventMessage, XML_WRITE);
-                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(TCP_XML_Event, TCPGRAM_CODE_EVENT);
+                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(CTrack::Message("warning",{{"message","The system is running hot"}}));
                         TCPServer.PushSendPackage(TCPGRam);
-                        PrintWarning(EventMessage);
                     };
                     break;
                 }

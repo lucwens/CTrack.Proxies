@@ -18,11 +18,11 @@ namespace CTrack
       public:
         void                       SetSendFunction(std::function<void(const std::string &)>);
         [[nodiscard]] Subscription Subscribe(const std::string &id, Handler);
-        void                       ReceiveMessage(const Message &);
+        void                       Unsubscribe(const std::string &id, HandlerID handlerID);
+        void                       RespondToMessage(const Message &);
         void                       SendMessage(const std::string &id, const json &);
         void                       SendMessage(const Message &);
         std::future<Message>       SendRequest(const Message &, Handler = {});
-        void                       Unsubscribe(const std::string &id, HandlerID handlerID);
 
       private:
         mutable std::mutex                                                      mutex_;

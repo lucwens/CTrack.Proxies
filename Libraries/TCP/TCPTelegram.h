@@ -50,7 +50,7 @@ constexpr unsigned char TCPGRAM_CODE_ERROR         = 7;         // contains an e
 constexpr unsigned char TCPGRAM_CODE_MESSAGE       = 8;         //
 constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
 constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
-constexpr unsigned char TCPGRAM_CODE_DONT_USE      = UCHAR_MAX; // contains a warning
+constexpr unsigned char TCPGRAM_CODE_ALL           = UCHAR_MAX; // used in receive to indicate all messages
 
 constexpr int ALL_DESTINATIONS                     = 0;
 
@@ -95,7 +95,7 @@ __pragma(pack(pop))
     explicit CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code);
     explicit CTCPGram(std::vector<double> &arDoubles);
     explicit CTCPGram(const std::exception &);
-    explicit CTCPGram(const CTrack::Message &); 
+    explicit CTCPGram(const CTrack::Message &);
 
     // copy or move other std::vector<T>
     //

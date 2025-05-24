@@ -179,7 +179,7 @@ All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
 
-class CCommunicationInterface : public CTrack::MessageResponder
+class CCommunicationInterface 
 {
     friend class CCommunicationThread;
 
@@ -187,6 +187,7 @@ class CCommunicationInterface : public CTrack::MessageResponder
     void CopyFrom(CCommunicationInterface *ipFrom);
 
   public:
+    CCommunicationInterface();
     E_COMMUNICATION_Mode GetCommunicationMode();
     void                 SetCommunicationMode(E_COMMUNICATION_Mode iMode);
     unsigned short       GetPort();
@@ -206,9 +207,8 @@ class CCommunicationInterface : public CTrack::MessageResponder
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
         std::unique_ptr<CTCPGram> &); // thrd: pops the oldest package from the start of the list, the returned CTCPGram needs to be destroyed afterwards
-    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code = TCPGRAM_CODE_DONT_USE); 
+    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code = TCPGRAM_CODE_ALL); 
                                                                                 // CTCPGram needs to be destroyed afterwards
-    virtual bool GetLastReceivePackage(std::unique_ptr<CTCPGram> &);            // only last, most recent package, others are deleted
     virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);                  // Object: pushes a new send package to the end of the list
     virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &);               // thrd: pushes a new received package to the end of the list
     virtual void ClearBuffers();
@@ -235,6 +235,9 @@ class CCommunicationInterface : public CTrack::MessageResponder
     std::recursive_mutex                 m_Mutex; // critical section to be used with CSingleLock to protect data
     ConnectResponder                     m_OnConnectFunction{};
     ConnectResponder                     m_OnDisconnectFunction{};
+
+  public:
+    std::shared_ptr<CTrack::MessageResponder> m_pMessageResponder; // used to send messages to the UI
 #ifdef CTRACK_UI
   public: // edit settings
     virtual void EditSettings(CPropertySheet *pPropertySheet = nullptr);

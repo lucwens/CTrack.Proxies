@@ -21,7 +21,7 @@ namespace CTrack
         return Subscription(this->shared_from_this(), id, newID);
     }
 
-    void MessageResponder::ReceiveMessage(const Message &message)
+    void MessageResponder::RespondToMessage(const Message &message)
     {
         // standard handlers
         std::vector<Handler> copiedHandlers;
