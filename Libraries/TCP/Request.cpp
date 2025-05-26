@@ -3,7 +3,7 @@
 
 namespace CTrack
 {
-    Request::Request(MessageResponder &messageRouter, const Message &message, Handler i_handler)
+    Request::Request(const Message &message, Handler i_handler)
     {
         handler = std::move(i_handler);
     }
@@ -24,7 +24,7 @@ namespace CTrack
         this->handler = std::move(handler);
     }
 
-    Handler&& Request::GetHandler() 
+    Handler&& Request::TakeHandler() 
     {
         return std::move(handler);
     }

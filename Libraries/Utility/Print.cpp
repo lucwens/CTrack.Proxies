@@ -65,7 +65,6 @@ void DebugPrintShowHideConsole(bool bShow)
         ShowWindow(hWnd, bShow ? SW_SHOWNORMAL : SW_HIDE);
     }
 }
-
 void PrintTimeStamp()
 {
     std::cout << CTrack::GetTimeStampString() << " ";

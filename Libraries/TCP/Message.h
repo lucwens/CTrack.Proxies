@@ -46,9 +46,9 @@ namespace CTrack
             }
             return Message(std::move(parsed));
         }
-
+        // GetID and GetParams will throw if the keys are not present or not of the expected type
         const std::string &GetID() const { return data_.at("id").get_ref<const std::string &>(); }
-        void               SetID(const std::string &id) { data_["id"] = id; }
+        void               SetID(const std::string_view &id) { data_["id"] = id; }
         const json        &GetParams() const { return data_.at("params"); }
         json              &GetParams() { return data_["params"]; }
         void               SetParams(const json &params) { data_["params"] = params; }

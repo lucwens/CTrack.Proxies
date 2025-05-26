@@ -9,14 +9,13 @@
 namespace CTrack
 {
     class Message;
-    class MessageResponder;
     using Reply   = std::unique_ptr<Message>;
     using Handler = std::function<Reply(const Message &)>;
 
     class Request
     {
       public:
-        Request(MessageResponder &, const Message &, Handler = {});
+        Request(const Message &, Handler = {});
         // Delete copy constructor and copy assignment operator
         Request(const Request &)            = delete;
         Request &operator=(const Request &) = delete;
@@ -26,7 +25,7 @@ namespace CTrack
         Request &operator=(Request &&)      = default;
 
         void                 SetHandler(Handler handler);
-        Handler&&              GetHandler() ;
+        Handler            &&TakeHandler();
         std::future<Message> GetReplyFuture();
         Reply                SetReply(const Message &);
 

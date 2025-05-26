@@ -55,7 +55,7 @@ namespace CTrack
             auto  reply   = request.SetReply(message);
             if (reply)
             {
-                Handler handler = std::move(request.GetHandler());
+                Handler handler = std::move(request.TakeHandler());
                 if (handler)
                 {
                     SendRequest(*reply, handler);
@@ -89,9 +89,8 @@ namespace CTrack
     void MessageResponder::SendRequest(Message &message, Handler handler)
     {
         std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
-        requests_.emplace(message.GetID(), Request(*this, message, handler));
-        auto iter = requests_.find(message.GetID());
-        if (iter == requests_.end())
+        auto [iter, inserted] = requests_.emplace(message.GetID(), Request(message, handler));
+        if (!inserted)
         {
             throw std::runtime_error("Failed to create request for message ID: " + message.GetID());
         }
@@ -102,9 +101,8 @@ namespace CTrack
     void MessageResponder::SendRequest(Message &message, std::future<Message> &future)
     {
         std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
-        requests_.emplace(message.GetID(), Request(*this, message, {}));
-        auto iter = requests_.find(message.GetID());
-        if (iter == requests_.end())
+        auto [iter, inserted] = requests_.emplace(message.GetID(), Request(message, {}));
+        if (!inserted)
         {
             throw std::runtime_error("Failed to create request for message ID: " + message.GetID());
         }

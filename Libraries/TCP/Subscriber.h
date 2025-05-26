@@ -25,7 +25,6 @@ namespace CTrack
       protected:
         // Call this to add a subscription; ownership kept here.
         void TrackSubscription(Subscription &&sub) { subscriptions_.emplace_back(std::move(sub)); }
-
         void ClearSubscriptions() { subscriptions_.clear(); }
 
       private:
