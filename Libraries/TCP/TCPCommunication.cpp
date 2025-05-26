@@ -375,16 +375,17 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
             if (pTCPGram->GetMessage(message))
             {
                 m_pMessageResponder->RespondToMessage(message);
-                m_arReceiveBuffer.erase(Iter);
+                Iter =  m_arReceiveBuffer.erase(Iter);
             }
         } 
         else if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
         {
             ReturnTCPGram = std::move(pTCPGram);
-            m_arReceiveBuffer.erase(Iter);
+            Iter =  m_arReceiveBuffer.erase(Iter);
             return true;
         }
-        Iter++;
+        else
+            Iter++;
     }
     return false;
 }
