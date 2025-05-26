@@ -6,7 +6,7 @@ namespace CTrack
     using Handler   = std::function<Reply(const Message &)>;
     using HandlerID = size_t;
 
-    void MessageResponder::SetSendFunction(std::function<void(const std::string &)> sendFunction)
+    void MessageResponder::SetSendFunction(std::function<void(Message &)> sendFunction)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         sendFunction_ = std::move(sendFunction);
@@ -47,12 +47,20 @@ namespace CTrack
         }
 
         // request handlers
-        std::lock_guard<std::mutex> lock(requestsMutex_);
+        std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
         auto                        it = requests_.find(message.GetID());
         if (it != requests_.end())
         {
             auto &request = it->second;
-            request.SetReply(message);
+            auto  reply   = request.SetReply(message);
+            if (reply)
+            {
+                Handler handler = std::move(request.GetHandler());
+                if (handler)
+                {
+                    SendRequest(*reply, handler);
+                };
+            }
             requests_.erase(it);
         }
     }
@@ -63,9 +71,9 @@ namespace CTrack
         SendMessage(message);
     }
 
-    void MessageResponder::SendMessage(const Message &message)
+    void MessageResponder::SendMessage(Message &message)
     {
-        std::function<void(const std::string &)> sendCopy;
+        std::function<void(Message &)> sendCopy;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             sendCopy = sendFunction_;
@@ -75,12 +83,12 @@ namespace CTrack
             std::cerr << "No send callback set.\n";
             return;
         }
-        sendCopy(message.Serialize());
+        sendCopy(message);
     }
 
-    std::future<Message> MessageResponder::SendRequest(const Message &message, Handler handler)
+    void MessageResponder::SendRequest(Message &message, Handler handler)
     {
-        std::lock_guard<std::mutex> lock(requestsMutex_);
+        std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
         requests_.emplace(message.GetID(), Request(*this, message, handler));
         auto iter = requests_.find(message.GetID());
         if (iter == requests_.end())
@@ -89,7 +97,19 @@ namespace CTrack
         }
 
         SendMessage(message);
-        return iter->second.GetReplyFuture();
+    }
+
+    void MessageResponder::SendRequest(Message &message, std::future<Message> &future)
+    {
+        std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
+        requests_.emplace(message.GetID(), Request(*this, message, {}));
+        auto iter = requests_.find(message.GetID());
+        if (iter == requests_.end())
+        {
+            throw std::runtime_error("Failed to create request for message ID: " + message.GetID());
+        }
+        future = std::move(iter->second.GetReplyFuture());
+        SendMessage(message);
     }
 
     void MessageResponder::Unsubscribe(const std::string &id, HandlerID handlerID)
@@ -105,4 +125,35 @@ namespace CTrack
             }
         }
     }
+
+    // list of requests
+
+
+    void NextRequest(MessageResponder &responder, std::shared_ptr<std::deque<RequestItem>> queue)
+    {
+        if (queue->empty())
+        {
+            return;
+        }
+        RequestItem item = std::move(queue->front());
+        queue->pop_front();
+
+        // Recursive callback
+        Handler cb = [queue, item, &responder](const Message &reply) -> Reply
+        {
+            if (item.handler)
+                item.handler(reply);       // call the handler for this item
+            NextRequest(responder, queue); // only now send the next
+            return nullptr;                // no reply expected
+        };
+
+        responder.SendRequest(item.message, cb);
+    }
+
+    void RequestList(MessageResponder &messageResponder, std::deque<RequestItem> &list)
+    {
+        auto queue = std::make_shared<std::deque<RequestItem>>(std::move(list));
+        NextRequest(messageResponder, queue);
+    }
+
 } // namespace CTrack

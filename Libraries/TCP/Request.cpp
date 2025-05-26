@@ -8,18 +8,25 @@ namespace CTrack
         handler = std::move(i_handler);
     }
 
-    void Request::SetReply(const Message &message)
+    Reply Request::SetReply(const Message &message)
     {
+        Reply reply;
         replyPromise.set_value(message);
         if (handler)
         {
-            handler(message);
+            reply = handler(message);
         }
+        return reply;
     }
 
     void Request::SetHandler(Handler handler)
     {
         this->handler = std::move(handler);
+    }
+
+    Handler&& Request::GetHandler() 
+    {
+        return std::move(handler);
     }
 
     std::future<Message> Request::GetReplyFuture()

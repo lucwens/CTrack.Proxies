@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 
-
 namespace CTrack
 {
     using json      = nlohmann::json;

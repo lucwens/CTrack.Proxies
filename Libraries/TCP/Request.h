@@ -26,8 +26,9 @@ namespace CTrack
         Request &operator=(Request &&)      = default;
 
         void                 SetHandler(Handler handler);
+        Handler&&              GetHandler() ;
         std::future<Message> GetReplyFuture();
-        void                 SetReply(const Message &);
+        Reply                SetReply(const Message &);
 
       private:
         std::promise<Message> replyPromise;

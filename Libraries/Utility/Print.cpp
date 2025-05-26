@@ -10,6 +10,22 @@
 
 std::mutex printMutex;
 
+void EnableAnsiColors()
+{
+    static bool initialized = false;
+    if (!initialized)
+    {
+        HANDLE hOut   = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD  dwMode = 0;
+        if (GetConsoleMode(hOut, &dwMode))
+        {
+            dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+            SetConsoleMode(hOut, dwMode);
+            initialized = true;
+        }
+    }
+}
+
 void SetConsoleBackgroundColor(WORD color)
 {
     //     HANDLE                     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -31,7 +47,7 @@ void SetConsoleTabText(const char *newTitle)
     std::cout.flush(); // Ensure the sequence is sent immediately
 }
 
-void SetConsoleTabBackgroundColor(int Color) 
+void SetConsoleTabBackgroundColor(int Color)
 {
     //
     std::string Code = fmt::format("\033[2;15;{},|", Color);
