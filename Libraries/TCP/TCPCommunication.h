@@ -16,6 +16,7 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <condition_variable>
 
 #ifdef CTRACK_UI
 #include "DCommunication.h"
@@ -179,7 +180,7 @@ All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
 
-class CCommunicationInterface 
+class CCommunicationInterface
 {
     friend class CCommunicationThread;
 
@@ -200,6 +201,7 @@ class CCommunicationInterface
     virtual void         SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage);
     void                 SetOnConnectFunction(ConnectResponder iFunction) { m_OnConnectFunction = iFunction; };
     void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
+    virtual bool         WaitConnection(DWORD timeoutMs) { return false; };
 
   public: // CCommunicationParameters
     virtual size_t GetNumConnections() { return 0; };
@@ -207,10 +209,10 @@ class CCommunicationInterface
   public: // sending data : pushes a telegram into the FIFO stack
     virtual bool GetSendPackage(
         std::unique_ptr<CTCPGram> &); // thrd: pops the oldest package from the start of the list, the returned CTCPGram needs to be destroyed afterwards
-    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code = TCPGRAM_CODE_ALL); 
-                                                                                // CTCPGram needs to be destroyed afterwards
-    virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);                  // Object: pushes a new send package to the end of the list
-    virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &);               // thrd: pushes a new received package to the end of the list
+    virtual bool GetReceivePackage(std::unique_ptr<CTCPGram> &, const unsigned char Code = TCPGRAM_CODE_ALL);
+    // CTCPGram needs to be destroyed afterwards
+    virtual void PushSendPackage(std::unique_ptr<CTCPGram> &);    // Object: pushes a new send package to the end of the list
+    virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &); // thrd: pushes a new received package to the end of the list
     virtual void ClearBuffers();
     virtual void RemoveOldReceiveTelegrams(int iNumberToKeep); // removes old packages, keeps iNumberToKeep
   protected:                                                   // sockets and states
@@ -274,6 +276,7 @@ class CCommunicationObject : public CCommunicationInterface
   public: // CCommunicationParameters
     size_t GetNumConnections() override;
     void   PushSendPackage(std::unique_ptr<CTCPGram> &) override;
+    bool   WaitConnection(DWORD timeoutMs) override;
 
   public: // own overrideable functions
     virtual CSocket *SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPReceivePort, bool UDPBroadcast,
@@ -319,12 +322,14 @@ class CCommunicationThread : public CCommunicationInterface
     CSocket *SocketDeleteCurrent();                     // deletes current socket and return pointer to next socket
     void     SocketDeleteAll();                         // deletes all sockets
   public:                                               // thread management
-    void ThreadFunction();
-    void SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
-    void StartThread();
-    void EndThread();
-    void SetQuit(bool ibQuit = true);
-    bool GetQuit();
+    void                     ThreadFunction();
+    void                     SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
+    void                     StartThread();
+    void                     EndThread();
+    void                     SetQuit(bool ibQuit = true);
+    bool                     GetQuit();
+    std::mutex              &GetConnectionMutex() { return m_connectionMutex; }
+    std::condition_variable &GetConnectionCV() { return m_connectionCV; }
 
   protected: // thread members
     std::thread                      m_Thread;
@@ -334,4 +339,6 @@ class CCommunicationThread : public CCommunicationInterface
     std::list<CSocket *>             m_arSockets;
     std::set<CCommunicationObject *> m_setCommunicationObject;
     std::string                      m_ThreadName;
+    std::condition_variable          m_connectionCV;
+    std::mutex                       m_connectionMutex;
 };

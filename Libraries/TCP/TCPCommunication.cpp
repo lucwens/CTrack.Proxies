@@ -1,4 +1,3 @@
-
 #ifdef CTRACK
 
 #include "stdafx.h"
@@ -366,7 +365,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
     auto Iter = m_arReceiveBuffer.begin();
     while (Iter != m_arReceiveBuffer.end())
     {
-        std::unique_ptr<CTCPGram> &pTCPGram = (*Iter);
+        std::unique_ptr<CTCPGram> pTCPGram =  std::move(*Iter);
 
         // handle message telegrams on the fly as well
         if (pTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
@@ -375,13 +374,13 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
             if (pTCPGram->GetMessage(message))
             {
                 m_pMessageResponder->RespondToMessage(message);
-                Iter =  m_arReceiveBuffer.erase(Iter);
+                Iter = m_arReceiveBuffer.erase(Iter);
             }
-        } 
+        }
         else if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
         {
             ReturnTCPGram = std::move(pTCPGram);
-            Iter =  m_arReceiveBuffer.erase(Iter);
+            Iter          = m_arReceiveBuffer.erase(Iter);
             return true;
         }
         else
@@ -649,6 +648,31 @@ size_t CCommunicationObject::GetNumConnections()
     if (m_pCommunicationThread)
         return m_pCommunicationThread->GetNumConnections();
     return 0;
+}
+
+bool CCommunicationObject::WaitConnection(DWORD timeoutMs) 
+{
+    auto thread = m_pCommunicationThread.get();
+    if (thread)
+    {
+        std::unique_lock<std::mutex> lock(thread->GetConnectionMutex());
+        return thread->GetConnectionCV().wait_for(lock, std::chrono::milliseconds(timeoutMs), [thread] { return thread->GetNumConnections() > 0; });
+    }
+    else
+    {
+        // Fallback to polling
+        DWORD startTick = GetTickCount();
+        DWORD endTick   = startTick + timeoutMs;
+        DWORD nowTick   = startTick;
+        while (nowTick < endTick)
+        {
+            if (GetNumConnections() > 0)
+                return true;
+            Sleep(50);
+            nowTick = GetTickCount();
+        }
+        return false;
+    }
 }
 
 void CCommunicationObject::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
@@ -1074,7 +1098,6 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
                                      const std::string &UDPSendPort)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    // a communication thread can have multiple ccommunicationObjects, which may have different SocketCreate methods, here we just take the first
     auto                                  iter = m_setCommunicationObject.begin();
     if (iter != m_setCommunicationObject.end())
     {
@@ -1082,7 +1105,13 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
         m_arSockets.push_back(pNewSocket);
     }
     else
-        assert(false); // existing port
+        assert(false);
+
+    // Notify waiting threads about the new connection
+    {
+        std::lock_guard<std::mutex> cvLock(m_connectionMutex);
+        m_connectionCV.notify_all();
+    }
 }
 
 CSocket *CCommunicationThread::SocketFirst()
@@ -1112,10 +1141,15 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
     {
         delete *m_IterCurrentSocket;
         m_IterCurrentSocket = m_arSockets.erase(m_IterCurrentSocket);
+
+        // Notify waiting threads about the connection change
+        {
+            std::lock_guard<std::mutex> cvLock(m_connectionMutex);
+            m_connectionCV.notify_all();
+        }
+
         if (m_IterCurrentSocket != m_arSockets.end())
             return (*m_IterCurrentSocket);
-        else
-            return nullptr;
     }
     return nullptr;
 }
@@ -1126,6 +1160,12 @@ void CCommunicationThread::SocketDeleteAll()
     for (auto &arSocket : m_arSockets)
         delete arSocket;
     m_arSockets.clear();
+
+    // Notify waiting threads about the connection change
+    {
+        std::lock_guard<std::mutex> cvLock(m_connectionMutex);
+        m_connectionCV.notify_all();
+    }
 }
 
 size_t CCommunicationThread::GetNumConnections()
