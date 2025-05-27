@@ -365,7 +365,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
     auto Iter = m_arReceiveBuffer.begin();
     while (Iter != m_arReceiveBuffer.end())
     {
-        std::unique_ptr<CTCPGram> pTCPGram =  std::move(*Iter);
+        std::unique_ptr<CTCPGram>& pTCPGram =  *Iter;
 
         // handle message telegrams on the fly as well
         if (pTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
