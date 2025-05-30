@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
                 if (Command == TAG_HANDSHAKE)
                 {
 #ifndef _DEBUG
-                    Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
+                    Response = ProxyHandShake::ProxyHandShakeOld(TCP_XML_Input);
 #endif
                 }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
