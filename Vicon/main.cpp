@@ -45,7 +45,12 @@ int main(int argc, char *argv[])
 
     // startup server object
     CCommunicationObject         TCPServer;
-    std::unique_ptr<DriverVicon> driver = std::make_unique<DriverVicon>();
+    std::unique_ptr<DriverVicon>      driver = std::make_unique<DriverVicon>();
+    std::vector<CTrack::Subscription> subscriptions;
+
+    TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
+    TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+    subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
@@ -92,12 +97,6 @@ int main(int argc, char *argv[])
                 {
                     PrintInfo("Quit");
                     bContinueLoop = false;
-                }
-                if (Command == TAG_HANDSHAKE)
-                {
-#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
-                    Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
-#endif
                 }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {

@@ -152,5 +152,8 @@
     <ClInclude Include="..\Libraries\TCP\Subscription.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscriber.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

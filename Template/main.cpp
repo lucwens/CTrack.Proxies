@@ -11,9 +11,9 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 
-#ifndef _DEBUG
+// #ifndef _DEBUG
 #include "../../CTrack_Data/ProxyHandshake.h"
-#endif
+// #endif
 
 #include <conio.h>
 #include <iostream>
@@ -49,11 +49,15 @@ int main(int argc, char *argv[])
     PrintInfo("b : send big TCP package");
 
     // startup server object
-    CCommunicationObject    TCPServer;
-    std::unique_ptr<Driver> driver = std::make_unique<Driver>();
+    std::unique_ptr<Driver>           driver = std::make_unique<Driver>();
+    CCommunicationObject              TCPServer;
+    std::vector<CTrack::Subscription> subscriptions;
 
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
     TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+#if !defined(CTRACK_UI) // && !defined(_DEBUG)
+    subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
+#endif
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);
@@ -220,7 +224,7 @@ int main(int argc, char *argv[])
                     break;
                     case 'w':
                     {
-                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(CTrack::Message("warning",{{"message","The system is running hot"}}));
+                        std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(CTrack::Message("warning", {{"message", "The system is running hot"}}));
                         TCPServer.PushSendPackage(TCPGRam);
                     };
                     break;

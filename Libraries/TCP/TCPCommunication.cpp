@@ -316,6 +316,7 @@ CCommunicationParameters
 CCommunicationInterface::CCommunicationInterface()
 {
     m_pMessageResponder = std::make_shared<CTrack::MessageResponder>();
+    m_pMessageResponder->SetSendFunction([this](CTrack::Message &message) { SendMessage(message); });
 }
 
 void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
@@ -331,6 +332,19 @@ void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
         m_bDisableNagle     = ipFrom->m_bDisableNagle;
         m_TimeOut           = ipFrom->m_TimeOut;
     }
+}
+
+void CCommunicationInterface::SendMessage(CTrack::Message &message)
+{
+    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::unique_ptr<CTCPGram>             tcpGram = std::make_unique<CTCPGram>(message);
+    PushSendPackage(tcpGram);
+}
+
+CTrack::Subscription CCommunicationInterface::Subscribe(const std::string &messageID, CTrack::Handler handler)
+{
+    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    return m_pMessageResponder->Subscribe(messageID, handler);
 }
 
 bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
@@ -365,7 +379,7 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
     auto Iter = m_arReceiveBuffer.begin();
     while (Iter != m_arReceiveBuffer.end())
     {
-        std::unique_ptr<CTCPGram>& pTCPGram =  *Iter;
+        std::unique_ptr<CTCPGram> &pTCPGram = *Iter;
 
         // handle message telegrams on the fly as well
         if (pTCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
@@ -636,11 +650,20 @@ CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode
     return new CSocket(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendAddress, m_bDisableNagle);
 }
 
+// In CCommunicationObject.cpp
 void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunicationThread> &rCommunicationThread)
 {
+    // Use the general m_Mutex to protect modifications to members of CCommunicationInterface,
+    // including m_pCommunicationThread and m_pMessageResponder.
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex); // m_Mutex is from CCommunicationInterface
+
     m_pCommunicationThread = rCommunicationThread;
     if (m_ThreadName.size() > 0)
         rCommunicationThread->SetThreadName(m_ThreadName);
+    if (m_pCommunicationThread)
+    {
+        m_pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder);
+    }
 }
 
 size_t CCommunicationObject::GetNumConnections()
@@ -650,7 +673,7 @@ size_t CCommunicationObject::GetNumConnections()
     return 0;
 }
 
-bool CCommunicationObject::WaitConnection(DWORD timeoutMs) 
+bool CCommunicationObject::WaitConnection(DWORD timeoutMs)
 {
     auto thread = m_pCommunicationThread.get();
     if (thread)
@@ -1044,6 +1067,7 @@ CCommunicationThread
 
 CCommunicationThread::CCommunicationThread()
 {
+    m_pMessageResponder = nullptr;
     m_bErrorOccurred    = false;
     m_CommunicationMode = TCP_SERVER;
     m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
@@ -1064,6 +1088,18 @@ void CCommunicationThread::SetQuit(bool ibQuit)
 bool CCommunicationThread::GetQuit()
 {
     return m_bQuit;
+}
+
+void CCommunicationThread::SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_Mutex); // Protect assignment with CCommunicationInterface's mutex
+    if (m_pMessageResponder)
+        ClearSubscriptions(); // Unsubscribe from the old responder to avoid dangling subscriptions
+    m_pMessageResponder = responder;
+    // If other objects are already attached to this thread and were using an old responder,
+    // they would ideally need to be updated. This scenario suggests that changing
+    // a thread's established responder is complex and should be handled with care.
+    // For this model, we primarily rely on this for initial setup if thread starts with nullptr.
 }
 
 void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommunicationObject)
@@ -1488,6 +1524,13 @@ void CCommunicationThread::ThreadFunction()
                     std::unique_ptr<CTCPGram> TCPGram;
                     while (pCurrentSocket->ReadExtractTelegram(TCPGram))
                     {
+                        if (TCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
+                        {
+                            CTrack::Message message;
+                            if (TCPGram->GetMessage(message))
+                                m_pMessageResponder->RequestSetPromiseThread(message);
+                        }
+
                         if (TCPGram->GetCode() == TCPGRAM_CODE_INTERRUPT)
                             InterruptSet(true);
                         else

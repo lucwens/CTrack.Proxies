@@ -29,7 +29,7 @@
       <UniqueIdentifier>{e71aa41d-089d-45b7-b153-51916367a1f6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\TCP\Message">
-      <UniqueIdentifier>{a6589383-b88c-435f-8ca0-f57a58669ff6}</UniqueIdentifier>
+      <UniqueIdentifier>{057c2de9-9876-43e9-853c-9a67ffcb71e5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -81,13 +81,13 @@
     <ClCompile Include="DriverVicon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
+    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
       <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\TCP\Request.cpp">
       <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
+    <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
       <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
   </ItemGroup>
@@ -143,16 +143,19 @@
     <ClInclude Include="DriverVicon.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\TCP\Request.h">
+    <ClInclude Include="..\Libraries\TCP\Message.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\TCP\MessageResponder.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\TCP\Message.h">
+    <ClInclude Include="..\Libraries\TCP\Request.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\TCP\Subscription.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscriber.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
   </ItemGroup>

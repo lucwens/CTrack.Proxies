@@ -48,20 +48,33 @@ namespace CTrack
 
         // request handlers
         std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
-        auto                        it = requests_.find(message.GetID());
+        auto                                  it = requests_.find(message.GetID());
         if (it != requests_.end())
         {
             auto &request = it->second;
-            auto  reply   = request.SetReply(message);
-            if (reply)
+            if (request.HasHandler())
             {
-                Handler handler = std::move(request.TakeHandler());
-                if (handler)
-                {
-                    SendRequest(*reply, handler);
-                };
+                Handler              handler       = std::move(request.TakeHandler());
+                std::future<Message> messageFuture = request.GetReplyFuture();
+                assert(messageFuture.wait_for(std::chrono::seconds(0)) != std::future_status::timeout);
+                auto replyMessage = messageFuture.get(); // Store the result in a local variable
+                SendRequest(replyMessage, handler);      // Pass the local variable to SendRequest
             }
             requests_.erase(it);
+        }
+    }
+
+    void MessageResponder::RequestSetPromiseThread(const Message &message)
+    {
+        // request handlers
+        std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
+        auto                                  it = requests_.find(message.GetID());
+        if (it != requests_.end())
+        {
+            auto &request = it->second;
+            request.SetReply(message);
+            if (!request.HasHandler())
+                requests_.erase(it);
         }
     }
 
@@ -125,7 +138,6 @@ namespace CTrack
     }
 
     // list of requests
-
 
     void NextRequest(MessageResponder &responder, std::shared_ptr<std::deque<RequestItem>> queue)
     {

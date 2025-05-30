@@ -28,6 +28,7 @@ namespace CTrack
         Handler            &&TakeHandler();
         std::future<Message> GetReplyFuture();
         Reply                SetReply(const Message &);
+        bool                 HasHandler() { return handler != nullptr; };
 
       private:
         std::promise<Message> replyPromise;

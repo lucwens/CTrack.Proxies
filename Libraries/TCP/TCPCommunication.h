@@ -3,9 +3,11 @@
 #ifdef CTRACK
 #include "../Proxies/Libraries/TCP/TCPTelegram.h"
 #include "../Proxies/Libraries/TCP/MessageResponder.h"
+#include "../Proxies/Libraries/TCP/Subscriber.h"
 #else
 #include "TCPTelegram.h"
 #include "MessageResponder.h"
+#include "Subscriber.h"
 #endif
 
 #include <list>
@@ -180,7 +182,7 @@ All data members have thread safe acces (m_Lock)
 */
 //------------------------------------------------------------------------------------------------------------------
 
-class CCommunicationInterface
+class CCommunicationInterface : public CTrack::Subscriber
 {
     friend class CCommunicationThread;
 
@@ -202,6 +204,12 @@ class CCommunicationInterface
     void                 SetOnConnectFunction(ConnectResponder iFunction) { m_OnConnectFunction = iFunction; };
     void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
     virtual bool         WaitConnection(DWORD timeoutMs) { return false; };
+
+  public:
+    void                                       SendMessage(CTrack::Message &);
+    std::shared_ptr<CTrack::MessageResponder>  GetMessageResponder() const { return m_pMessageResponder; };
+    std::shared_ptr<CTrack::MessageResponder> &GetMessageResponder() { return m_pMessageResponder; };
+    [[nodiscard]] CTrack::Subscription         Subscribe(const std::string &id, CTrack::Handler);
 
   public: // CCommunicationParameters
     virtual size_t GetNumConnections() { return 0; };
@@ -238,7 +246,7 @@ class CCommunicationInterface
     ConnectResponder                     m_OnConnectFunction{};
     ConnectResponder                     m_OnDisconnectFunction{};
 
-  public:
+  protected:
     std::shared_ptr<CTrack::MessageResponder> m_pMessageResponder; // used to send messages to the UI
 #ifdef CTRACK_UI
   public: // edit settings
@@ -322,6 +330,7 @@ class CCommunicationThread : public CCommunicationInterface
     CSocket *SocketDeleteCurrent();                     // deletes current socket and return pointer to next socket
     void     SocketDeleteAll();                         // deletes all sockets
   public:                                               // thread management
+    void                     SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder);
     void                     ThreadFunction();
     void                     SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
     void                     StartThread();
