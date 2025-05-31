@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Message.h"
+#include "MessageResponder.h"
 #include "Subscription.h"
 #include <vector>
 #include <memory>

@@ -1,4 +1,3 @@
-
 #include "Driver.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
@@ -53,17 +52,19 @@ int main(int argc, char *argv[])
     CCommunicationObject              TCPServer;
     std::vector<CTrack::Subscription> subscriptions;
 
+    // responders & handlers
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
     TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
-#if !defined(CTRACK_UI) // && !defined(_DEBUG)
+#if !defined(CTRACK_UI) && !defined(_DEBUG)
     subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
 #endif
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
 
+    // start server
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);
 
     bool bContinueLoop = true;
-
     while (bContinueLoop)
     {
         try
@@ -109,16 +110,6 @@ int main(int argc, char *argv[])
                 {
                     std::cout << "Quit" << std::endl;
                     bContinueLoop = false;
-                }
-                if (Command == TAG_HANDSHAKE)
-                {
-#ifndef _DEBUG
-                    Response = ProxyHandShake::ProxyHandShakeOld(TCP_XML_Input);
-#endif
-                }
-                if (Command == TAG_COMMAND_HARDWAREDETECT)
-                {
-                    Response = driver->HardwareDetect(TCP_XML_Input);
                 }
                 if (Command == TAG_COMMAND_CONFIGDETECT)
                 {

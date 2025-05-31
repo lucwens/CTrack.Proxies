@@ -9,10 +9,10 @@
 #include <thread>
 #include <chrono>
 
-std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElement> &)
+CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
 {
     bool                                          Result            = true;
-    std::unique_ptr<TiXmlElement>                 Return            = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
+    CTrack::Reply                                 Return            = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     bool                                          Present           = true;
     std::string                                   Feedback          = "Found 1 camera";
     std::string                                   Serial            = "123456789";
@@ -37,16 +37,16 @@ std::unique_ptr<TiXmlElement> Driver::HardwareDetect(std::unique_ptr<TiXmlElemen
         CameraPositions.push_back(CameraPos4x4);
     }
 
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_PRESENT, Present, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIAL, Serial, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, Feedback, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_NAMES, SubTrackerNames, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_SERIALS, SubTrackerSerials, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_IPPORTS, Ports, XML_WRITE);
-    GetSetAttribute(Return.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]     = Present;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_SERIAL]      = Serial;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_FEEDBACK]    = Feedback;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]       = SubTrackerNames;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]     = SubTrackerSerials;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_IPADDRESSES] = IPAddresses;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_IPPORTS]     = Ports;
+    Return->GetParams()[ATTRIB_HARDWAREDETECT_POS4x4]      = CameraPositions;
+    Return->GetParams()[ATTRIB_RESULT]                     = Result;
 
-    GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
     return Return;
 }
 
@@ -270,7 +270,7 @@ bool Driver::Run()
     return m_bRunning;
 }
 
-bool Driver::GetValues(std::vector<double>& values) 
+bool Driver::GetValues(std::vector<double> &values)
 {
     if (m_bRunning)
     {

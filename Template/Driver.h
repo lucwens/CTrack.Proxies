@@ -1,18 +1,20 @@
 #pragma once
 
-#include <tinyxml.h>
 
+#include "../Libraries/TCP/Subscriber.h"
+
+#include <tinyxml.h>
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
 
-class Driver
+class Driver : public CTrack::Subscriber
 {
   public:
     Driver()  = default;
     ~Driver() = default;
-    std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &);
+    CTrack::Reply HardwareDetect(const CTrack::Message&);
     std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
     bool                          Run();

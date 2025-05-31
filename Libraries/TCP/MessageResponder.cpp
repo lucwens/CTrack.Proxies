@@ -2,10 +2,6 @@
 
 namespace CTrack
 {
-    using Reply     = std::unique_ptr<Message>;
-    using Handler   = std::function<Reply(const Message &)>;
-    using HandlerID = size_t;
-
     void MessageResponder::SetSendFunction(std::function<void(Message &)> sendFunction)
     {
         std::lock_guard<std::mutex> lock(mutex_);

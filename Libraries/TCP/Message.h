@@ -10,13 +10,17 @@
 namespace CTrack
 {
     using json      = nlohmann::json;
-    using HandlerID = size_t;
 
     class Message
     {
       public:
         Message() = default;
 
+        Message(std::string id)
+        {
+            data_["id"]     = std::move(id);
+            DebugUpdate();
+        }
         Message(std::string id, json params)
         {
             data_["id"]     = std::move(id);
@@ -68,7 +72,7 @@ namespace CTrack
             return *this; // Ensure the function returns *this
         };
 
-        explicit Message(json raw) : data_(std::move(raw)) { DebugUpdate(); }
+//        explicit Message(json raw) : data_(std::move(raw)) { DebugUpdate(); }
 
         static Message Deserialize(const std::string &jsonString)
         {
@@ -113,4 +117,8 @@ namespace CTrack
         std::string debugMessage_; // For debugging purposes, can be used to store a message about the content of the message
 #endif
     };
+    
+    using Reply     = std::unique_ptr<Message>;
+    using Handler   = std::function<Reply(const Message &)>;
+    using HandlerID = size_t;
 } // namespace CTrack

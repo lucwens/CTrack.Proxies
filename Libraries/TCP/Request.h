@@ -9,8 +9,6 @@
 namespace CTrack
 {
     class Message;
-    using Reply   = std::unique_ptr<Message>;
-    using Handler = std::function<Reply(const Message &)>;
 
     class Request
     {
