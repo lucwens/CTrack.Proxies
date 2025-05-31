@@ -38,6 +38,7 @@ namespace CTrack
         {
             if (auto reply = handler(message))
             {
+                reply->DebugUpdate();
                 SendMessage(*reply);
             }
         }

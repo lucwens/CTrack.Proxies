@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     std::unique_ptr<Driver>           driver = std::make_unique<Driver>();
     CCommunicationObject              TCPServer;
     std::vector<CTrack::Subscription> subscriptions;
+    std::unique_ptr<CTrack::Message>  manualMessage;
 
     // responders & handlers
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
@@ -100,6 +101,13 @@ int main(int argc, char *argv[])
                         std::cout << "Unknown TCPgram received" << std::endl;
                         break;
                 }
+            }
+            if (manualMessage)
+            {
+                TCPServer.GetMessageResponder()->RespondToMessage(*manualMessage);
+                Command = manualMessage->GetID();
+                PrintCommand("Manual command received: {}", Command);
+                manualMessage.reset();
             }
 
             if (!Command.empty())
@@ -167,7 +175,7 @@ int main(int argc, char *argv[])
                         bContinueLoop = false;
                         break;
                     case 'h':
-                        Command = TAG_COMMAND_HARDWAREDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
                         break;
                     case 'c':
                         Command = TAG_COMMAND_CONFIGDETECT;

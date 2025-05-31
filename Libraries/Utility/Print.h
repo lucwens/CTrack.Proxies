@@ -71,5 +71,5 @@ template <typename... Args> void PrintError(const std::string &format, Args... a
 // PrintCommand function
 template <typename... Args> void PrintCommand(const std::string &format, Args... args)
 {
-    PrintColor(0, 0, 255, format, std::forward<Args>(args)...);
+    PrintColor(100, 100, 255, format, std::forward<Args>(args)...);
 }

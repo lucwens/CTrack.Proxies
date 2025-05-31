@@ -11,16 +11,16 @@
 
 CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
 {
-    bool                                          Result            = true;
-    CTrack::Reply                                 Return            = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
-    bool                                          Present           = true;
-    std::string                                   Feedback          = "Found 1 camera";
-    std::string                                   Serial            = "123456789";
-    std::vector<std::string>                      SubTrackerNames   = {"Tracker1", "Tracker2"};
-    std::vector<std::string>                      SubTrackerSerials = {"123", "456"};
+    bool                                          result            = true;
+    CTrack::Reply                                 reply            = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
+    bool                                          present           = true;
+    std::string                                   feedback          = "Found 1 camera";
+    std::string                                   serial            = "123456789";
+    std::vector<std::string>                      subTrackerNames   = {"Tracker1", "Tracker2"};
+    std::vector<std::string>                      subTrackerSerials = {"123", "456"};
     std::vector<std::string>                      IPAddresses       = {"127.0.0.1"};
-    std::vector<int>                              Ports             = {5000};
-    std::vector<std::vector<std::vector<double>>> CameraPositions;
+    std::vector<int>                              ports             = {5000};
+    std::vector<std::vector<std::vector<double>>> cameraPositions;
 
     // position sub trackers
     for (int i = 0; i < 2; i++)
@@ -34,20 +34,19 @@ CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
         {
             CameraPos4x4[0][3] = -1000.0;
         }
-        CameraPositions.push_back(CameraPos4x4);
+        cameraPositions.push_back(CameraPos4x4);
     }
 
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]     = Present;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_SERIAL]      = Serial;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_FEEDBACK]    = Feedback;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]       = SubTrackerNames;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]     = SubTrackerSerials;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_IPADDRESSES] = IPAddresses;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_IPPORTS]     = Ports;
-    Return->GetParams()[ATTRIB_HARDWAREDETECT_POS4x4]      = CameraPositions;
-    Return->GetParams()[ATTRIB_RESULT]                     = Result;
-
-    return Return;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]     = present;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIAL]      = serial;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_FEEDBACK]    = feedback;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]       = subTrackerNames;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]     = subTrackerSerials;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_IPADDRESSES] = IPAddresses;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_IPPORTS]     = ports;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_POS4x4]      = cameraPositions;
+    reply->GetParams()[ATTRIB_RESULT]                     = result;
+    return reply;
 }
 
 /* return of Configdetect

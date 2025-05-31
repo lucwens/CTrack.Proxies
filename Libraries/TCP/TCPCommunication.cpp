@@ -1423,7 +1423,7 @@ void CCommunicationThread::ThreadFunction()
                         if (ClientSocket != SOCKET_ERROR)
                         {
                             // callback for freshly connected sockets : send the configuration if the engine is running
-                            PrintInfo("Client accepted at port " + std::to_string(PortNumber));
+                            PrintInfo("Client accepted at port {}", PortNumber);
                             SocketAdd(ClientSocket, TCP_SERVER, &sincontrol, 0, false, (""));
                             if (m_OnConnectFunction)
                                 m_OnConnectFunction(ClientSocket, GetNumConnections());
@@ -1451,7 +1451,7 @@ void CCommunicationThread::ThreadFunction()
                         }
                         if (connect(MainSocket, (LPSOCKADDR)&sincontrol, sizeof(sincontrol)) != SOCKET_ERROR)
                         {
-                            PrintInfo("TCP client connected to ", HostName, " on port ", PortNumber);
+                            PrintInfo("TCP client connected to {} on port {}", HostName, PortNumber);
                             SocketAdd(MainSocket, TCP_CLIENT, &sincontrol, 0, false, (""));
                             if (m_OnConnectFunction)
                                 m_OnConnectFunction(MainSocket, GetNumConnections());
@@ -1558,7 +1558,7 @@ void CCommunicationThread::ThreadFunction()
             }
         }
 #ifdef _DEBUG
-        PrintInfo("Closing thread for port : ", PortNumber);
+        PrintInfo("Closing thread for port {}", PortNumber);
 #endif
     }
 #ifdef CTRACK
