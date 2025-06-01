@@ -120,6 +120,17 @@ namespace CTrack
         SendMessage(message);
     }
 
+    void MessageResponder::CancelRequest(const Message &message)
+    {
+        // request handlers
+        std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
+        auto                                  it = requests_.find(message.GetID());
+        if (it != requests_.end())
+        {
+            requests_.erase(it);
+        }
+    }
+
     void MessageResponder::Unsubscribe(const std::string &id, HandlerID handlerID)
     {
         std::lock_guard<std::mutex> lock(mutex_);

@@ -12,7 +12,7 @@
 CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
 {
     bool                                          result            = true;
-    CTrack::Reply                                 reply            = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
+    CTrack::Reply                                 reply             = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     bool                                          present           = true;
     std::string                                   feedback          = "Found 1 camera";
     std::string                                   serial            = "123456789";

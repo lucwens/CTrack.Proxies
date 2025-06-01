@@ -87,6 +87,9 @@
     <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
       <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Message.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">

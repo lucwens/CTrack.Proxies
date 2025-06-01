@@ -24,6 +24,7 @@ namespace CTrack
         void                       SendMessage(Message &);
         void                       SendRequest(Message &, Handler);
         void                       SendRequest(Message &, std::future<Message> &);
+        void                       CancelRequest(const Message &);
         void                       Unsubscribe(const std::string &id, HandlerID handlerID);
         void                       RequestSetPromiseThread(const Message &message);
 

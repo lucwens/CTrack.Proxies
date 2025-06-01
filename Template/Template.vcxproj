@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Libraries\TCP\Message.cpp" />
     <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp" />
     <ClCompile Include="..\Libraries\TCP\Request.cpp" />
     <ClCompile Include="..\Libraries\TCP\Subscription.cpp" />

@@ -1261,6 +1261,12 @@ void CCommunicationThread::ThreadFunction()
     E_COMMUNICATION_Mode CommunicationMode = GetCommunicationMode();
     WORD                 sockVersion;
     WSADATA              wsaData;
+    std::string          IP4;
+    std::string          HostName;
+    unsigned short       PortNumber;
+    unsigned short       PortNumberUDP;
+    bool                 bUDPBroadcast;
+    bool                 bContinueBigLoop = true;
 
     try
     {
@@ -1277,11 +1283,10 @@ void CCommunicationThread::ThreadFunction()
         //--------------------------------------------------------------------------------------------------------
         // Resolve IP4 address (no need for IP6)
         //--------------------------------------------------------------------------------------------------------
-        std::string    IP4;
-        std::string    HostName      = GetHostName();
-        unsigned short PortNumber    = GetPort();
-        unsigned short PortNumberUDP = GetPortUDP();
-        bool           bUDPBroadcast = GetUDPBroadcast();
+        HostName      = GetHostName();
+        PortNumber    = GetPort();
+        PortNumberUDP = GetPortUDP();
+        bUDPBroadcast = GetUDPBroadcast();
 
         if (!ResolveIP4_Address(HostName, IP4))
         {
@@ -1388,23 +1393,46 @@ void CCommunicationThread::ThreadFunction()
             };
             break;
         }
+    }
+    catch (const std::exception &e)
+    {
+        SetError(__FILE__, __LINE__, e.what());
+        bContinueBigLoop = false;
+    }
+#ifdef CTRACK
+    catch (CException *e)
+    {
+        TCHAR ErrorMessage[2001];
+        e->GetErrorMessage(ErrorMessage, 2000);
+        SetError("unknown", 0, ErrorMessage);
+        e->Delete();
+        bContinueBigLoop = false;
+    }
+#endif
+    catch (...)
+    {
+        SetError(__FILE__, __LINE__, "An unknown error occurred");
+        bContinueBigLoop = false;
+    }
 
-        //--------------------------------------------------------------------------------------------------------
-        // BIG LOOP
-        //--------------------------------------------------------------------------------------------------------
-        /*
-        BIG Loop
-        - Check connection state
-        - Server:
-        - Check data-available on listen socket, if true
-        -
-        - Send data
-        - Receive data
-        */
-        while (true)
+    //--------------------------------------------------------------------------------------------------------
+    // BIG LOOP
+    //--------------------------------------------------------------------------------------------------------
+    /*
+    BIG Loop
+    - Check connection state
+    - Server:
+    - Check data-available on listen socket, if true
+    -
+    - Send data
+    - Receive data
+    */
+    while (bContinueBigLoop)
+    {
+        try
         {
             if (GetQuit())
-                break;
+                bContinueBigLoop = false;
             //--------------------------------------------------------------------------------------------------------
             // Connection checking for TCP server and client
             //--------------------------------------------------------------------------------------------------------
@@ -1557,27 +1585,27 @@ void CCommunicationThread::ThreadFunction()
                 }
             }
         }
-#ifdef _DEBUG
-        PrintInfo("Closing thread for port {}", PortNumber);
-#endif
-    }
+        catch (const std::exception &e)
+        {
+            SetError(__FILE__, __LINE__, e.what());
+        }
 #ifdef CTRACK
-    catch (const std::exception &e)
-    {
-        SetError(__FILE__, __LINE__, e.what());
-    }
-    catch (CException *e)
-    {
-        TCHAR ErrorMessage[2001];
-        e->GetErrorMessage(ErrorMessage, 2000);
-        SetError("unknown", 0, ErrorMessage);
-        e->Delete();
-    }
+        catch (CException *e)
+        {
+            TCHAR ErrorMessage[2001];
+            e->GetErrorMessage(ErrorMessage, 2000);
+            SetError("unknown", 0, ErrorMessage);
+            e->Delete();
+        }
 #endif
-    catch (...)
-    {
-        SetError(__FILE__, __LINE__, "An unknown error occurred");
+        catch (...)
+        {
+            SetError(__FILE__, __LINE__, "An unknown error occurred");
+        }
     }
+#ifdef _DEBUG
+    PrintInfo("Closing thread for port {}", PortNumber);
+#endif
 
     //
     // close our sockets
