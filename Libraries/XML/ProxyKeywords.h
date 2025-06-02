@@ -92,6 +92,11 @@ constexpr char const *ATTRIB_INCLUDE_PROBE                      = "include_probe
 constexpr char const *ATTRIB_INCLUDE_IJK                        = "include_IJK";
 constexpr char const *ATTRIB_INCLUDE_Z_ANGLE                    = "include_z_angle";
 constexpr char const *ATTRIB_INCLUDE_UNCODED_MARKERS            = "include_uncoded_markers";
+constexpr char const *ATTRIB_6DOF                               = "6dof";
+constexpr char const *ATTRIB_CONFIG_3DMARKERS                   = "markers";
+constexpr char const *ATTRIB_PROBES                             = "probes";
+constexpr char const *ATTRIB_PROBE_NUMBUTTONS                   = "numbuttons";
+constexpr char const *ATTRIB_PROBE_TIPDIAMETER                  = "tipdiameter";
 
 //------------------------------------------------------------------------------------------------------------------
 /*

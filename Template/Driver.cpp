@@ -49,115 +49,53 @@ CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
     return reply;
 }
 
-/* return of Configdetect
-<CONFIG_DETECT result="true">
-    <6DOF name="6dof" orient_convention="3x3" residu="false">
-        <MARKER name="6dof1" />
-        <MARKER name="6dof2" />
-        <MARKER name="6dof3" />
-    </6DOF>
-    <PROBE name="probe" orient_convention="3x3" residu="false" buttons="true">
-        <MARKER name="probe1" />
-        <MARKER name="probe2" />
-        <MARKER name="probe3" />
-        <MARKER name="probe4" />
-    </PROBE>
-    <MARKER name="marker1" />
-    <MARKER name="marker2" />
-    <MARKER name="marker3" />
-</CONFIG_DETECT>
-*/
 
-void AMT(std::vector<std::string> &Data3D, std::vector<std::string> &Data6DOF, std::vector<std::string> &Data6DOF_Markers, std::vector<std::string> &DataProbes,
-         std::vector<std::string> &DataProbesMarkers)
+CTrack::Reply Driver::ConfigDetect(const CTrack::Message &message)
 {
-    Data3D.clear();
-    Data6DOF.clear();
-    Data6DOF_Markers.clear();
-    DataProbes.clear();
-    DataProbesMarkers.clear();
-
-    Data6DOF.push_back("MSP");
-    for (int i = 0; i < 25; i++)
-    {
-        std::string MarkerName = fmt::format("MSP{}", i);
-        Data6DOF_Markers.push_back(MarkerName);
-    }
-}
-
-std::unique_ptr<TiXmlElement> Driver::ConfigDetect(std::unique_ptr<TiXmlElement> &)
-{
-    bool                          Result       = true;
-    std::unique_ptr<TiXmlElement> ReturnXML    = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+    bool          Result                                    = true;
+    CTrack::Reply reply                                     = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
 
     //
     // data provided by the hardware
-    std::vector<std::string> Data3D            = {"marker1", "marker2", "marker3"};
-    std::vector<std::string> Data6DOF          = {}; //{"6dof"};
-    std::vector<std::string> Data6DOF_Markers  = {}; //{"6dof1", "6dof2", "6dof3"};
-    std::vector<std::string> DataProbes        = {"probe"};
-    std::vector<std::string> DataProbesMarkers = {
-        "probe1",
-        "probe2",
-        "probe3",
-        "probe4",
-    };
-    std::string orient_convention = "3x3"; // for the 6DOF and the probe
-    bool        hasResidu         = false; // for the 6DOF and the probe
-    int         numButtons        = 4;     // for the probe
-    bool        hasTipDiameter    = false; // for the probe
+    std::vector<std::string>              Data3D            = {"marker1", "marker2", "marker3"};
+    std::vector<std::string>              Data6DOF          = {"6dofA", "6dofB"};
+    std::vector<std::vector<std::string>> Data6DOF_Markers  = {{"6dofA1", "6dofA2", "6dofA3"}, {"6dofB1", "6dofB2", "6dofB3"}};
+    std::vector<std::string>              DataProbes        = {"probe"};
+    std::vector<std::vector<std::string>> DataProbesMarkers = {{"probe1", "probe2", "probe3", "probe4"}};
+    std::string                           orient_convention = "3x3"; // for the 6DOF and the probe
+    bool                                  hasResidu         = false; // for the 6DOF and the probe
+    int                                   numButtons        = 4;     // for the probe
+    double                                tipDiameter       = 0.0;   // for the 6DOF and the probe
 
-    // AMT(Data3D, Data6DOF, Data6DOF_Markers, DataProbes, DataProbesMarkers);
     //
     //  Add 6DOF
-    if (Data6DOF.size() > 0)
+    for (int i = 0; i < Data6DOF.size(); i++)
     {
-        TiXmlElement *p6DOF = new TiXmlElement(TAG_CONFIG_6DOF);
-        GetSetAttribute(p6DOF, ATTRIB_CONFIG_NAME, Data6DOF[0], XML_WRITE);
-        GetSetAttribute(p6DOF, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
-        GetSetAttribute(p6DOF, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
-        ReturnXML->LinkEndChild(p6DOF);
-        for (auto &marker : Data6DOF_Markers)
-        {
-            TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
-            GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
-            p6DOF->LinkEndChild(pMarker);
-        }
+        reply->GetParams()[ATTRIB_6DOF][Data6DOF[i]][ATTRIB_CONFIG_ORIENT_CONVENTION] = orient_convention;
+        reply->GetParams()[ATTRIB_6DOF][Data6DOF[i]][ATTRIB_CONFIG_RESIDU]            = hasResidu;
+
+        if (i < Data6DOF_Markers.size())
+            reply->GetParams()[ATTRIB_6DOF][Data6DOF[i]][ATTRIB_CONFIG_3DMARKERS] = Data6DOF_Markers[i];
     }
 
     //
     // Add Probe
-    if (DataProbes.size() > 0)
+    for (int i = 0; i < DataProbes.size(); i++)
     {
-        TiXmlElement *pProbes = new TiXmlElement(TAG_CONFIG_PROBE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_NAME, DataProbes[0], XML_WRITE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_ORIENT_CONVENTION, orient_convention, XML_WRITE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_RESIDU, hasResidu, XML_WRITE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_BUTTONS, numButtons, XML_WRITE);
-        GetSetAttribute(pProbes, ATTRIB_CONFIG_TIP_DIAMETER, hasTipDiameter, XML_WRITE);
-        ReturnXML->LinkEndChild(pProbes);
-        for (auto &marker : DataProbesMarkers)
-        {
-            TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
-            GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
-            pProbes->LinkEndChild(pMarker);
-        }
+        reply->GetParams()[ATTRIB_PROBES][DataProbes[i]][ATTRIB_CONFIG_ORIENT_CONVENTION] = orient_convention;
+        reply->GetParams()[ATTRIB_PROBES][DataProbes[i]][ATTRIB_PROBE_NUMBUTTONS]         = numButtons;
+        reply->GetParams()[ATTRIB_PROBES][DataProbes[i]][ATTRIB_CONFIG_RESIDU]            = hasResidu;
+
+        if (i < DataProbesMarkers.size())
+            reply->GetParams()[ATTRIB_PROBES][DataProbes[i]][ATTRIB_CONFIG_3DMARKERS] = DataProbesMarkers[i];
     }
 
     //
     // Add 3D
-    for (auto &marker : Data3D)
-    {
-        TiXmlElement *pMarker = new TiXmlElement(TAG_CONFIG_MARKER);
-        GetSetAttribute(pMarker, ATTRIB_CONFIG_NAME, marker, XML_WRITE);
-        ReturnXML->LinkEndChild(pMarker);
-    }
+    reply->GetParams()[ATTRIB_CONFIG_3DMARKERS] = Data3D;
+    reply->DebugUpdate();
 
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-
-    std::string XMLString = XMLToString(ReturnXML.get());
-
-    return ReturnXML;
+    return reply;
 }
 
 int Driver::FindChannelTypeIndex(const int Value)

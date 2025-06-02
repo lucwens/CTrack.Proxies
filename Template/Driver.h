@@ -15,7 +15,7 @@ class Driver : public CTrack::Subscriber
     Driver()  = default;
     ~Driver() = default;
     CTrack::Reply HardwareDetect(const CTrack::Message&);
-    std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
+    CTrack::Reply                 ConfigDetect(const CTrack::Message &);
     std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
     bool                          Run();
     bool                          GetValues(std::vector<double> &values);

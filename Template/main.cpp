@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     CCommunicationObject              TCPServer;
     std::vector<CTrack::Subscription> subscriptions;
     std::unique_ptr<CTrack::Message>  manualMessage;
+    bool                              bContinueLoop = true;
 
     // responders & handlers
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
@@ -59,13 +60,21 @@ int main(int argc, char *argv[])
 #if !defined(CTRACK_UI) && !defined(_DEBUG)
     subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
 #endif
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_QUIT,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          PrintCommand("Received quit commando");
+                          bContinueLoop = false;
+                          return nullptr;
+                      });
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::ConfigDetect));
 
     // start server
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);
 
-    bool bContinueLoop = true;
     while (bContinueLoop)
     {
         try
@@ -119,10 +128,6 @@ int main(int argc, char *argv[])
                     std::cout << "Quit" << std::endl;
                     bContinueLoop = false;
                 }
-                if (Command == TAG_COMMAND_CONFIGDETECT)
-                {
-                    Response = driver->ConfigDetect(TCP_XML_Input);
-                }
                 if (Command == TAG_COMMAND_CHECKINIT)
                 {
                     std::string xmlstring = XMLToString(TCP_XML_Input);
@@ -131,11 +136,6 @@ int main(int argc, char *argv[])
                 if (Command == TAG_COMMAND_SHUTDOWN)
                 {
                     Response = driver->ShutDown();
-                }
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    std::cout << "Quit" << std::endl;
-                    bContinueLoop = false;
                 }
 
                 std::string               xmlstring = XMLToString(Response);
