@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Libraries\TCP\Message.cpp" />
     <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp" />
     <ClCompile Include="..\Libraries\TCP\Request.cpp" />
     <ClCompile Include="..\Libraries\TCP\Subscription.cpp" />
@@ -199,7 +200,7 @@
     <ClInclude Include="..\Libraries\TCP\Subscription.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
-    <ClInclude Include="..\Libraries\Utility\errorHandling.h" />
+    <ClInclude Include="..\Libraries\Utility\errorException.h" />
     <ClInclude Include="..\Libraries\Utility\FileReader.h" />
     <ClInclude Include="..\Libraries\Utility\Logging.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkError.h" />
