@@ -70,6 +70,8 @@ int main(int argc, char *argv[])
                       });
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::ConfigDetect));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CHECKINIT, CTrack::MakeMemberHandler(driver.get(), &Driver::CheckInitialize));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHUTDOWN, CTrack::MakeMemberHandler(driver.get(), &Driver::ShutDown));
 
     // start server
     TCPServer.Open(TCP_SERVER, PortNumber);
@@ -107,40 +109,19 @@ int main(int argc, char *argv[])
                         PrintInfo("Received a big packet of {} long values", arChar.size());
                     };
                     default:
-                        std::cout << "Unknown TCPgram received" << std::endl;
+                        PrintError("Unknown TCPgram received");
                         break;
                 }
             }
             if (manualMessage)
             {
                 TCPServer.GetMessageResponder()->RespondToMessage(*manualMessage);
-                Command = manualMessage->GetID();
-                PrintCommand("Manual command received: {}", Command);
                 manualMessage.reset();
             }
 
             if (!Command.empty())
             {
-                std::unique_ptr<TiXmlElement> Response;
-                PrintCommand("Command received: " + Command);
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    std::cout << "Quit" << std::endl;
-                    bContinueLoop = false;
-                }
-                if (Command == TAG_COMMAND_CHECKINIT)
-                {
-                    std::string xmlstring = XMLToString(TCP_XML_Input);
-                    Response              = driver->CheckInitialize(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_SHUTDOWN)
-                {
-                    Response = driver->ShutDown();
-                }
-
-                std::string               xmlstring = XMLToString(Response);
-                std::unique_ptr<CTCPGram> TCPGRam   = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                TCPServer.PushSendPackage(TCPGRam);
+                PrintError("should not receive any commands here anymore");
                 Command.clear();
             }
             //------------------------------------------------------------------------------------------------------------------
@@ -172,29 +153,25 @@ int main(int argc, char *argv[])
                 switch (c)
                 {
                     case 'q':
-                        bContinueLoop = false;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_QUIT);
                         break;
                     case 'h':
                         manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
                         break;
                     case 'c':
-                        Command = TAG_COMMAND_CONFIGDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
                         break;
                     case 's':
                     {
                         double AcquisitionRate(1.0);
-                        Command = TAG_COMMAND_CHECKINIT;
                         std::cout << "Enter the measurement frequency" << std::endl;
                         std::cin >> AcquisitionRate;
-                        TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-                        if (TCP_XML_Input)
-                        {
-                            GetSetAttribute(TCP_XML_Input.get(), ATTRIB_CHECKINIT_MEASFREQ, AcquisitionRate, XML_WRITE);
-                        }
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
+                        manualMessage->GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = AcquisitionRate;
                     };
                     break;
                     case 't':
-                        Command = TAG_COMMAND_SHUTDOWN;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
                         break;
                     case 'p':
                         driver->PressTriggerButton();

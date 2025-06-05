@@ -73,3 +73,9 @@ template <typename... Args> void PrintCommand(const std::string &format, Args...
 {
     PrintColor(100, 100, 255, format, std::forward<Args>(args)...);
 }
+
+// PrintCommand function
+template <typename... Args> void PrintCommandReturn(const std::string &format, Args... args)
+{
+    PrintColor(200, 200, 255, format, std::forward<Args>(args)...);
+}

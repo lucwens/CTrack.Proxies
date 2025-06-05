@@ -49,7 +49,6 @@ CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
     return reply;
 }
 
-
 CTrack::Reply Driver::ConfigDetect(const CTrack::Message &message)
 {
     bool          Result                                    = true;
@@ -111,20 +110,19 @@ int Driver::FindChannelTypeIndex(const int Value)
     }
 }
 
-std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
+CTrack::Reply Driver::CheckInitialize(const CTrack::Message &message)
 {
-    bool                          Result = true;
-    std::string                   ResultFeedback;
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
+    bool          Result = true;
+    std::string   ResultFeedback;
+    CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
 
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_SIM_FILEPATH, m_simulationFile, XML_READ);
-
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DNAMES, m_3DNames, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELNAMES, m_channelNames, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELTYPES, m_channelTypes, XML_READ);
-
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DINDICES, m_3DIndices, XML_READ);
+    m_MeasurementFrequencyHz = message.GetParams().value(ATTRIB_CHECKINIT_MEASFREQ, 10.0);
+    m_simulationFile         = message.GetParams().value(ATTRIB_SIM_FILEPATH, "");
+    m_3DNames                = message.GetParams().value(ATTRIB_CHECKINIT_3DNAMES, std::vector<std::string>{});
+    m_channelNames           = message.GetParams().value(ATTRIB_CHECKINIT_CHANNELNAMES, std::vector<std::string>{});
+    m_channelTypes           = message.GetParams().value(ATTRIB_CHECKINIT_CHANNELTYPES, std::vector<int>{});
+    m_3DIndices              = message.GetParams().value(ATTRIB_CHECKINIT_3DINDICES, std::vector<int>{});
+    m_bRunning               = false;
 
     try
     {
@@ -161,13 +159,13 @@ std::unique_ptr<TiXmlElement> Driver::CheckInitialize(std::unique_ptr<TiXmlEleme
     }
     catch (const std::exception &e)
     {
-        Result         = false;
-        ResultFeedback = e.what();
-        GetSetAttribute(Return.get(), ATTRIB_RESULT_FEEDBACK, ResultFeedback, XML_WRITE);
+        Result                                     = false;
+        ResultFeedback                             = e.what();
+        reply->GetParams()[ATTRIB_RESULT_FEEDBACK] = e.what();
     }
 
-    GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return Return;
+    reply->GetParams()[ATTRIB_RESULT] = Result;
+    return reply;
 }
 
 bool Driver::Run()
@@ -217,13 +215,12 @@ bool Driver::GetValues(std::vector<double> &values)
     return false;
 }
 
-std::unique_ptr<TiXmlElement> Driver::ShutDown()
+CTrack::Reply Driver::ShutDown(const CTrack::Message &message)
 {
-    bool                          Result = true;
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
+    bool          Result              = true;
+    CTrack::Reply reply               = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
 
-    m_bRunning                           = false;
-
-    GetSetAttribute(Return.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return Return;
+    m_bRunning                        = false;
+    reply->GetParams()[ATTRIB_RESULT] = Result;
+    return reply;
 }

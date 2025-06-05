@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "../Libraries/TCP/Subscriber.h"
 
 #include <tinyxml.h>
@@ -14,12 +13,12 @@ class Driver : public CTrack::Subscriber
   public:
     Driver()  = default;
     ~Driver() = default;
-    CTrack::Reply HardwareDetect(const CTrack::Message&);
+    CTrack::Reply                 HardwareDetect(const CTrack::Message &);
     CTrack::Reply                 ConfigDetect(const CTrack::Message &);
-    std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
+    CTrack::Reply                 CheckInitialize(const CTrack::Message &message);
     bool                          Run();
     bool                          GetValues(std::vector<double> &values);
-    std::unique_ptr<TiXmlElement> ShutDown();
+    CTrack::Reply                 ShutDown(const CTrack::Message &message);
 
   public:
     void PressTriggerButton() { m_ButtonTriggerPressed = true; };

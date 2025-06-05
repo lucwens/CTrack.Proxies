@@ -1,5 +1,13 @@
 #include "MessageResponder.h"
 
+
+#ifdef CTRACK
+#include "Print.h"
+#else
+#include "../Utility/Print.h"
+#endif
+#undef SendMessage
+
 namespace CTrack
 {
     void MessageResponder::SetSendFunction(std::function<void(Message &)> sendFunction)
@@ -36,9 +44,15 @@ namespace CTrack
         // Call handlers outside lock for deadlock safety
         for (auto &handler : copiedHandlers)
         {
+#ifdef _DEBUG
+            PrintCommand("Command {} : {}", message.GetID(), message.GetParams().dump());
+#endif
             if (auto reply = handler(message))
             {
                 reply->DebugUpdate();
+#ifdef _DEBUG
+                PrintCommandReturn("Result for {} : {}", reply->GetID(), reply->GetParams().dump());
+#endif
                 SendMessage(*reply);
             }
         }
