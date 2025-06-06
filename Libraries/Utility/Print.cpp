@@ -55,6 +55,7 @@ void SetConsoleTabBackgroundColor(int Color)
     std::cout.flush();
 }
 
+
 void DebugPrintShowHideConsole(bool bShow)
 {
     HWND hWnd = GetConsoleWindow();

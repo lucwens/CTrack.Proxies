@@ -3,6 +3,7 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/errorException.h"
+#include "../Libraries/Utility/orientations.h"
 #include "DriverVicon.h"
 
 #include <iostream>
@@ -59,9 +60,10 @@ void DriverVicon::Disconnect()
     m_Client.Disconnect();
 }
 
-std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlElement> &)
+CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
 {
     bool                                          bPresent    = false;
+    CTrack::Reply                                 reply       = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     unsigned int                                  CameraCount = 0;
     bool                                          Result      = true;
     std::string                                   FeedBack("Not present");
@@ -124,106 +126,84 @@ std::unique_ptr<TiXmlElement> DriverVicon::HardwareDetect(std::unique_ptr<TiXmlE
         else
         {
             FeedBack = "Failed to connect to Vicon DataStream";
-            PrintError(FeedBack);
-            return ReturnXML;
+            Result   = false;
         }
         Disconnect();
     }
-    PrintInfo(FeedBack);
 
-    for (int i = 0; i < CameraPositions.size(); i++)
-    {
-        PrintInfo(CameraNames[i]);
-        for (int r = 0; r < 3; r++)
-        {
-            PrintInfo("{:.1f} {:.1f} {:.1f} {:.1f}", CameraPositions[i][r][0], CameraPositions[i][r][1], CameraPositions[i][r][2], CameraPositions[i][r][3]);
-        }
-    }
-
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_FEEDBACK, FeedBack, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_NAMES, CameraNames, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_SERIALS, CameraSerials, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_HARDWAREDETECT_POS4x4, CameraPositions, XML_WRITE);
-
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    PrintInfo(FeedBack);
-    return ReturnXML;
+    reply->GetParams()[ATTRIB_RESULT]                  = Result;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_FEEDBACK] = FeedBack;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]    = CameraNames;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]  = CameraSerials;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_POS4x4]   = CameraPositions;
+    return reply;
 }
 
-std::unique_ptr<TiXmlElement> DriverVicon::ConfigDetect(std::unique_ptr<TiXmlElement> &)
+CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 {
-    bool                          Result = true;
-    std::vector<std::string>      ar6DOF;
-    std::vector<std::string>      ar3D;       // belong to a 6DOF
-    std::vector<std::string>      ar3DParent; // belong to a 6DOF
-    int                           numUnlabeled{0};
-    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
+    CTrack::Reply reply  = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
+    auto         &params = reply->GetParams();
+
+    std::vector<std::string>              Data6DOF;          //= {"6dofA", "6dofB"};
+    std::vector<std::vector<std::string>> Data6DOF_Markers;  //= {{"6dofA1", "6dofA2", "6dofA3"}, {"6dofB1", "6dofB2", "6dofB3"}};
+    std::string                           orient_convention; //= "3x3"; // for the 6DOF and the probe
 
     if (Connect())
     {
-        // unlabeled 3D
+        // add unlabeled markers
         VICONSDK::Output_GetUnlabeledMarkerCount output_GetUnlabeledMarkerCount = m_Client.GetUnlabeledMarkerCount();
         if (output_GetUnlabeledMarkerCount.Result == VICONSDK::Result::Success)
         {
-            numUnlabeled = output_GetUnlabeledMarkerCount.MarkerCount;
+            int numUnlabeled                = output_GetUnlabeledMarkerCount.MarkerCount;
+            params[ATTRIB_CONFIG_3DMARKERS] = std::vector<std::string>();
+            for (unsigned int MarkerIndex = 0; MarkerIndex < output_GetUnlabeledMarkerCount.MarkerCount; ++MarkerIndex)
+            {
+                VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalPosition = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
+                std::string                                          MarkerName           = fmt::format("unlabeled_{}", MarkerIndex);
+                params[ATTRIB_CONFIG_3DMARKERS].emplace_back(std::move(MarkerName));
+            }
         }
-        // 6DOF
+
+        // get rigid bodies (6DOF)
         VICONSDK::Output_GetSubjectCount subjectCount = m_Client.GetSubjectCount();
         if (subjectCount.Result == VICONSDK::Result::Success)
         {
             for (unsigned int SubjectIndex = 0; SubjectIndex < subjectCount.SubjectCount; ++SubjectIndex)
             {
-                std::string SubjectName = m_Client.GetSubjectName(SubjectIndex).SubjectName;
-                ar6DOF.push_back(SubjectName);
+                std::string SubjectName                                           = m_Client.GetSubjectName(SubjectIndex).SubjectName;
+                params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_ORIENT_CONVENTION] = GetOrientationManager()->GetOrientationName(ORIENTATION_3X3);
+                params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_RESIDU]            = false;
+
+
                 // labeled 3D
-                unsigned int MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
+                std::vector<std::string> Data6DOF_Markers_Subject;
+                unsigned int             MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
                 for (unsigned int MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
                 {
                     std::string MarkerName       = m_Client.GetMarkerName(SubjectName, MarkerIndex).MarkerName;
-                    std::string MarkerParentName = m_Client.GetMarkerParentName(SubjectName, MarkerName).SegmentName;
-                    ar3D.push_back(MarkerName);
-                    ar3DParent.push_back(MarkerParentName);
+                    params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_3DMARKERS].push_back(MarkerName);
                 }
             }
         }
-
-        PrintInfo("6DOF objects:");
-        for (auto &object : ar6DOF)
-            PrintInfo(object);
-        PrintInfo("Labelled markers");
-        for (auto &object : ar3D)
-            PrintInfo(object);
-        PrintInfo("Number of unlabelled markers {}", numUnlabeled);
-        Disconnect();
     }
-    else
-    {
-        Result = false;
-    }
-
-    GetSetAttribute(ReturnXML.get(), ATTRIB_MODELS, ar6DOF, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D, ar3D, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_DATA_3D_PARENTS, ar3DParent, XML_WRITE);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_NUM_MARKERS, numUnlabeled, XML_WRITE);
-
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return ReturnXML;
+    reply->DebugUpdate();
+    return reply;
 }
 
-std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXmlElement> &InputXML)
+CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
 {
-    bool                          Result    = true;
-    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_MEASFREQ, m_MeasurementFrequencyHz, XML_READ);
+    bool          Result     = true;
+    CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
 
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELNAMES, m_arChannelNames, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_CHANNELTYPES, m_arChannelTypes, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DNAMES, m_arMatrix3DNames, XML_READ);
-    GetSetAttribute(InputXML.get(), ATTRIB_CHECKINIT_3DINDICES, m_arMatrix3DChannelIndex, XML_READ);
+    m_MeasurementFrequencyHz = message.GetParams().value(ATTRIB_CHECKINIT_MEASFREQ, 50.0);
+    m_arChannelNames         = message.GetParams().value(ATTRIB_CHECKINIT_CHANNELNAMES, std::vector<std::string>{});
+    m_arChannelTypes         = message.GetParams().value(ATTRIB_CHECKINIT_CHANNELTYPES, std::vector<int>{});
+    m_arMatrix3DNames        = message.GetParams().value(ATTRIB_CHECKINIT_3DNAMES, std::vector<std::string>{});
+    m_arMatrix3DChannelIndex = message.GetParams().value(ATTRIB_CHECKINIT_3DINDICES, std::vector<int>{});
 
-    m_bRunning           = true;
-    m_LastFrameNumber    = 0;
-    m_InitialFrameNumber = 0;
+    m_bRunning               = true;
+    m_LastFrameNumber        = 0;
+    m_InitialFrameNumber     = 0;
 
     if (!Connect())
     {
@@ -231,9 +211,8 @@ std::unique_ptr<TiXmlElement> DriverVicon::CheckInitialize(std::unique_ptr<TiXml
     }
     m_arValues.resize(m_arChannelNames.size(), 0);
 
-
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return ReturnXML;
+    reply->GetParams()[ATTRIB_RESULT] = Result;
+    return reply;
 }
 
 bool DriverVicon::Run()
@@ -254,9 +233,9 @@ bool DriverVicon::Run()
                     m_InitialFrameNumber = m_LastFrameNumber;
                 }
 
-                VICONSDK::Output_GetFrameRate Rate            = m_Client.GetFrameRate();
-                VICONSDK::Output_GetTimecode  timecode        = m_Client.GetTimecode();
-                double                        RelativeTime    = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
+                VICONSDK::Output_GetFrameRate Rate         = m_Client.GetFrameRate();
+                VICONSDK::Output_GetTimecode  timecode     = m_Client.GetTimecode();
+                double                        RelativeTime = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
                 m_arValues.push_back(m_LastFrameNumber);
                 m_arValues.push_back(RelativeTime);
 
@@ -273,8 +252,8 @@ bool DriverVicon::Run()
 
                     VICONSDK::Output_GetSegmentGlobalRotationMatrix globalRotationMatrix = m_Client.GetSegmentGlobalRotationMatrix(SubjectName, SubjectName);
                     for (int r = 0; r < 3; r++)
-                        for (int c=0;c<3;c++)
-                            m_arValues.push_back(globalRotationMatrix.Rotation[r+c*3]);
+                        for (int c = 0; c < 3; c++)
+                            m_arValues.push_back(globalRotationMatrix.Rotation[r + c * 3]);
 
                     // get the marker information for this 6DOF
                     unsigned int MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
@@ -320,14 +299,14 @@ bool DriverVicon::GetValues(std::vector<double> &values)
     return false;
 }
 
-std::unique_ptr<TiXmlElement> DriverVicon::ShutDown()
+CTrack::Reply DriverVicon::ShutDown(const CTrack::Message &message)
 {
     bool Result = true;
     m_bRunning  = false;
 
     Disconnect();
 
-    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_SHUTDOWN);
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return ReturnXML;
+    CTrack::Reply reply               = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
+    reply->GetParams()[ATTRIB_RESULT] = Result;
+    return reply;
 }

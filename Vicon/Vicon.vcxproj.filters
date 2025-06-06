@@ -17,19 +17,19 @@
       <UniqueIdentifier>{14836a83-5afc-4661-b00a-88ca64f18762}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries">
-      <UniqueIdentifier>{5e6f1f34-5f24-4383-b4aa-3d302edd079d}</UniqueIdentifier>
+      <UniqueIdentifier>{bc62a1e0-b5e9-492f-bd1c-b9e17f172650}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\TCP">
-      <UniqueIdentifier>{76c6bd09-0866-49d1-b382-1edc164f55b9}</UniqueIdentifier>
+      <UniqueIdentifier>{9e0b43b5-5072-4e20-9641-8a9c04bd7007}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\TCP\Message">
-      <UniqueIdentifier>{1e7e45d0-d33e-44a7-99e7-2d776056b82f}</UniqueIdentifier>
+      <UniqueIdentifier>{88fed90d-a4f2-449b-9853-54588561e557}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\Utility">
-      <UniqueIdentifier>{538a5caa-9810-4b19-90a0-85c119e031c1}</UniqueIdentifier>
+      <UniqueIdentifier>{36c1bf7d-b5db-45dc-a076-79761ce727a7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\XML">
-      <UniqueIdentifier>{9d12e87c-372b-4d9c-9fd4-f0f99a135eba}</UniqueIdentifier>
+      <UniqueIdentifier>{d46bb8ed-f0d7-4b41-a7c6-856db78b5b7f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +79,12 @@
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
@@ -144,6 +150,12 @@
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\baseUnits.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Orientations.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">

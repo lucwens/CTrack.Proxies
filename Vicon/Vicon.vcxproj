@@ -173,10 +173,12 @@
     <ClCompile Include="..\Libraries\TCP\Subscription.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp" />
     <ClCompile Include="..\Libraries\Utility\FileReader.cpp" />
     <ClCompile Include="..\Libraries\Utility\Logging.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp" />
+    <ClCompile Include="..\Libraries\Utility\Orientations.cpp" />
     <ClCompile Include="..\Libraries\Utility\os.cpp" />
     <ClCompile Include="..\Libraries\Utility\Print.cpp" />
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp" />
@@ -200,11 +202,13 @@
     <ClInclude Include="..\Libraries\TCP\Subscription.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
+    <ClInclude Include="..\Libraries\Utility\baseUnits.h" />
     <ClInclude Include="..\Libraries\Utility\errorException.h" />
     <ClInclude Include="..\Libraries\Utility\FileReader.h" />
     <ClInclude Include="..\Libraries\Utility\Logging.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkError.h" />
     <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h" />
+    <ClInclude Include="..\Libraries\Utility\Orientations.h" />
     <ClInclude Include="..\Libraries\Utility\os.h" />
     <ClInclude Include="..\Libraries\Utility\Print.h" />
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h" />

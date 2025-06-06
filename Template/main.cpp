@@ -10,9 +10,9 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 
-// #ifndef _DEBUG
+#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
 #include "../../CTrack_Data/ProxyHandshake.h"
-// #endif
+#endif
 
 #include <conio.h>
 #include <iostream>
@@ -29,8 +29,6 @@ int main(int argc, char *argv[])
     //
     // parse port
     unsigned short                PortNumber(40001);
-    std::string                   Command;
-    std::unique_ptr<TiXmlElement> TCP_XML_Input;
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
@@ -95,12 +93,7 @@ int main(int argc, char *argv[])
                 {
                     case TCPGRAM_CODE_COMMAND:
                     {
-                        TCP_XML_Input = TCPGram->GetXML();
-                        if (TCP_XML_Input)
-                        {
-                            // CString XMLString = XML_To_String(XMLElement.get());
-                            Command = ToUpperCase(TCP_XML_Input->Value());
-                        }
+                        PrintError("should not receive any commands here anymore");
                     };
                     break;
                     case TCPGRAM_CODE_TEST_BIG:
@@ -119,11 +112,6 @@ int main(int argc, char *argv[])
                 manualMessage.reset();
             }
 
-            if (!Command.empty())
-            {
-                PrintError("should not receive any commands here anymore");
-                Command.clear();
-            }
             //------------------------------------------------------------------------------------------------------------------
             /*
             Running
@@ -212,14 +200,12 @@ int main(int argc, char *argv[])
             PrintError("An error occurred : {}", e.what());
             std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(e);
             TCPServer.PushSendPackage(TCPGRam);
-            Command.clear();
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
             std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>("An unknown error occurred", TCPGRAM_CODE_ERROR);
             TCPServer.PushSendPackage(TCPGRam);
-            Command.clear();
         }
     }
     PrintInfo("Closing server");

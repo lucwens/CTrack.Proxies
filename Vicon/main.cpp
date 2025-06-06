@@ -22,14 +22,15 @@
 
 int main(int argc, char *argv[])
 {
+    CTrack::InitLogging("");
+    SetConsoleTabText("Vicon");
+    SetConsoleTabBackgroundColor(MAGENTA);
+
     //
     // parse port
     unsigned short                PortNumber(40001);
-    std::string                   Command;
-    std::unique_ptr<TiXmlElement> TCP_XML_Input;
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
-
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
     PrintInfo("Big loop starting");
@@ -44,18 +45,33 @@ int main(int argc, char *argv[])
     PrintInfo("l : report last coordinates");
 
     // startup server object
-    CCommunicationObject         TCPServer;
+    CCommunicationObject              TCPServer;
     std::unique_ptr<DriverVicon>      driver = std::make_unique<DriverVicon>();
     std::vector<CTrack::Subscription> subscriptions;
+    std::unique_ptr<CTrack::Message>  manualMessage;
+    bool                              bContinueLoop = true;
 
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
     TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+#if !defined(CTRACK_UI) && !defined(_DEBUG)
     subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
+#endif
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_QUIT,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          PrintCommand("Received quit commando");
+                          bContinueLoop = false;
+                          return nullptr;
+                      });
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::HardwareDetect));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::ConfigDetect));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CHECKINIT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::CheckInitialize));
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHUTDOWN, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::ShutDown));
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
-    bool bContinueLoop = true;
 
     while (bContinueLoop)
     {
@@ -75,57 +91,25 @@ int main(int argc, char *argv[])
                 {
                     case TCPGRAM_CODE_COMMAND:
                     {
-                        TCP_XML_Input = TCPGram->GetXML();
-                        if (TCP_XML_Input)
-                        {
-                            // CString XMLString = XML_To_String(XMLElement.get());
-                            Command = ToUpperCase(TCP_XML_Input->Value());
-                        }
+                        PrintError("should not receive any commands here anymore");
                     };
                     break;
+                    case TCPGRAM_CODE_TEST_BIG:
+                    {
+                        std::vector<char> arChar = TCPGram->GetData();
+                        PrintInfo("Received a big packet of {} long values", arChar.size());
+                    };
                     default:
-                        PrintInfo("Unknown TCPgram received");
+                        PrintError("Unknown TCPgram received");
                         break;
                 }
             }
-
-            if (!Command.empty())
+            if (manualMessage)
             {
-                std::unique_ptr<TiXmlElement> Response;
-                PrintCommand("Command received: " + Command);
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    PrintInfo("Quit");
-                    bContinueLoop = false;
-                }
-                if (Command == TAG_COMMAND_HARDWAREDETECT)
-                {
-                    Response = driver->HardwareDetect(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_CONFIGDETECT)
-                {
-                    Response = driver->ConfigDetect(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_CHECKINIT)
-                {
-                    std::string xmlstring = XMLToString(TCP_XML_Input);
-                    Response              = driver->CheckInitialize(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_SHUTDOWN)
-                {
-                    Response = driver->ShutDown();
-                }
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    PrintInfo("Quit");
-                    bContinueLoop = false;
-                }
-
-                std::string               xmlstring = XMLToString(Response);
-                std::unique_ptr<CTCPGram> TCPGRam   = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                TCPServer.PushSendPackage(TCPGRam);
-                Command.clear();
+                TCPServer.GetMessageResponder()->RespondToMessage(*manualMessage);
+                manualMessage.reset();
             }
+
             //------------------------------------------------------------------------------------------------------------------
             /*
             Running
@@ -157,29 +141,25 @@ int main(int argc, char *argv[])
                 switch (c)
                 {
                     case 'q':
-                        bContinueLoop = false;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_QUIT);
                         break;
                     case 'h':
-                        Command = TAG_COMMAND_HARDWAREDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
                         break;
                     case 'c':
-                        Command = TAG_COMMAND_CONFIGDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
                         break;
                     case 's':
                     {
                         double AcquisitionRate(50.0);
-                        Command       = TAG_COMMAND_CHECKINIT;
-                        //                         std::cout << "Enter the measurement frequency" << endl;
-                        //                         cin >> AcquisitionRate;
-                        TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-                        if (TCP_XML_Input)
-                        {
-                            GetSetAttribute(TCP_XML_Input.get(), ATTRIB_CHECKINIT_MEASFREQ, AcquisitionRate, XML_WRITE);
-                        }
+//                         std::cout << "Enter the measurement frequency" << std::endl;
+//                         std::cin >> AcquisitionRate;
+                        manualMessage                                         = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
+                        manualMessage->GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = AcquisitionRate;
                     };
                     break;
                     case 't':
-                        Command = TAG_COMMAND_SHUTDOWN;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
                         break;
                 }
             }
@@ -187,10 +167,14 @@ int main(int argc, char *argv[])
         catch (const std::exception &e)
         {
             PrintError("An error occurred : {}", e.what());
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(e);
+            TCPServer.PushSendPackage(TCPGRam);
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>("An unknown error occurred", TCPGRAM_CODE_ERROR);
+            TCPServer.PushSendPackage(TCPGRam);
         }
     }
     PrintInfo("Closing server");

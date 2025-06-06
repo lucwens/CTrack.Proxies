@@ -1,20 +1,21 @@
 #pragma once
 
 #include "DataStreamClient.h"
+#include "../Libraries/TCP/Subscriber.h"
 
 namespace VICONSDK = ViconDataStreamSDK::CPP;
 
-class DriverVicon
+class DriverVicon : public CTrack::Subscriber
 {
   public:
     DriverVicon()          = default;
     virtual ~DriverVicon() = default;
-    std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &);
-    std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
-    std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
-    bool                          Run();
-    bool                          GetValues(std::vector<double> &values);
-    std::unique_ptr<TiXmlElement> ShutDown();
+    CTrack::Reply HardwareDetect(const CTrack::Message &message);
+    CTrack::Reply ConfigDetect(const CTrack::Message &message);
+    CTrack::Reply CheckInitialize(const CTrack::Message &message);
+    bool          Run();
+    bool          GetValues(std::vector<double> &values);
+    CTrack::Reply ShutDown(const CTrack::Message &message);
 
   public:
     bool Connect();
