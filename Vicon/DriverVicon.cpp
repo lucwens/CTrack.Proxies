@@ -145,10 +145,6 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
     CTrack::Reply reply  = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
     auto         &params = reply->GetParams();
 
-    std::vector<std::string>              Data6DOF;          //= {"6dofA", "6dofB"};
-    std::vector<std::vector<std::string>> Data6DOF_Markers;  //= {{"6dofA1", "6dofA2", "6dofA3"}, {"6dofB1", "6dofB2", "6dofB3"}};
-    std::string                           orient_convention; //= "3x3"; // for the 6DOF and the probe
-
     if (Connect())
     {
         // add unlabeled markers
@@ -156,13 +152,15 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
         if (output_GetUnlabeledMarkerCount.Result == VICONSDK::Result::Success)
         {
             int numUnlabeled                = output_GetUnlabeledMarkerCount.MarkerCount;
-            params[ATTRIB_CONFIG_3DMARKERS] = std::vector<std::string>();
+            PrintInfo("Num markers {}", numUnlabeled);
+            std::vector<std::string> markerNames;
             for (unsigned int MarkerIndex = 0; MarkerIndex < output_GetUnlabeledMarkerCount.MarkerCount; ++MarkerIndex)
             {
                 VICONSDK::Output_GetUnlabeledMarkerGlobalTranslation markerGlobalPosition = m_Client.GetUnlabeledMarkerGlobalTranslation(MarkerIndex);
                 std::string                                          MarkerName           = fmt::format("unlabeled_{}", MarkerIndex);
-                params[ATTRIB_CONFIG_3DMARKERS].emplace_back(std::move(MarkerName));
+                markerNames.push_back(MarkerName);
             }
+            params[ATTRIB_CONFIG_3DMARKERS] = markerNames;
         }
 
         // get rigid bodies (6DOF)
@@ -175,13 +173,11 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
                 params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_ORIENT_CONVENTION] = GetOrientationManager()->GetOrientationName(ORIENTATION_3X3);
                 params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_RESIDU]            = false;
 
-
                 // labeled 3D
-                std::vector<std::string> Data6DOF_Markers_Subject;
-                unsigned int             MarkerCount = m_Client.GetMarkerCount(SubjectName).MarkerCount;
+                unsigned int MarkerCount                                          = m_Client.GetMarkerCount(SubjectName).MarkerCount;
                 for (unsigned int MarkerIndex = 0; MarkerIndex < MarkerCount; ++MarkerIndex)
                 {
-                    std::string MarkerName       = m_Client.GetMarkerName(SubjectName, MarkerIndex).MarkerName;
+                    std::string MarkerName = m_Client.GetMarkerName(SubjectName, MarkerIndex).MarkerName;
                     params[ATTRIB_6DOF][SubjectName][ATTRIB_CONFIG_3DMARKERS].push_back(MarkerName);
                 }
             }
