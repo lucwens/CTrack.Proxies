@@ -39,20 +39,16 @@ int main(int argc, char *argv[])
     PrintInfo("c : configuration detect");
     PrintInfo("s : start track");
     PrintInfo("t : stop track");
-    PrintInfo("p : simulate push trigger button");
-    PrintInfo("v : simulate push validate button");
-    PrintInfo("i : print info");
-    PrintInfo("l : report last coordinates");
 
     // startup server object
-    CCommunicationObject              TCPServer;
     std::unique_ptr<DriverVicon>      driver = std::make_unique<DriverVicon>();
+    CCommunicationObject              TCPServer;
     std::vector<CTrack::Subscription> subscriptions;
     std::unique_ptr<CTrack::Message>  manualMessage;
     bool                              bContinueLoop = true;
 
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
-    TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintInfo("DISCONNNECTED : {}", numConnections); });
+    TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintWarning("DISCONNNECTED : {}", numConnections); });
 #if !defined(CTRACK_UI) && !defined(_DEBUG)
     subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
 #endif
@@ -70,7 +66,7 @@ int main(int argc, char *argv[])
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHUTDOWN, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::ShutDown));
 
     TCPServer.Open(TCP_SERVER, PortNumber);
-    PrintInfo("Server started on port " + std::to_string(PortNumber));
+    PrintInfo("Server started on port {}", PortNumber);
 
 
     while (bContinueLoop)
@@ -123,10 +119,6 @@ int main(int argc, char *argv[])
                 {
                     std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(arValues);
                     TCPServer.PushSendPackage(TCPGRam);
-                }
-                else
-                {
-                    PrintError("No values received");
                 }
             }
 

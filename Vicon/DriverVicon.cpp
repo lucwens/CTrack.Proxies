@@ -131,11 +131,12 @@ CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
         Disconnect();
     }
 
-    reply->GetParams()[ATTRIB_RESULT]                  = Result;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]  = Result;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_FEEDBACK] = FeedBack;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]    = CameraNames;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]  = CameraSerials;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_POS4x4]   = CameraPositions;
+    reply->DebugUpdate();
     return reply;
 }
 
