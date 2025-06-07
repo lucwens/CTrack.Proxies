@@ -293,10 +293,27 @@ class CCommunicationObject : public CCommunicationInterface
     void             SetThreadName(const std::string &iName) { m_ThreadName = iName; };
 
   protected:
-    std::shared_ptr<CCommunicationThread> m_pCommunicationThread;
-    std::mutex                            m_LockThreadRunning;
-    bool                                  m_bOpened = false;
-    std::string                           m_ThreadName;
+    std::weak_ptr<CCommunicationThread> m_pCommunicationThread;
+    std::mutex                          m_LockThreadRunning;
+    bool                                m_bOpened = false;
+    std::string                         m_ThreadName;
+
+  public:
+    static void AssignCommunicationThread(UINT, CCommunicationObject &);
+    static void CloseCommunicationThread(UINT, CCommunicationObject &);
+    static void CloseAllConnections();
+
+  protected:
+    static std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> &getMapThreads()
+    {
+        static std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> m_mapThreads;
+        return m_mapThreads;
+    };
+    static std::mutex &getMapThreadsMutex()
+    {
+        static std::mutex m_MutexThreads;
+        return m_MutexThreads;
+    };
 };
 
 //------------------------------------------------------------------------------------------------------------------
@@ -308,8 +325,6 @@ multiple CCommunicationTCP objects want to communicate through the same port, th
 
 class CCommunicationThread : public CCommunicationInterface
 {
-    friend UINT CommunicationThread(LPVOID lpParameter);
-
   public:
     CCommunicationThread();
     virtual ~CCommunicationThread();
@@ -341,13 +356,13 @@ class CCommunicationThread : public CCommunicationInterface
     std::condition_variable &GetConnectionCV() { return m_connectionCV; }
 
   protected: // thread members
-    std::thread                      m_Thread;
-    std::atomic<bool>                m_bQuit       = false;
-    std::atomic<bool>                m_bIntialized = false;
-    std::list<CSocket *>::iterator   m_IterCurrentSocket;
-    std::list<CSocket *>             m_arSockets;
-    std::set<CCommunicationObject *> m_setCommunicationObject;
-    std::string                      m_ThreadName;
-    std::condition_variable          m_connectionCV;
-    std::mutex                       m_connectionMutex;
+    std::thread                                   m_Thread;
+    std::atomic<bool>                             m_bQuit       = false;
+    std::atomic<bool>                             m_bIntialized = false;
+    std::list<std::unique_ptr<CSocket>>::iterator m_IterCurrentSocket;
+    std::list<std::unique_ptr<CSocket>>           m_arSockets;
+    std::set<CCommunicationObject *>              m_setCommunicationObject;
+    std::string                                   m_ThreadName;
+    std::condition_variable                       m_connectionCV;
+    std::mutex                                    m_connectionMutex;
 };

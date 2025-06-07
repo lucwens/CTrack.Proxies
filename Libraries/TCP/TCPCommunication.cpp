@@ -44,7 +44,6 @@ constexpr int MAX_DEBUG_TELEGRAMS = 500;
 
 #pragma comment(lib, "Iphlpapi.lib")
 
-std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> m_mapThreads;
 //------------------------------------------------------------------------------------------------------------------
 /*
 Supporting routines for the communication thread
@@ -591,31 +590,9 @@ bool CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
     {
         // when a communication object wants to open the communication channels, CCommunicationManager checks if there is already a thread running on the same
         // port, if yes then the communication object is added to the list of communication objects belonging to that port, if no, then we create a new thread
-        bool                                  bStartThread = false;
-        std::shared_ptr<CCommunicationThread> pCommunicationThread;
 
-        int  Port     = GetPort();
-        auto iterFind = m_mapThreads.find(Port);
-        if (iterFind == m_mapThreads.end())
-        {
-            // not connected yet, create a CCommunicationThread object, copy parameters and start a thread
-            pCommunicationThread.reset(new CCommunicationThread);
-            pCommunicationThread->CopyFrom(this);
-            m_mapThreads[Port] = pCommunicationThread;
-            bStartThread       = true;
-        }
-        else
-            pCommunicationThread = iterFind->second;
-
-        // add the rObject to the list of the
-        if (pCommunicationThread)
-        {
-            pCommunicationThread->CommunicationObjectAdd(*this);
-            SetCommunicationThread(pCommunicationThread);
-        }
-
-        if (bStartThread)
-            pCommunicationThread->StartThread();
+        int Port = GetPort();
+        CCommunicationObject::AssignCommunicationThread(Port, *this);
         m_bOpened = true;
     }
     return m_bOpened;
@@ -623,25 +600,13 @@ bool CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
 
 void CCommunicationObject::Close()
 {
-    if (m_bOpened)
+    std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
+    if (pCommunicationThread)
     {
-        int  Port     = GetPort();
-        auto iterFind = m_mapThreads.find(Port);
-        if (iterFind != m_mapThreads.end())
-        {
-            std::shared_ptr<CCommunicationThread> pCommunicationThread = iterFind->second;
-            if (pCommunicationThread)
-            {
-                pCommunicationThread->CommunicationObjectRemove(*this);
-                if (pCommunicationThread->CommunicationObjectGetNum() == 0)
-                {
-                    pCommunicationThread->EndThread();
-                    m_mapThreads.erase(iterFind);
-                }
-                m_bOpened = false;
-            }
-        }
+        int Port = GetPort();
+        CCommunicationObject::CloseCommunicationThread(Port, *this);
     }
+    m_bOpened = false;
 }
 
 CSocket *CCommunicationObject::SocketCreate(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort,
@@ -660,48 +625,119 @@ void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunication
     m_pCommunicationThread = rCommunicationThread;
     if (m_ThreadName.size() > 0)
         rCommunicationThread->SetThreadName(m_ThreadName);
-    if (m_pCommunicationThread)
+    std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
+    if (pCommunicationThread)
     {
-        m_pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder);
+        pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder);
     }
 }
 
 size_t CCommunicationObject::GetNumConnections()
 {
-    if (m_pCommunicationThread)
-        return m_pCommunicationThread->GetNumConnections();
+    std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
+    if (pCommunicationThread)
+    {
+        return pCommunicationThread->GetNumConnections();
+    }
     return 0;
 }
 
 bool CCommunicationObject::WaitConnection(DWORD timeoutMs)
 {
-    auto thread = m_pCommunicationThread.get();
-    if (thread)
+    std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
+    if (pCommunicationThread)
     {
-        std::unique_lock<std::mutex> lock(thread->GetConnectionMutex());
-        return thread->GetConnectionCV().wait_for(lock, std::chrono::milliseconds(timeoutMs), [thread] { return thread->GetNumConnections() > 0; });
-    }
-    else
-    {
-        // Fallback to polling
-        DWORD startTick = GetTickCount();
-        DWORD endTick   = startTick + timeoutMs;
-        DWORD nowTick   = startTick;
-        while (nowTick < endTick)
+        auto thread = pCommunicationThread.get();
+        if (thread)
         {
-            if (GetNumConnections() > 0)
-                return true;
-            Sleep(50);
-            nowTick = GetTickCount();
+            std::unique_lock<std::mutex> lock(thread->GetConnectionMutex());
+            return thread->GetConnectionCV().wait_for(lock, std::chrono::milliseconds(timeoutMs), [thread] { return thread->GetNumConnections() > 0; });
         }
-        return false;
+        else
+        {
+            // Fallback to polling
+            DWORD startTick = GetTickCount();
+            DWORD endTick   = startTick + timeoutMs;
+            DWORD nowTick   = startTick;
+            while (nowTick < endTick)
+            {
+                if (GetNumConnections() > 0)
+                    return true;
+                Sleep(50);
+                nowTick = GetTickCount();
+            }
+            return false;
+        }
     }
 }
 
 void CCommunicationObject::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    if (m_pCommunicationThread)
-        m_pCommunicationThread->PushSendPackage(rTCPGram);
+    std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
+    if (pCommunicationThread)
+    {
+        pCommunicationThread->PushSendPackage(rTCPGram);
+    }
+}
+
+void CCommunicationObject::AssignCommunicationThread(UINT port, CCommunicationObject &pComObject)
+{
+    std::lock_guard<std::mutex>                                     lock(CCommunicationObject::getMapThreadsMutex());
+    std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> &maps = getMapThreads();
+    std::shared_ptr<CCommunicationThread>                           pCommunicationThread;
+    bool                                                            bStartThread = false;
+    auto                                                            iterFind     = getMapThreads().find(port);
+    if (iterFind == maps.end())
+    {
+        // not connected yet, create a CCommunicationThread object, copy parameters and start a thread
+        pCommunicationThread.reset(new CCommunicationThread);
+        pCommunicationThread->CopyFrom(&pComObject);
+        maps[port]   = pCommunicationThread;
+        bStartThread = true;
+    }
+    else
+        pCommunicationThread = iterFind->second;
+
+    if (pCommunicationThread)
+    {
+        pCommunicationThread->CommunicationObjectAdd(pComObject);
+        pComObject.SetCommunicationThread(pCommunicationThread);
+    }
+    if (bStartThread)
+        pCommunicationThread->StartThread();
+}
+
+void CCommunicationObject::CloseCommunicationThread(UINT port, CCommunicationObject &pComObject)
+{
+    std::lock_guard<std::mutex>                                     lock(CCommunicationObject::getMapThreadsMutex());
+    std::map<UINT /*port*/, std::shared_ptr<CCommunicationThread>> &maps     = getMapThreads();
+    auto                                                            iterFind = maps.find(port);
+    if (iterFind != maps.end())
+    {
+        std::shared_ptr<CCommunicationThread> pCommunicationThread = iterFind->second;
+        if (pCommunicationThread)
+        {
+            pCommunicationThread->CommunicationObjectRemove(pComObject);
+            if (pCommunicationThread->CommunicationObjectGetNum() == 0)
+            {
+                pCommunicationThread->EndThread();
+                maps.erase(iterFind);
+            }
+        }
+    }
+}
+
+void CCommunicationObject::CloseAllConnections()
+{
+    std::lock_guard<std::mutex> lock(CCommunicationObject::getMapThreadsMutex());
+    auto                        maps = getMapThreads();
+    for (auto &[port, thread] : maps)
+    {
+        PrintDebug("Forcefully shutting down TCP communication for {}", port);
+        if (thread)
+            thread->EndThread();
+    }
+    maps.clear();
 }
 
 //------------------------------------------------------------------------------------------------------------------
@@ -1078,6 +1114,10 @@ CCommunicationThread::CCommunicationThread()
 
 CCommunicationThread::~CCommunicationThread()
 {
+    // The list m_arSockets will be implicitly destructed here.
+    // If SocketDeleteAll() hasn't been called, or if it failed, this is where it might crash.
+    int NumSockets = static_cast<int>(m_arSockets.size());
+    m_arSockets.clear();
 }
 
 void CCommunicationThread::SetQuit(bool ibQuit)
@@ -1137,8 +1177,8 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
     auto                                  iter = m_setCommunicationObject.begin();
     if (iter != m_setCommunicationObject.end())
     {
-        CSocket *pNewSocket = (*iter)->SocketCreate(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendPort);
-        m_arSockets.push_back(pNewSocket);
+        auto pNewSocket = std::unique_ptr<CSocket>((*iter)->SocketCreate(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendPort));
+        m_arSockets.emplace_back(std::move(pNewSocket));
     }
     else
         assert(false);
@@ -1155,7 +1195,7 @@ CSocket *CCommunicationThread::SocketFirst()
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     m_IterCurrentSocket = m_arSockets.begin();
     if (m_IterCurrentSocket != m_arSockets.end())
-        return (*m_IterCurrentSocket);
+        return (m_IterCurrentSocket->get());
     else
         return nullptr;
 }
@@ -1165,7 +1205,7 @@ CSocket *CCommunicationThread::SocketNext()
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     m_IterCurrentSocket++;
     if (m_IterCurrentSocket != m_arSockets.end())
-        return (*m_IterCurrentSocket);
+        return (m_IterCurrentSocket->get());
     else
         return nullptr;
 }
@@ -1175,7 +1215,7 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     if (m_IterCurrentSocket != m_arSockets.end())
     {
-        delete *m_IterCurrentSocket;
+        m_IterCurrentSocket->release();
         m_IterCurrentSocket = m_arSockets.erase(m_IterCurrentSocket);
 
         // Notify waiting threads about the connection change
@@ -1185,7 +1225,7 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
         }
 
         if (m_IterCurrentSocket != m_arSockets.end())
-            return (*m_IterCurrentSocket);
+            return (m_IterCurrentSocket->get());
     }
     return nullptr;
 }
@@ -1194,7 +1234,10 @@ void CCommunicationThread::SocketDeleteAll()
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     for (auto &arSocket : m_arSockets)
-        delete arSocket;
+    {
+        if (arSocket)
+            arSocket.release();
+    }
     m_arSockets.clear();
 
     // Notify waiting threads about the connection change
@@ -1246,7 +1289,9 @@ void CCommunicationThread::EndThread()
 {
     SetQuit(true);
     if (m_Thread.joinable())
+    {
         m_Thread.join();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------

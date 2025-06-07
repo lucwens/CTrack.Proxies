@@ -916,8 +916,8 @@ COrientationManager::COrientationManager()
         {ORIENTATION_KUKAABC, new COrientationKukaABC()},
         {ORIENTATION_QUATERNION, new COrientationQuaternion()},
         {ORIENTATION_ZVECTOR, new COrientationZVector()},
-        {ORIENTATION_4X4, new COrientation4x4()}, // New
-        {ORIENTATION_3X3, new COrientation3x3()}  // New
+        {ORIENTATION_4X4, new COrientation4x4()}, 
+        {ORIENTATION_3X3, new COrientation3x3()}  
     };
 }
 
@@ -939,7 +939,6 @@ COrientation *COrientationManager::GetOrientation(int iIndex)
     }
     else
     {
-        // assert(false); // Or handle error appropriately
         return nullptr;
     }
 }
