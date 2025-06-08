@@ -6,7 +6,6 @@
 #else
 #include "../Utility/Print.h"
 #endif
-#undef SendMessage
 
 namespace CTrack
 {
@@ -49,7 +48,7 @@ namespace CTrack
             {
                 reply->DebugUpdate();
                 PrintCommandReturn("Result for {} : {}", reply->GetID(), reply->GetParams().dump());
-                SendMessage(*reply);
+                SendTrackMessage(*reply);
             }
         }
 
@@ -65,7 +64,7 @@ namespace CTrack
                 std::future<Message> messageFuture = request.GetReplyFuture();
                 assert(messageFuture.wait_for(std::chrono::seconds(0)) != std::future_status::timeout);
                 auto replyMessage = messageFuture.get(); // Store the result in a local variable
-                SendRequest(replyMessage, handler);      // Pass the local variable to SendRequest
+                SendTrackRequest(replyMessage, handler);      // Pass the local variable to SendRequest
             }
             requests_.erase(it);
         }
@@ -85,13 +84,13 @@ namespace CTrack
         }
     }
 
-    void MessageResponder::SendMessage(const std::string &id, const json &params)
+    void MessageResponder::SendTrackMessage(const std::string &id, const json &params)
     {
         Message message(id, params);
-        SendMessage(message);
+        SendTrackMessage(message);
     }
 
-    void MessageResponder::SendMessage(Message &message)
+    void MessageResponder::SendTrackMessage(Message &message)
     {
         std::function<void(Message &)> sendCopy;
         {
@@ -106,7 +105,7 @@ namespace CTrack
         sendCopy(message);
     }
 
-    void MessageResponder::SendRequest(Message &message, Handler handler)
+    void MessageResponder::SendTrackRequest(Message &message, Handler handler)
     {
         std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
         auto [iter, inserted] = requests_.emplace(message.GetID(), Request(message, handler));
@@ -115,10 +114,10 @@ namespace CTrack
             throw std::runtime_error("Failed to create request for message ID: " + message.GetID());
         }
 
-        SendMessage(message);
+        SendTrackMessage(message);
     }
 
-    void MessageResponder::SendRequest(Message &message, std::future<Message> &future)
+    void MessageResponder::SendTrackRequest(Message &message, std::future<Message> &future)
     {
         std::lock_guard<std::recursive_mutex> lock(requestsMutex_);
         auto [iter, inserted] = requests_.emplace(message.GetID(), Request(message, {}));
@@ -127,7 +126,7 @@ namespace CTrack
             throw std::runtime_error("Failed to create request for message ID: " + message.GetID());
         }
         future = std::move(iter->second.GetReplyFuture());
-        SendMessage(message);
+        SendTrackMessage(message);
     }
 
     void MessageResponder::CancelRequest(const Message &message)
@@ -175,7 +174,7 @@ namespace CTrack
             return nullptr;                // no reply expected
         };
 
-        responder.SendRequest(item.message, cb);
+        responder.SendTrackRequest(item.message, cb);
     }
 
     void RequestList(MessageResponder &messageResponder, std::deque<RequestItem> &list)

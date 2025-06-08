@@ -20,10 +20,10 @@ namespace CTrack
         void                       SetSendFunction(std::function<void(Message &)>);
         [[nodiscard]] Subscription Subscribe(const std::string &id, Handler);
         void                       RespondToMessage(const Message &);
-        void                       SendMessage(const std::string &id, const json &);
-        void                       SendMessage(Message &);
-        void                       SendRequest(Message &, Handler);
-        void                       SendRequest(Message &, std::future<Message> &);
+        void                       SendTrackMessage(const std::string &id, const json &);
+        void                       SendTrackMessage(Message &); // do not change to SendMessage , will conflict with Windows SDK
+        void                       SendTrackRequest(Message &, Handler);
+        void                       SendTrackRequest(Message &, std::future<Message> &);
         void                       CancelRequest(const Message &);
         void                       Unsubscribe(const std::string &id, HandlerID handlerID);
         void                       RequestSetPromiseThread(const Message &message);
