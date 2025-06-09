@@ -1688,9 +1688,7 @@ void CCommunicationThread::ThreadFunction()
             SetError(__FILE__, __LINE__, "An unknown error occurred");
         }
     }
-#ifdef _DEBUG
-    PrintInfo("Closing thread for port {}", PortNumber);
-#endif
+    PrintDebug("Closing thread for port {}", PortNumber);
 
     //
     // close our sockets
