@@ -137,6 +137,46 @@ bool ResolveIP4_Address(const std::string &HostName, std::string &IP_Number)
     return true;
 }
 
+bool IsTCPPortInUse(int port)
+{
+    WSADATA wsaData;
+    int     result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0)
+    {
+        PrintError("WSAStartup failed: {}", result);
+        return false;
+    }
+    SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listenSocket == INVALID_SOCKET)
+    {
+        PrintError("Socket creation failed: {}", WSAGetLastError());
+        WSACleanup();
+        return false;
+    }
+    sockaddr_in service;
+    service.sin_family      = AF_INET;
+    service.sin_addr.s_addr = INADDR_ANY; // Bind to any available interface
+    service.sin_port        = htons(port);
+    // Try binding the socket
+    if (::bind(listenSocket, (SOCKADDR *)&service, sizeof(service)) == 0)
+    {
+        closesocket(listenSocket);
+        WSACleanup();
+        return false; // Port is available
+    }
+    else
+    {
+        int err = WSAGetLastError();
+        closesocket(listenSocket);
+        WSACleanup();
+        if (err == WSAEADDRINUSE)
+            return true; // Port is in use
+        else
+            PrintError("Bind failed with error: {}", err);
+            return false; // Some other error occurred
+    }
+}
+
 int FindAvailableTCPPortNumber(int startPort)
 {
     WSADATA wsaData;

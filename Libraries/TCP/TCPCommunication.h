@@ -40,6 +40,7 @@ find an available port starting from a given port
 //------------------------------------------------------------------------------------------------------------------
 
 bool               Ping(const char *ipAddress, std::string &FeedBack, DWORD iTimeout = 1000);
+bool               IsTCPPortInUse(int port);
 int                FindAvailableTCPPortNumber(int startPort);
 std::vector<DWORD> ListTcpConnectionsForApp(const std::string &appName);
 
