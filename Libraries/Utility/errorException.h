@@ -33,5 +33,5 @@ class CDetailedSocketException : public CDetailedException
     }
 };
 
-#define THROW_ERROR(msg)                   throw CDetailedException((msg), __FILE__, __LINE__)
-#define THROW_SOCKET_ERROR(msg, errorcode) throw CDetailedSocketException((msg), errorcode, __FILE__, __LINE__)
+#define CTRACK_THROW_ERROR(msg)                   throw CDetailedException((msg), __FILE__, __LINE__)
+#define CTRACK_THROW_SOCKET_ERROR(msg, errorcode) throw CDetailedSocketException((msg), errorcode, __FILE__, __LINE__)

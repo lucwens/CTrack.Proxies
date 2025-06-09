@@ -840,7 +840,7 @@ void CSocket::Throw(const std::string &ErrorMessage)
     if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED || errval == 0)
         throw false; // connection was closed
     else
-        THROW_SOCKET_ERROR(ErrorMessage, errval);
+        CTRACK_THROW_SOCKET_ERROR(ErrorMessage, errval);
 }
 
 void CSocket::ResetBuffers()
@@ -856,7 +856,7 @@ void SetSocketOption(SOCKET socket, int level, int option, int value, const std:
     if (setsockopt(socket, level, option, (const char *)&value, sizeof(value)) == SOCKET_ERROR)
     {
         int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(errorMessage, LastError);
+        CTRACK_THROW_SOCKET_ERROR(errorMessage, LastError);
     }
 }
 
@@ -882,7 +882,7 @@ void CSocket::SetNonBlocking(bool bNonBlocking)
     if (ioctlsocket(m_Socket, FIONBIO, argList) == SOCKET_ERROR)
     {
         int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(("Failed to set non-blocking option"), LastError);
+        CTRACK_THROW_SOCKET_ERROR(("Failed to set non-blocking option"), LastError);
     }
 }
 
@@ -893,7 +893,7 @@ int CSocket::GetMaxUDPMessageSize()
     if (getsockopt(m_Socket, SOL_SOCKET, SO_MAX_MSG_SIZE, (char *)&maxSize, &SizeOf) == SOCKET_ERROR)
     {
         int LastError = WSAGetLastError();
-        THROW_SOCKET_ERROR(("Failed to set the reuse address option"), LastError);
+        CTRACK_THROW_SOCKET_ERROR(("Failed to set the reuse address option"), LastError);
     }
     return maxSize;
 }
@@ -924,7 +924,7 @@ bool CSocket::DataAvailable()
         if (errval == WSAECONNRESET || errval == WSAENOTCONN || errval == WSAECONNABORTED)
             throw false; // connection was closed
         else
-            THROW_SOCKET_ERROR("An error occurred on the TCP network", errval);
+            CTRACK_THROW_SOCKET_ERROR("An error occurred on the TCP network", errval);
     }
     return false;
 }
@@ -1119,7 +1119,7 @@ bool CSocket::WriteSendTelegram(std::unique_ptr<CTCPGram> &rTCPGram)
             {
                 std::string ErrorMessage =
                     fmt::format("Error sending data over UDP : the package size {} is bigger than allowed {}", rTCPGram->m_Data.size(), m_MaxUDPMessageSize);
-                THROW_ERROR(ErrorMessage);
+                CTRACK_THROW_ERROR(ErrorMessage);
             }
             int rVal = ::sendto(m_Socket, reinterpret_cast<const char *>(rTCPGram->m_Data.data()), static_cast<int>(rTCPGram->m_Data.size()), 0,
                                 (SOCKADDR *)&m_UDPBroadCastAddr, sizeof(m_UDPBroadCastAddr));
@@ -1363,7 +1363,7 @@ void CCommunicationThread::ThreadFunction()
         sockVersion = MAKEWORD(2, 2);
         // start dll
         if (WSAStartup(sockVersion, &wsaData) != 0)
-            THROW_ERROR(("Failed to initialize the socket library"));
+            CTRACK_THROW_ERROR(("Failed to initialize the socket library"));
 
         //--------------------------------------------------------------------------------------------------------
         // Resolve IP4 address (no need for IP6)
@@ -1376,7 +1376,7 @@ void CCommunicationThread::ThreadFunction()
         if (!ResolveIP4_Address(HostName, IP4))
         {
             std::string ErrorMessage = fmt::format("The host {} could not be resolved", HostName);
-            THROW_ERROR(ErrorMessage);
+            CTRACK_THROW_ERROR(ErrorMessage);
         }
 
         //--------------------------------------------------------------------------------------------------------
@@ -1396,7 +1396,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError    = WSAGetLastError();
                     std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName, PortNumber);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 };
                 PrintInfo("TCP client on port {}", PortNumber);
             };
@@ -1413,7 +1413,7 @@ void CCommunicationThread::ThreadFunction()
                     int         LastError = WSAGetLastError();
                     std::string ErrorMessage =
                         fmt::format("The creation of the socket (host : {} port:{}) failed. Lasterror was {}.", HostName.c_str(), PortNumber, LastError);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
                 // make it NON BLOCKING
@@ -1424,7 +1424,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError    = WSAGetLastError();
                     std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName.c_str(), PortNumber);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
                 // bind the socket
@@ -1434,7 +1434,7 @@ void CCommunicationThread::ThreadFunction()
                     std::string ErrorMessage =
                         fmt::format("The binding of the socket (host : {} port:%d) failed.Lasterror was {}.\nPossibly the port is already in use.",
                                     HostName.c_str(), PortNumber, LastError);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
                 //
                 // start listening
@@ -1445,7 +1445,7 @@ void CCommunicationThread::ThreadFunction()
                         fmt::format("The listen command on the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.",
                                     HostName.c_str(), PortNumber, LastError);
                     PrintError(ErrorMessage);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
             };
             break;
@@ -1460,7 +1460,7 @@ void CCommunicationThread::ThreadFunction()
                 {
                     int         LastError    = WSAGetLastError();
                     std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName.c_str(), PortNumberUDP);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
 
                 // bind the socket
@@ -1471,7 +1471,7 @@ void CCommunicationThread::ThreadFunction()
                         fmt::format("The binding of the socket (host : {} port:{}) failed.Lasterror was {}.\nPossibly the port is already in use.",
                                     HostName.c_str(), PortNumberUDP, LastError);
                     PrintError(ErrorMessage);
-                    THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                    CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                 }
                 SocketAdd(MainSocket, UDP, &sincontrol, PortNumber, bUDPBroadcast, HostName);
                 PrintInfo("UDP available on port {}", PortNumber);
@@ -1555,7 +1555,7 @@ void CCommunicationThread::ThreadFunction()
                             {
                                 int         LastError    = WSAGetLastError();
                                 std::string ErrorMessage = fmt::format("The creation of the socket (host : {} port:{}) failed.", HostName.c_str(), PortNumber);
-                                THROW_SOCKET_ERROR(ErrorMessage, LastError);
+                                CTRACK_THROW_SOCKET_ERROR(ErrorMessage, LastError);
                             }
                             ZeroMemory(&sincontrol, sizeof(sincontrol));
                             sincontrol.sin_family = PF_INET;
@@ -1573,7 +1573,7 @@ void CCommunicationThread::ThreadFunction()
                         {
                             int SocketError = WSAGetLastError();
                             if ((SocketError != WSAECONNREFUSED) && (SocketError != WSAEWOULDBLOCK) && (SocketError != WSAEALREADY))
-                                THROW_SOCKET_ERROR("An error occurred trying to connect to the server", SocketError);
+                                CTRACK_THROW_SOCKET_ERROR("An error occurred trying to connect to the server", SocketError);
                             else
                                 ::Sleep(1000); // don't check every microsecond
                         }
