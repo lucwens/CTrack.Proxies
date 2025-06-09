@@ -89,6 +89,7 @@ namespace CTrack
         void log(LogSeverity level, std::string_view message, int errorCode, const source_location_t &location);
         void log(LogSeverity level, std::string_view message, const std::error_code &ec, const source_location_t &location);
         void log(LogSeverity level, const std::exception &ex, const source_location_t &location);
+        void log(LogSeverity level, std::string_view message, const std::vector<std::string> &stackTrace, const source_location_t &location);
 
         // --- Convenience methods ---
         void info(std::string_view message, const source_location_t &loc);

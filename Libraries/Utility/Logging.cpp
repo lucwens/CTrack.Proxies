@@ -463,23 +463,17 @@ namespace CTrack
             sourceDetails["function"] = location.function_name();
             jsonLogEntry["source"]    = sourceDetails;
 
-            boost::json::object errorDetails;
             if (directErrorCode)
-                errorDetails["error_code"] = *directErrorCode;
+                sourceDetails["error_code"] = *directErrorCode;
             if (stdErrorCode)
             {
-                errorDetails["system_error_value"]    = stdErrorCode->value();
-                errorDetails["system_error_message"]  = stdErrorCode->message();
-                errorDetails["system_error_category"] = stdErrorCode->category().name();
+                sourceDetails["system_error_value"]    = stdErrorCode->value();
+                sourceDetails["system_error_message"]  = stdErrorCode->message();
+                sourceDetails["system_error_category"] = stdErrorCode->category().name();
             }
             if (exceptionType)
             {
-                errorDetails["exception_type"] = *exceptionType;
-            }
-
-            if (!errorDetails.empty())
-            {
-                jsonLogEntry["details"] = errorDetails;
+                sourceDetails["exception_type"] = *exceptionType;
             }
 
             if (stackTrace)
@@ -489,8 +483,14 @@ namespace CTrack
                 {
                     stackTraceArray.push_back(boost::json::value(trace));
                 }
-                errorDetails["stack_trace"] = stackTraceArray;
+                sourceDetails["stack_trace"] = stackTraceArray;
             }
+
+            if (!sourceDetails.empty())
+            {
+                jsonLogEntry["details"] = sourceDetails;
+            }
+
 
             try
             {
@@ -527,6 +527,13 @@ namespace CTrack
         // For exceptions, ex.what() becomes the primary message.
         // typeid(ex).name() gives mangled name. Demangling is platform-specific and complex.
         logInternal(level, location, ex.what(), std::nullopt, std::nullopt, typeid(ex).name());
+    }
+
+    void CLogging::log(LogSeverity level, std::string_view message, const std::vector<std::string>& stackTrace, const source_location_t &location)
+    {
+        // For exceptions, ex.what() becomes the primary message.
+        // typeid(ex).name() gives mangled name. Demangling is platform-specific and complex.
+        logInternal(level, location, message, std::nullopt, std::nullopt, std::nullopt, stackTrace);
     }
 
     // --- Convenience method implementations ---
