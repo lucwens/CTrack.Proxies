@@ -418,7 +418,7 @@ namespace CTrack
         }
 
         std::scoped_lock lock(m_logMutex);
-        std::string timestampStr = getCurrentTimestampISO8601();
+        std::string      timestampStr = getCurrentTimestampISO8601();
 
         // Console Output (Plain Text)
         if (m_consoleOutputEnabled)
@@ -458,10 +458,13 @@ namespace CTrack
             jsonLogEntry["message"]   = std::string(primaryMessage); // Convert string_view to string for Boost.JSON
 
             boost::json::object sourceDetails;
-            sourceDetails["file"]     = std::filesystem::path(location.file_name()).filename().string();
-            sourceDetails["line"]     = location.line();
-            sourceDetails["function"] = location.function_name();
-            jsonLogEntry["source"]    = sourceDetails;
+            if (!stackTrace)
+            {
+                sourceDetails["file"]     = std::filesystem::path(location.file_name()).filename().string();
+                sourceDetails["line"]     = location.line();
+                sourceDetails["function"] = location.function_name();
+                jsonLogEntry["source"]    = sourceDetails;
+            }
 
             if (directErrorCode)
                 sourceDetails["error_code"] = *directErrorCode;
@@ -488,9 +491,8 @@ namespace CTrack
 
             if (!sourceDetails.empty())
             {
-                jsonLogEntry["details"] = sourceDetails;
+                jsonLogEntry["sourceDetails"] = sourceDetails;
             }
-
 
             try
             {
@@ -529,7 +531,7 @@ namespace CTrack
         logInternal(level, location, ex.what(), std::nullopt, std::nullopt, typeid(ex).name());
     }
 
-    void CLogging::log(LogSeverity level, std::string_view message, const std::vector<std::string>& stackTrace, const source_location_t &location)
+    void CLogging::log(LogSeverity level, std::string_view message, const std::vector<std::string> &stackTrace, const source_location_t &location)
     {
         // For exceptions, ex.what() becomes the primary message.
         // typeid(ex).name() gives mangled name. Demangling is platform-specific and complex.
