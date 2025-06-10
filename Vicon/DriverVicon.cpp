@@ -151,7 +151,7 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
         VICONSDK::Output_GetUnlabeledMarkerCount output_GetUnlabeledMarkerCount = m_Client.GetUnlabeledMarkerCount();
         if (output_GetUnlabeledMarkerCount.Result == VICONSDK::Result::Success)
         {
-            int numUnlabeled                = output_GetUnlabeledMarkerCount.MarkerCount;
+            int numUnlabeled = output_GetUnlabeledMarkerCount.MarkerCount;
             PrintInfo("Num markers {}", numUnlabeled);
             std::vector<std::string> markerNames;
             for (unsigned int MarkerIndex = 0; MarkerIndex < output_GetUnlabeledMarkerCount.MarkerCount; ++MarkerIndex)
@@ -189,7 +189,8 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 
 CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
 {
-    bool          Result     = true;
+    bool          Result = true;
+    std::string   Feedback;
     CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
 
     m_MeasurementFrequencyHz = message.GetParams().value(ATTRIB_CHECKINIT_MEASFREQ, 50.0);
@@ -204,11 +205,15 @@ CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
 
     if (!Connect())
     {
-        Result = false;
+        Result     = false;
+        Feedback   = "Could not connect to Vicon SDK";
+        m_bRunning = false;
     }
-    m_arValues.resize(m_arChannelNames.size(), 0);
+    else
+        m_arValues.resize(m_arChannelNames.size(), 0);
 
-    reply->GetParams()[ATTRIB_RESULT] = Result;
+    reply->GetParams()[ATTRIB_RESULT]          = Result;
+    reply->GetParams()[ATTRIB_RESULT_FEEDBACK] = Feedback;
     return reply;
 }
 
