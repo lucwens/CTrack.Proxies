@@ -9,10 +9,7 @@
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
-
-#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
 #include "../../CTrack_Data/ProxyHandshake.h"
-#endif
 
 #include <conio.h>
 #include <iostream>
@@ -28,7 +25,7 @@ int main(int argc, char *argv[])
 
     //
     // parse port
-    unsigned short                PortNumber(40001);
+    unsigned short PortNumber(40001);
     if (argc >= 2)
         PortNumber = atoi(argv[1]);
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
@@ -62,7 +59,6 @@ int main(int argc, char *argv[])
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_QUIT,
                       [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
                       {
-                          PrintCommand("Received quit commando");
                           bContinueLoop = false;
                           return nullptr;
                       });
@@ -154,7 +150,7 @@ int main(int argc, char *argv[])
                         double AcquisitionRate(1.0);
                         std::cout << "Enter the measurement frequency" << std::endl;
                         std::cin >> AcquisitionRate;
-                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
+                        manualMessage                                         = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
                         manualMessage->GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = AcquisitionRate;
                     };
                     break;

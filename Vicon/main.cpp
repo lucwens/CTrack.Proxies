@@ -9,10 +9,7 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
-
-#if !defined(_DEBUG) && !defined(DISABLE_HANDSHAKE)
 #include "../../CTrack_Data/ProxyHandshake.h"
-#endif
 
 #include <conio.h>
 #include <iostream>
@@ -56,7 +53,6 @@ int main(int argc, char *argv[])
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_QUIT,
                       [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
                       {
-                          PrintCommand("Received quit commando");
                           bContinueLoop = false;
                           return nullptr;
                       });

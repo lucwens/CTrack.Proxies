@@ -173,7 +173,7 @@ bool IsTCPPortInUse(int port)
             return true; // Port is in use
         else
             PrintError("Bind failed with error: {}", err);
-            return false; // Some other error occurred
+        return false; // Some other error occurred
     }
 }
 
@@ -346,6 +346,35 @@ void DataAvailable(SOCKET connection, bool &bDataAvail, bool &bNetWorkError, lon
     }
 }
 
+OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGram, bool send, int port) -> void
+{
+    if (!TCPGram)
+    {
+        PrintError("Received empty TCPGram in PrintSendDiagnostics");
+        return;
+    }
+    int code = TCPGram->GetCode();
+    if (code == TCPGRAM_CODE_MESSAGE)
+    {
+        CTrack::Message message;
+        if (TCPGram->GetMessage(message))
+        {
+            if (send)
+                PrintCommandReturn(" [{}] Send message {} : {}", port,message.GetID(), message.GetParams().dump());
+            else
+                PrintCommand(" [{}] Received message {} : {}", port,message.GetID(), message.GetParams().dump());
+        }
+    }
+    else
+    {
+        if (send)
+            PrintCommandReturn(" [{}] Send TCPGram {} : {}", port,code, TCPGram->GetData().size());
+        else
+            PrintCommand(" [{}] Received TCPGram {} : {}",port, code);
+    }
+};
+
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 CCommunicationParameters
@@ -407,7 +436,7 @@ void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
     }
 }
 
-bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &ReturnTCPGram, unsigned char CodeFilter)
+bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGram, unsigned char CodeFilter)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
 #ifdef _DEBUG
@@ -426,14 +455,18 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
             CTrack::Message message;
             if (pTCPGram->GetMessage(message))
             {
+                if (m_OnReceiveFunction)
+                    m_OnReceiveFunction(pTCPGram, false, m_Port);
                 m_pMessageResponder->RespondToMessage(message);
                 Iter = m_arReceiveBuffer.erase(Iter);
             }
         }
         else if (CodeFilter == TCPGRAM_CODE_ALL || pTCPGram->GetCode() == CodeFilter)
         {
-            ReturnTCPGram = std::move(pTCPGram);
-            Iter          = m_arReceiveBuffer.erase(Iter);
+            TCPGram = std::move(pTCPGram);
+            Iter    = m_arReceiveBuffer.erase(Iter);
+
+
             return true;
         }
         else
@@ -445,6 +478,10 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &Retur
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    if (m_OnSendFunction)
+    {
+        m_OnSendFunction(rTCPGram, true, m_Port);
+    };
     m_arSendBuffer.emplace_back(std::move(rTCPGram));
 }
 
@@ -589,6 +626,8 @@ CCommunicationObject::CCommunicationObject()
     m_CommunicationMode = TCP_SERVER;
     m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
     m_HostName          = STATEMANAGER_DEFAULT_TCP_HOST;
+    SetOnReceive(PrintSendDiagnostics);
+    SetOnSend(PrintSendDiagnostics);
 }
 
 CCommunicationObject::~CCommunicationObject()
@@ -668,7 +707,7 @@ void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunication
     std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
     if (pCommunicationThread)
     {
-        pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder);
+        pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder,this->m_OnReceiveFunction,this->m_OnSendFunction);
     }
 }
 
@@ -1170,12 +1209,15 @@ bool CCommunicationThread::GetQuit()
     return m_bQuit;
 }
 
-void CCommunicationThread::SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder)
+void CCommunicationThread::SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder, OnDiagnosticFunction &onReceiveFunction,
+                                                       OnDiagnosticFunction &onSendFunction)
 {
     std::lock_guard<std::recursive_mutex> lock(m_Mutex); // Protect assignment with CCommunicationInterface's mutex
     if (m_pMessageResponder)
         ClearSubscriptions(); // Unsubscribe from the old responder to avoid dangling subscriptions
     m_pMessageResponder = responder;
+    m_OnReceiveFunction = onReceiveFunction;
+    m_OnSendFunction    = onSendFunction;
     // If other objects are already attached to this thread and were using an old responder,
     // they would ideally need to be updated. This scenario suggests that changing
     // a thread's established responder is complex and should be handled with care.
