@@ -58,6 +58,12 @@ typedef std::function<void(SOCKET, size_t)> ConnectResponder;
 typedef std::function<void(CNode *&)> CommandResponder; // function for CNode responders
 #endif
 
+// this can be used to set a hook when receiving or sending a CTCPGram for diagnostics
+typedef std::function<void(std::unique_ptr<CTCPGram> &, bool send,int port )> OnDiagnosticFunction; // function for CTrack messages
+
+// diagnostics on the TCP server
+extern OnDiagnosticFunction PrintSendDiagnostics;
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 The communication class permits to send messages to and from between engine and UI.
@@ -206,6 +212,10 @@ class CCommunicationInterface : public CTrack::Subscriber
     void                 SetOnDisconnectFunction(ConnectResponder iFunction) { m_OnDisconnectFunction = iFunction; };
     virtual bool         WaitConnection(DWORD timeoutMs) { return false; };
 
+  public: // diagnostics
+    void SetOnReceive(OnDiagnosticFunction &onReceiveFunction) { m_OnReceiveFunction = onReceiveFunction; };
+    void SetOnSend(OnDiagnosticFunction &onSendFunction) { m_OnSendFunction = onSendFunction; };
+
   public:
     void                                       SendMessage(CTrack::Message &);
     std::shared_ptr<CTrack::MessageResponder>  GetMessageResponder() const { return m_pMessageResponder; };
@@ -246,6 +256,8 @@ class CCommunicationInterface : public CTrack::Subscriber
     std::recursive_mutex                 m_Mutex; // critical section to be used with CSingleLock to protect data
     ConnectResponder                     m_OnConnectFunction{};
     ConnectResponder                     m_OnDisconnectFunction{};
+    OnDiagnosticFunction                 m_OnReceiveFunction{}; // function to call when receiving a telegram, for diagnostics
+    OnDiagnosticFunction                 m_OnSendFunction{};    // function to call when sending a telegram, for diagnostics
 
   protected:
     std::shared_ptr<CTrack::MessageResponder> m_pMessageResponder; // used to send messages to the UI
@@ -346,7 +358,9 @@ class CCommunicationThread : public CCommunicationInterface
     CSocket *SocketDeleteCurrent();                     // deletes current socket and return pointer to next socket
     void     SocketDeleteAll();                         // deletes all sockets
   public:                                               // thread management
-    void                     SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder);
+    void                     SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder, OnDiagnosticFunction &onReceiveFunction,
+                                                         OnDiagnosticFunction &onSendFunction);
+    void                     SetOnSend(OnDiagnosticFunction &onSendFunction);
     void                     ThreadFunction();
     void                     SetThreadName(const std::string &iName) { m_ThreadName = iName; }; // must be called before starting the thread
     void                     StartThread();

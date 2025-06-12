@@ -43,11 +43,9 @@ namespace CTrack
         // Call handlers outside lock for deadlock safety
         for (auto &handler : copiedHandlers)
         {
-            PrintCommand("Command {} : {}", message.GetID(), message.GetParams().dump());
             if (auto reply = handler(message))
             {
                 reply->DebugUpdate();
-                PrintCommandReturn("Result for {} : {}", reply->GetID(), reply->GetParams().dump());
                 SendTrackMessage(*reply);
             }
         }

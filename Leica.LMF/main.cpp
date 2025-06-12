@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
     // startup server object
     CCommunicationObject TCPServer;
     CLeicaLMFDriver      driver;
+    // diagnostics on the TCP server
+   
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
 
@@ -83,7 +85,6 @@ int main(int argc, char *argv[])
             if (!Command.empty())
             {
                 std::unique_ptr<TiXmlElement> Response;
-                PrintCommand("Command received: " + Command);
                 if (Command == TAG_COMMAND_QUIT)
                 {
                     PrintInfo("Quit");
@@ -91,9 +92,7 @@ int main(int argc, char *argv[])
                 }
                 if (Command == TAG_HANDSHAKE)
                 {
-#ifndef _DEBUG
                     Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
-#endif
                 }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
