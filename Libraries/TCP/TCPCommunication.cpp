@@ -365,15 +365,14 @@ OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGra
                 PrintCommand(" [{}] Received message {} : {}", port,message.GetID(), message.GetParams().dump());
         }
     }
-    else
+    /*else
     {
         if (send)
             PrintCommandReturn(" [{}] Send TCPGram {} : {}", port,code, TCPGram->GetData().size());
         else
             PrintCommand(" [{}] Received TCPGram {} : {}",port, code);
-    }
+    }*/
 };
-
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -455,8 +454,6 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGr
             CTrack::Message message;
             if (pTCPGram->GetMessage(message))
             {
-                if (m_OnReceiveFunction)
-                    m_OnReceiveFunction(pTCPGram, false, m_Port);
                 m_pMessageResponder->RespondToMessage(message);
                 Iter = m_arReceiveBuffer.erase(Iter);
             }
@@ -465,7 +462,6 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGr
         {
             TCPGram = std::move(pTCPGram);
             Iter    = m_arReceiveBuffer.erase(Iter);
-
 
             return true;
         }
@@ -478,10 +474,6 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGr
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
     std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    if (m_OnSendFunction)
-    {
-        m_OnSendFunction(rTCPGram, true, m_Port);
-    };
     m_arSendBuffer.emplace_back(std::move(rTCPGram));
 }
 
@@ -626,8 +618,6 @@ CCommunicationObject::CCommunicationObject()
     m_CommunicationMode = TCP_SERVER;
     m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
     m_HostName          = STATEMANAGER_DEFAULT_TCP_HOST;
-    SetOnReceive(PrintSendDiagnostics);
-    SetOnSend(PrintSendDiagnostics);
 }
 
 CCommunicationObject::~CCommunicationObject()
@@ -665,6 +655,8 @@ bool CCommunicationObject::Open(E_COMMUNICATION_Mode iTcpMode, int iPort, int iP
     m_Port              = iPort;
     m_PortUDP           = iPortUDP;
     m_HostName          = iIpAddress;
+    SetOnReceive(PrintSendDiagnostics);
+    SetOnSend(PrintSendDiagnostics);
     if (!m_bOpened)
     {
         // when a communication object wants to open the communication channels, CCommunicationManager checks if there is already a thread running on the same
@@ -707,7 +699,7 @@ void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunication
     std::shared_ptr<CCommunicationThread> pCommunicationThread = m_pCommunicationThread.lock();
     if (pCommunicationThread)
     {
-        pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder,this->m_OnReceiveFunction,this->m_OnSendFunction);
+        pCommunicationThread->SetMessageResponderInstance(this->m_pMessageResponder, this->m_OnReceiveFunction, this->m_OnSendFunction);
     }
 }
 
@@ -1636,6 +1628,10 @@ void CCommunicationThread::ThreadFunction()
                 bool bAllSocketsCompleted = true;
                 if (TCPGram)
                 {
+                    if (m_OnSendFunction)
+                    {
+                        m_OnSendFunction(TCPGram, true, PortNumber);
+                    };
                     SOCKET   Destination    = TCPGram->GetDestination();
                     CSocket *pCurrentSocket = SocketFirst();
                     while (pCurrentSocket != nullptr)
@@ -1682,6 +1678,9 @@ void CCommunicationThread::ThreadFunction()
                     std::unique_ptr<CTCPGram> TCPGram;
                     while (pCurrentSocket->ReadExtractTelegram(TCPGram))
                     {
+                        if (m_OnReceiveFunction)
+                            m_OnReceiveFunction(TCPGram, false, PortNumber);
+
                         if (TCPGram->GetCode() == TCPGRAM_CODE_MESSAGE)
                         {
                             CTrack::Message message;
