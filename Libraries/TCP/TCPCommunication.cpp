@@ -1608,14 +1608,17 @@ void CCommunicationThread::ThreadFunction()
                         catch (bool &) // disconnected, other exceptions are handled by outer routines
                         {
                             pCurrentSocket = SocketDeleteCurrent();
-                            pCurrentSocket->ResetBuffers();
-                            PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
-                            if (m_OnDisconnectFunction)
-                                m_OnDisconnectFunction(pCurrentSocket->GetSocket(), GetNumConnections());
-                            if (CommunicationMode == TCP_CLIENT)
+                            if (pCurrentSocket)
                             {
-                                PrintWarning("TCP client disconnected from ", HostName, " on port ", PortNumber);
-                                MainSocket = INVALID_SOCKET;
+                                pCurrentSocket->ResetBuffers();
+                                PrintWarning("TCP client disconnected from {} on port {}", HostName, PortNumber);
+                                if (m_OnDisconnectFunction)
+                                    m_OnDisconnectFunction(pCurrentSocket->GetSocket(), GetNumConnections());
+                                if (CommunicationMode == TCP_CLIENT)
+                                {
+                                    PrintWarning("TCP client disconnected from ", HostName, " on port ", PortNumber);
+                                    MainSocket = INVALID_SOCKET;
+                                }
                             }
                         }
                     }
