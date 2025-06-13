@@ -146,6 +146,6 @@ std::string CBaseUnits::GetUnit(const std::string &iBaseUnit)
 std::string CBaseUnits::GetFormatString(const std::string &iBaseUnit, int DefaultNumDecimals)
 {
     std::string FormatString;
-    FormatString = fmt::format("%%.{}f", GetNumDecimals(iBaseUnit, DefaultNumDecimals));
+    FormatString = fmt::format("%.{}f", GetNumDecimals(iBaseUnit, DefaultNumDecimals));
     return FormatString;
 }
