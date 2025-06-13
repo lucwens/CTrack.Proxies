@@ -37,6 +37,16 @@ template <typename... Args> void PrintColor(int r, int g, int b, const std::stri
     fmt::print("\x1b[0m"); // reset to default
 }
 
+inline void PrintColor(int r, int g, int b, const std::string &text)
+{
+    std::lock_guard<std::mutex> lock(printMutex);
+    EnableAnsiColors(); // make sure ANSI sequences are supported
+    fmt::print("\x1b[38;2;{};{};{}m", r, g, b);
+    PrintTimeStamp();
+    std::cout << text << std::endl;
+    fmt::print("\x1b[0m"); // reset to default
+}
+
 // PrintInfo function
 template <typename... Args> void Print(const std::string &format, Args... args)
 {

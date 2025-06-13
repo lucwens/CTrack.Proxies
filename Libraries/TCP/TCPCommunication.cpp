@@ -360,9 +360,17 @@ OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGra
         if (TCPGram->GetMessage(message))
         {
             if (send)
-                PrintCommandReturn(" [{}] Send message {} : {}", port,message.GetID(), message.GetParams().dump());
+            {
+                std::string commandString = fmt::format(" [{}] Send message {} : {}", port, message.GetID(), message.GetParams().dump());
+                PrintCommandReturn(commandString);
+                LOG_DEBUG(commandString); 
+            }
             else
-                PrintCommand(" [{}] Received message {} : {}", port,message.GetID(), message.GetParams().dump());
+            {
+                std::string commandString = fmt::format(" [{}] Received message {} : {}", port, message.GetID(), message.GetParams().dump());
+                PrintCommand(commandString);
+                LOG_DEBUG(commandString); 
+            }
         }
     }
     /*else

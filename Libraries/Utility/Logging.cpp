@@ -463,7 +463,16 @@ namespace CTrack
                 sourceDetails["file"]     = std::filesystem::path(location.file_name()).filename().string();
                 sourceDetails["line"]     = location.line();
                 sourceDetails["function"] = location.function_name();
-                jsonLogEntry["source"]    = sourceDetails;
+                jsonLogEntry["sourceDetails"]    = sourceDetails;
+            }
+            else
+            {
+                boost::json::array stackTraceArray;
+                for (const auto &trace : *stackTrace)
+                {
+                    stackTraceArray.push_back(boost::json::value(trace));
+                }
+                sourceDetails["stack_trace"] = stackTraceArray;
             }
 
             if (directErrorCode)
@@ -479,20 +488,6 @@ namespace CTrack
                 sourceDetails["exception_type"] = *exceptionType;
             }
 
-            if (stackTrace)
-            {
-                boost::json::array stackTraceArray;
-                for (const auto &trace : *stackTrace)
-                {
-                    stackTraceArray.push_back(boost::json::value(trace));
-                }
-                sourceDetails["stack_trace"] = stackTraceArray;
-            }
-
-            if (!sourceDetails.empty())
-            {
-                jsonLogEntry["sourceDetails"] = sourceDetails;
-            }
 
             try
             {
@@ -543,6 +538,7 @@ namespace CTrack
     {
         log(LogSeverity::LOG_INFO, message, loc);
     }
+
     void CLogging::warning(std::string_view message, const source_location_t &loc)
     {
         log(LogSeverity::LOG_WARNING, message, loc);
