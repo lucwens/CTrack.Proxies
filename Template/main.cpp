@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
                           bContinueLoop = false;
                           return nullptr;
                       });
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE,  &ProxyHandShake::ProxyHandShake);
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::ConfigDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CHECKINIT, CTrack::MakeMemberHandler(driver.get(), &Driver::CheckInitialize));
