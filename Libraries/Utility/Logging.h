@@ -16,8 +16,6 @@
 
 // --- Logging Macros (adapted from LogTesting.cpp) ---
 #define LOG_INFO(message)                        CTrack::CLogging::getInstance().info(message, MAKE_SOURCE_LOCATION())
-#define LOG_COMMAND(message)                     CTrack::CLogging::getInstance().log(CTrack::LogSeverity::LOG_COMMAND, message, MAKE_SOURCE_LOCATION())
-#define LOG_COMMAND_REPLY(message)               CTrack::CLogging::getInstance().log(CTrack::LogSeverity::LOG_COMMAND_REPLY, message, MAKE_SOURCE_LOCATION())
 #define LOG_WARNING(message)                     CTrack::CLogging::getInstance().warning(message, MAKE_SOURCE_LOCATION())
 #define LOG_WARNING_EX(exception)                CTrack::CLogging::getInstance().warning(exception, MAKE_SOURCE_LOCATION())
 #define LOG_ERROR_MSG(message)                   CTrack::CLogging::getInstance().error(message, MAKE_SOURCE_LOCATION()) // Renamed from LOG_ERROR
