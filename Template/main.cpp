@@ -5,6 +5,7 @@
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/Logging.h"
+#include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
@@ -187,6 +188,16 @@ int main(int argc, char *argv[])
                     {
                         std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(CTrack::Message("warning", {{"message", "The system is running hot"}}));
                         TCPServer.PushSendPackage(TCPGRam);
+                    };
+                    break;
+                    case 'o':
+                    {
+                        SetConsoleVisible(true);
+                    };
+                    break;
+                    case 'x':
+                    {
+                        SetConsoleVisible(false);
                     };
                     break;
                 }

@@ -4,6 +4,7 @@
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/Logging.h"
+#include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
                           bContinueLoop = false;
                           return nullptr;
                       });
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake);
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::ConfigDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CHECKINIT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::CheckInitialize));
@@ -149,6 +151,16 @@ int main(int argc, char *argv[])
                     case 't':
                         manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
                         break;
+                    case 'o':
+                    {
+                        SetConsoleVisible(true);
+                    };
+                    break;
+                    case 'x':
+                    {
+                        SetConsoleVisible(false);
+                    };
+                    break;
                 }
             }
         }

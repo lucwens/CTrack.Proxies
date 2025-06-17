@@ -5,6 +5,7 @@
 #include "../Libraries/Utility/errorException.h"
 #include "../Libraries/Utility/NetworkError.h"
 #include "../Libraries/Utility/Print.h"
+#include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
@@ -90,10 +91,6 @@ int main(int argc, char *argv[])
                     PrintInfo("Quit");
                     bContinueLoop = false;
                 }
-                if (Command == TAG_HANDSHAKE)
-                {
-                    Response = ProxyHandShake::ProxyHandShake(TCP_XML_Input);
-                }
                 if (Command == TAG_COMMAND_HARDWAREDETECT)
                 {
                     Response = driver.HardwareDetect(TCP_XML_Input);
@@ -177,6 +174,16 @@ int main(int argc, char *argv[])
                     case 't':
                         Command = TAG_COMMAND_SHUTDOWN;
                         break;
+                    case 'o':
+                    {
+                        SetConsoleVisible(true);
+                    };
+                    break;
+                    case 'x':
+                    {
+                        SetConsoleVisible(false);
+                    };
+                    break;
                 }
             }
         }
