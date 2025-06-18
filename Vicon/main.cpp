@@ -70,6 +70,20 @@ int main(int argc, char *argv[])
                           bContinueLoop = false;
                           return nullptr;
                       });
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHOW,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          SetConsoleVisible(true);
+                          return nullptr;
+                      });
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HIDE,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          SetConsoleVisible(false);
+                          return nullptr;
+                      });
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake);
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &DriverVicon::ConfigDetect));
