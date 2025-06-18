@@ -7,6 +7,7 @@
 #include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
+#include "../Libraries/Utility/CommandLineParameters.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
@@ -24,19 +25,31 @@ int main(int argc, char *argv[])
     SetConsoleTabText("Vicon");
     SetConsoleTabBackgroundColor(MAGENTA);
 
+    
     //
-    // parse port
-    unsigned short                PortNumber(40001);
-    if (argc >= 2)
-        PortNumber = atoi(argv[1]);
+    // command line parameters
+    unsigned short PortNumber(40001);
+    bool           showConsole{false};
+
+    CommandLineParameters parameters(argc, argv);
+
+    if (parameters.isInitializedFromJson())
+    {
+        PortNumber  = parameters.getInt(TCPPORT, 40001);
+        showConsole = parameters.getBool(SHOWCONSOLE, false);
+    }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
-    PrintInfo("Big loop starting");
-    PrintInfo("q : quit");
-    PrintInfo("h : hardware detect");
-    PrintInfo("c : configuration detect");
-    PrintInfo("s : start track");
-    PrintInfo("t : stop track");
+    SetConsoleVisible(showConsole);
+    if (showConsole)
+    {
+        PrintInfo("Big loop starting");
+        PrintInfo("q : quit");
+        PrintInfo("h : hardware detect");
+        PrintInfo("c : configuration detect");
+        PrintInfo("s : start track");
+        PrintInfo("t : stop track");
+    }
 
     // startup server object
     std::unique_ptr<DriverVicon>      driver = std::make_unique<DriverVicon>();

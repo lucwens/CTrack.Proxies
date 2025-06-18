@@ -155,6 +155,12 @@
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
     <ClCompile Include="..\Libraries\Utility\baseUnits.cpp" />
+    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\Libraries\Utility\FileReader.cpp" />
     <ClCompile Include="..\Libraries\Utility\Logging.cpp" />
     <ClCompile Include="..\Libraries\Utility\NetworkError.cpp" />
@@ -181,6 +187,7 @@
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
     <ClInclude Include="..\Libraries\Utility\baseUnits.h" />
+    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h" />
     <ClInclude Include="..\Libraries\Utility\errorException.h" />
     <ClInclude Include="..\Libraries\Utility\FileReader.h" />
     <ClInclude Include="..\Libraries\Utility\Logging.h" />

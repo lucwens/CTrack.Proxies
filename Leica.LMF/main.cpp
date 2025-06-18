@@ -7,6 +7,7 @@
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/StringUtilities.h"
+#include "../Libraries/Utility/CommandLineParameters.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/Logging.h"
@@ -23,24 +24,33 @@
 int main(int argc, char *argv[])
 {
     CTrack::InitLogging("");
-    //
-    // parse port
-    unsigned short                PortNumber(40014);
-    std::string                   Command;
-    std::unique_ptr<TiXmlElement> TCP_XML_Input;
-    if (argc >= 2)
-        PortNumber = atoi(argv[1]);
 
-    PrintInfo("Big loop starting");
-    PrintInfo("q : quit");
-    PrintInfo("h : hardware detect");
-    PrintInfo("c : configuration detect");
-    PrintInfo("s : start track");
-    PrintInfo("t : stop track");
-    PrintInfo("p : simulate push trigger button");
-    PrintInfo("v : simulate push validate button");
-    PrintInfo("i : print info");
-    PrintInfo("l : report last coordinates");
+    unsigned short PortNumber(40001);
+    bool           showConsole{false};
+
+    CommandLineParameters parameters(argc, argv);
+
+    if (parameters.isInitializedFromJson())
+    {
+        PortNumber  = parameters.getInt(TCPPORT, 40001);
+        showConsole = parameters.getBool(SHOWCONSOLE, false);
+    }
+    PortNumber = FindAvailableTCPPortNumber(PortNumber);
+
+    SetConsoleVisible(showConsole);
+    if (showConsole)
+    {
+        PrintInfo("Big loop starting");
+        PrintInfo("q : quit");
+        PrintInfo("h : hardware detect");
+        PrintInfo("c : configuration detect");
+        PrintInfo("s : start track");
+        PrintInfo("t : stop track");
+        PrintInfo("p : simulate push trigger button");
+        PrintInfo("v : simulate push validate button");
+        PrintInfo("i : print info");
+        PrintInfo("l : report last coordinates");
+    }
 
     // startup server object
     CCommunicationObject TCPServer;

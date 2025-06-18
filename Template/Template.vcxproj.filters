@@ -96,6 +96,9 @@
     <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
@@ -168,6 +171,9 @@
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\Orientations.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
   </ItemGroup>

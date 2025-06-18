@@ -8,6 +8,7 @@
 #include "../Libraries/Utility/os.h"
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
+#include "../Libraries/Utility/CommandLineParameters.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
@@ -25,23 +26,34 @@ int main(int argc, char *argv[])
     SetConsoleTabBackgroundColor(GREEN);
 
     //
-    // parse port
+    // command line parameters
     unsigned short PortNumber(40001);
-    if (argc >= 2)
-        PortNumber = atoi(argv[1]);
+    bool           showConsole{false};
+
+    CommandLineParameters parameters(argc, argv);
+
+    if (parameters.isInitializedFromJson())
+    {
+        PortNumber  = parameters.getInt(TCPPORT, 40001);
+        showConsole = parameters.getBool(SHOWCONSOLE, false);
+    }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
-    PrintInfo("Big loop starting");
-    PrintInfo("q : quit");
-    PrintInfo("h : hardware detect");
-    PrintInfo("c : configuration detect");
-    PrintInfo("s : start track");
-    PrintInfo("t : stop track");
-    PrintInfo("p : simulate push trigger button");
-    PrintInfo("v : simulate push validate button");
-    PrintInfo("i : print info");
-    PrintInfo("l : report last coordinates");
-    PrintInfo("b : send big TCP package");
+    SetConsoleVisible(showConsole);
+    if (showConsole)
+    {
+        PrintInfo("Big loop starting");
+        PrintInfo("q : quit");
+        PrintInfo("h : hardware detect");
+        PrintInfo("c : configuration detect");
+        PrintInfo("s : start track");
+        PrintInfo("t : stop track");
+        PrintInfo("p : simulate push trigger button");
+        PrintInfo("v : simulate push validate button");
+        PrintInfo("i : print info");
+        PrintInfo("l : report last coordinates");
+        PrintInfo("b : send big TCP package");
+    }
 
     // startup server object
     std::unique_ptr<Driver>           driver = std::make_unique<Driver>();
@@ -63,7 +75,22 @@ int main(int argc, char *argv[])
                           bContinueLoop = false;
                           return nullptr;
                       });
-    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE,  &ProxyHandShake::ProxyHandShake);
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHOW,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          SetConsoleVisible(true);
+                          return nullptr;
+                      });
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HIDE,
+                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                      {
+                          SetConsoleVisible(false);
+                          return nullptr;
+                      });
+
+    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake);
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::ConfigDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CHECKINIT, CTrack::MakeMemberHandler(driver.get(), &Driver::CheckInitialize));

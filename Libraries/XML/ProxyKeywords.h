@@ -4,6 +4,8 @@
 #include <vector>
 
 constexpr char const *TAG_COMMAND_QUIT                          = "QUIT";
+constexpr char const *TAG_COMMAND_SHOW                          = "SHOW";
+constexpr char const *TAG_COMMAND_HIDE                          = "HIDE";
 constexpr char const *ATTRIB_RESULT                             = "result";
 constexpr char const *ATTRIB_RESULT_FEEDBACK                    = "feedback";
 
@@ -187,3 +189,13 @@ OTHER COMMANDS
 constexpr char const *TAG_COMMAND_COMPENSATESTART     = "COMPENSATE_START";
 constexpr char const *TAG_COMMAND_PROBECALIBRATESTART = "PROBE_CALIBRATE_START";
 constexpr char const *ATTRIB_SIM_FILEPATH             = "filepath";
+
+//------------------------------------------------------------------------------------------------------------------
+/*
+COMMANDLINE PARAMETERS
+*/
+//------------------------------------------------------------------------------------------------------------------
+
+constexpr const char *SERIAL                          = "serial";
+constexpr const char *SHOWCONSOLE                     = "showconsole";
+constexpr const char *TCPPORT                         = "tcpport";
