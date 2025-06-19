@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     CTrack::InitLogging("");
 
     unsigned short PortNumber(40001);
-    bool           showConsole{false};
+    bool           showConsole{true};
 
     CommandLineParameters parameters(argc, argv);
 
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
-    SetConsoleVisible(showConsole);
+    ShowConsole(showConsole);
     if (showConsole)
     {
         PrintInfo("Big loop starting");
@@ -186,12 +186,12 @@ int main(int argc, char *argv[])
                         break;
                     case 'o':
                     {
-                        SetConsoleVisible(true);
+                        ShowConsole(true);
                     };
                     break;
                     case 'x':
                     {
-                        SetConsoleVisible(false);
+                        ShowConsole(false);
                     };
                     break;
                 }

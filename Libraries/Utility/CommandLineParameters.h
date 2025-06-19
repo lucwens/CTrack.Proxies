@@ -12,7 +12,8 @@ class CommandLineParameters
 {
   private:
     json parameters;
-    bool initializedSuccessfullyFromJson_ = false;
+    bool      initializedSuccessfullyFromJson_ = false;
+    static std::string escapeJsonStringForCommandLine(const std::string &jsonInput);
 
   public:
     CommandLineParameters();
@@ -21,7 +22,7 @@ class CommandLineParameters
     bool isInitializedFromJson() const;
 
     void set(const std::string &key, int value);
-    void set(const std::string &key, uint64_t value); 
+    void set(const std::string &key, uint64_t value);
     void set(const std::string &key, double value);
     void set(const std::string &key, bool value);
     void set(const std::string &key, const std::string &value);
@@ -47,6 +48,8 @@ class CommandLineParameters
 
     json       &getJsonObject();
     const json &getJsonObject() const;
+
+    static std::string generateCommandLineArgument(const CommandLineParameters &store);
 };
 
 // Template method definitions must be in the header or in a separate .tpp file
@@ -67,7 +70,7 @@ template <typename T> T CommandLineParameters::getGeneric(const std::string &key
         }
         catch (const json::type_error &e)
         {
-            PrintWarning("Warning: Type mismatch for key {} : {}",key ,e.what());
+            PrintWarning("Warning: Type mismatch for key {} : {}", key, e.what());
         }
     }
     return defaultValue;

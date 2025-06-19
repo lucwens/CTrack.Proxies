@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     //
     // command line parameters
     unsigned short PortNumber(40001);
-    bool           showConsole{false};
+    bool           showConsole{true};
 
     CommandLineParameters parameters(argc, argv);
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
-    SetConsoleVisible(showConsole);
+    ShowConsole(showConsole);
     if (showConsole)
     {
         PrintInfo("Big loop starting");
@@ -79,14 +79,14 @@ int main(int argc, char *argv[])
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHOW,
                       [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
                       {
-                          SetConsoleVisible(true);
+                          ShowConsole(true);
                           return nullptr;
                       });
 
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HIDE,
                       [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
                       {
-                          SetConsoleVisible(false);
+                          ShowConsole(false);
                           return nullptr;
                       });
 
@@ -219,12 +219,12 @@ int main(int argc, char *argv[])
                     break;
                     case 'o':
                     {
-                        SetConsoleVisible(true);
+                        ShowConsole(true);
                     };
                     break;
                     case 'x':
                     {
-                        SetConsoleVisible(false);
+                        ShowConsole(false);
                     };
                     break;
                 }

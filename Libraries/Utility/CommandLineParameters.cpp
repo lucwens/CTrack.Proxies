@@ -18,12 +18,8 @@ CommandLineParameters::CommandLineParameters(int argc, char *argv[])
         }
         else
         {
-            std::cerr << "CommandLineParameters: Command-line input is not a valid JSON string." << std::endl;
+            PrintWarning("CommandLineParameters: Command-line input is not a valid JSON string.");
         }
-    }
-    else
-    {
-        std::cout << "CommandLineParameters: No command-line argument provided. Initializing empty store." << std::endl;
     }
 }
 
@@ -140,7 +136,7 @@ bool CommandLineParameters::deserialize(const std::string &jsonString)
     }
     catch (const json::parse_error &e)
     {
-        std::cerr << "Error deserializing JSON string: " << e.what() << std::endl;
+        PrintWarning("Error deserializing JSON string: {}" ,e.what() );
         return false;
     }
 }
@@ -151,7 +147,7 @@ bool CommandLineParameters::saveToFile(const std::string &filename, int indent) 
     std::ofstream ofs(filename);
     if (!ofs.is_open())
     {
-        std::cerr << "Error: Could not open file for writing: " << filename << std::endl;
+        PrintWarning("Error: Could not open file for writing: {}", filename);
         return false;
     }
     ofs << parameters.dump(indent);
@@ -165,7 +161,7 @@ bool CommandLineParameters::loadFromFile(const std::string &filename)
     std::ifstream ifs(filename);
     if (!ifs.is_open())
     {
-        std::cerr << "Error: Could not open file for reading: " << filename << std::endl;
+        PrintWarning("Error: Could not open file for writing: {}", filename);
         return false;
     }
     try
@@ -175,7 +171,7 @@ bool CommandLineParameters::loadFromFile(const std::string &filename)
     }
     catch (const json::parse_error &e)
     {
-        std::cerr << "Error parsing JSON from file '" << filename << "': " << e.what() << std::endl;
+        PrintWarning("Error parsing JSON from file {} : {}", filename, e.what());
         return false;
     }
 }
@@ -189,4 +185,30 @@ json &CommandLineParameters::getJsonObject()
 const json &CommandLineParameters::getJsonObject() const
 {
     return parameters;
+}
+
+
+// Private helper function implementation
+std::string CommandLineParameters::escapeJsonStringForCommandLine(const std::string &jsonInput)
+{
+    std::string escaped = jsonInput;
+    size_t      pos     = 0;
+    while ((pos = escaped.find('\"', pos)) != std::string::npos)
+    {
+        escaped.replace(pos, 1, "\\\"");
+        pos += 2; // Skip the inserted backslash and the quote itself
+    }
+    return escaped;
+}
+
+std::string CommandLineParameters::generateCommandLineArgument(const CommandLineParameters &store)
+{
+    // First, serialize the store's internal JSON into a string
+    std::string jsonString         = store.serialize(-1); // -1 for compact JSON
+
+    // Then, escape this JSON string for the command line
+    std::string escapedJsonPayload = escapeJsonStringForCommandLine(jsonString);
+
+    // Finally, enclose the escaped JSON payload in quotes to form a single argument
+    return "\"" + escapedJsonPayload + "\"";
 }

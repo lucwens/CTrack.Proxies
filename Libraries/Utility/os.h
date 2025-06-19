@@ -8,4 +8,4 @@ void ThreadSetName(const std::string &name);
 void ThreadSetName(std::thread &rThread, const std::string &name);
 
 bool IsConsoleVisible();
-void SetConsoleVisible(bool visible);
+void ShowConsole(bool visible);

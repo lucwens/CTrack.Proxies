@@ -32,6 +32,11 @@ class HMatrix;
 #define STATEMANAGER_DEFAULT_TCP_PORT 40000
 #define STATEMANAGER_DEFAULT_TCP_HOST ("localhost")
 
+#ifdef _DEBUG
+const int TIMEOUTSECS = 60;
+#else
+const int TIMEOUTSECS = 5;
+#endif
 //------------------------------------------------------------------------------------------------------------------
 /*
 Ping : check if a destination can be reached
