@@ -47,12 +47,12 @@ void ShowConsole(bool visible)
         {
             // Ensure it appears in the taskbar when visible
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
-            // Remove WS_EX_TOOLWINDOW and ensure WS_EX_APPWINDOW is present for taskbar
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW);
 
-            // SWP_FRAMECHANGED is crucial to make the style change take effect immediately
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+            // Apply style changes before showing
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
+            // Now show the window
             ShowWindow(hwnd, SW_SHOW);
             SetForegroundWindow(hwnd);
         }
@@ -61,19 +61,16 @@ void ShowConsole(bool visible)
     {
         if (hwnd)
         {
-            // 1. Hide the window visually first
-            ShowWindow(hwnd, SW_HIDE);
-
-            // 2. Then, change its style to be a tool window to remove it from the taskbar
+            // First change its style to be a tool window to remove it from the taskbar
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
-            // Add WS_EX_TOOLWINDOW and remove WS_EX_APPWINDOW
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW);
 
-            // SWP_FRAMECHANGED is essential for the style change to take effect for the taskbar
-            // SWP_HIDEWINDOW is redundant here as ShowWindow(SW_HIDE) already hid it, but harmless.
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_HIDEWINDOW);
+            // Apply the style change immediately
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+
+            // THEN hide the window
+            ShowWindow(hwnd, SW_HIDE);
+            FreeConsole();
         }
-        // DO NOT CALL FreeConsole() here if your application is a /SUBSYSTEM:CONSOLE app.
-        // It won't destroy the console, and it can cause issues.
     }
 }
