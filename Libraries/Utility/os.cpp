@@ -1,6 +1,7 @@
 #include "os.h"
 #include <Windows.h>
 #include <stdio.h> // For freopen_s, if you keep it
+#include <ios>
 
 void ThreadSetName(const std::string &name)
 {
@@ -35,12 +36,30 @@ void ShowConsole(bool visible)
             // For a /SUBSYSTEM:CONSOLE app, AllocConsole() typically won't create a *new* console.
             if (AllocConsole())
             {
-                FILE *file;
-                freopen_s(&file, "CONOUT$", "w", stdout);
-                freopen_s(&file, "CONOUT$", "w", stderr);
-                freopen_s(&file, "CONIN$", "r", stdin);
+                // Reopen standard streams
+                FILE *dummy;
+
+                // stdout
+                freopen_s(&dummy, "CONOUT$", "w", stdout);
+                setvbuf(stdout, nullptr, _IONBF, 0); // No buffering
+
+                // stderr
+                freopen_s(&dummy, "CONOUT$", "w", stderr);
+                setvbuf(stderr, nullptr, _IONBF, 0); // No buffering
+
+                // stdin
+                freopen_s(&dummy, "CONIN$", "r", stdin);
+                setvbuf(stdin, nullptr, _IONBF, 0); // No buffering
+
+                // Force update of C++ standard streams
+                std::ios::sync_with_stdio(true);
             }
-            hwnd = GetConsoleWindow(); // Re-fetch after potential allocation
+            for (int i = 0; i < 10 && hwnd == nullptr; ++i)
+            {
+                hwnd = GetConsoleWindow();
+                if (!hwnd)
+                    Sleep(50); // Small delay to give conhost time
+            }
         }
 
         if (hwnd)
@@ -61,12 +80,12 @@ void ShowConsole(bool visible)
     {
         if (hwnd)
         {
-            // First change its style to be a tool window to remove it from the taskbar
+           /* // First change its style to be a tool window to remove it from the taskbar
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW);
 
             // Apply the style change immediately
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);*/
 
             // THEN hide the window
             ShowWindow(hwnd, SW_HIDE);

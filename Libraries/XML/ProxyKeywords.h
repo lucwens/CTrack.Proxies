@@ -4,8 +4,6 @@
 #include <vector>
 
 constexpr char const *TAG_COMMAND_QUIT                          = "QUIT";
-constexpr char const *TAG_COMMAND_SHOW                          = "SHOW";
-constexpr char const *TAG_COMMAND_HIDE                          = "HIDE";
 constexpr char const *ATTRIB_RESULT                             = "result";
 constexpr char const *ATTRIB_RESULT_FEEDBACK                    = "feedback";
 
