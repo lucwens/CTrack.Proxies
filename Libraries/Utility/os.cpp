@@ -1,4 +1,5 @@
 #include "os.h"
+#include "Print.h"
 #include <Windows.h>
 #include <stdio.h> // For freopen_s, if you keep it
 
@@ -17,7 +18,6 @@ bool IsConsoleVisible()
     HWND hConsoleWnd = GetConsoleWindow();
     return (hConsoleWnd != NULL) && IsWindowVisible(hConsoleWnd);
 }
-
 
 void ShowConsole(bool visible)
 {
@@ -72,6 +72,17 @@ void ShowConsole(bool visible)
             // SWP_FRAMECHANGED is essential for the style change to take effect for the taskbar
             // SWP_HIDEWINDOW is redundant here as ShowWindow(SW_HIDE) already hid it, but harmless.
             SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_HIDEWINDOW);
+
+            if (!FreeConsole())
+            {
+                // FreeConsole can fail if the console was never allocated or is already freed.
+                // Handle the error if necessary, but it's not critical for GUI apps.
+                DWORD error = GetLastError();
+                if (error != ERROR_INVALID_HANDLE && error != ERROR_NOT_SUPPORTED)
+                {
+                    PrintError("FreeConsole failed with error: {}", error);
+                }
+            }
         }
         // DO NOT CALL FreeConsole() here if your application is a /SUBSYSTEM:CONSOLE app.
         // It won't destroy the console, and it can cause issues.
