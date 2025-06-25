@@ -129,12 +129,20 @@ namespace CTrack
 
     std::string GetLogFileName(const std::string Extension, const std::string AppID)
     {
-        std::string ReturnString;
         if (g_LogFileBaseName.empty())
         {
-            g_LogFileBaseName = GenerateLogFileName(AppID, Extension, false);
+            g_LogFileBaseName = GenerateLogFileName(AppID, LogExtension, false);
         }
-        return g_LogFileBaseName;
+        if (Extension != LogExtension)
+        {
+            std::filesystem::path original(g_LogFileBaseName);
+            std::filesystem::path newPath = original.parent_path() / original.stem();
+            newPath += ".";
+            newPath += Extension;
+            return newPath.string();
+        }
+        else
+            return g_LogFileBaseName;
     }
 
     namespace fs = std::filesystem;
