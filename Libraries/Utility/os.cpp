@@ -80,7 +80,7 @@ void ShowConsole(bool visible)
     {
         if (hwnd)
         {
-           /* // First change its style to be a tool window to remove it from the taskbar
+           // First change its style to be a tool window to remove it from the taskbar
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW);
 
