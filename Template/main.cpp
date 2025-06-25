@@ -76,20 +76,6 @@ int main(int argc, char *argv[])
                           return nullptr;
                       });
 
-    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_SHOW,
-                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
-                      {
-                          ShowConsole(true);
-                          return nullptr;
-                      });
-
-    driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HIDE,
-                      [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
-                      {
-                          ShowConsole(false);
-                          return nullptr;
-                      });
-
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake);
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_HARDWAREDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::HardwareDetect));
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_CONFIGDETECT, CTrack::MakeMemberHandler(driver.get(), &Driver::ConfigDetect));

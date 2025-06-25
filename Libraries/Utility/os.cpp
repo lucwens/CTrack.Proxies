@@ -2,6 +2,7 @@
 #include "Print.h"
 #include <Windows.h>
 #include <stdio.h> // For freopen_s, if you keep it
+#include <ios>
 
 void ThreadSetName(const std::string &name)
 {
@@ -35,24 +36,42 @@ void ShowConsole(bool visible)
             // For a /SUBSYSTEM:CONSOLE app, AllocConsole() typically won't create a *new* console.
             if (AllocConsole())
             {
-                FILE *file;
-                freopen_s(&file, "CONOUT$", "w", stdout);
-                freopen_s(&file, "CONOUT$", "w", stderr);
-                freopen_s(&file, "CONIN$", "r", stdin);
+                // Reopen standard streams
+                FILE *dummy;
+
+                // stdout
+                freopen_s(&dummy, "CONOUT$", "w", stdout);
+                setvbuf(stdout, nullptr, _IONBF, 0); // No buffering
+
+                // stderr
+                freopen_s(&dummy, "CONOUT$", "w", stderr);
+                setvbuf(stderr, nullptr, _IONBF, 0); // No buffering
+
+                // stdin
+                freopen_s(&dummy, "CONIN$", "r", stdin);
+                setvbuf(stdin, nullptr, _IONBF, 0); // No buffering
+
+                // Force update of C++ standard streams
+                std::ios::sync_with_stdio(true);
             }
-            hwnd = GetConsoleWindow(); // Re-fetch after potential allocation
+            for (int i = 0; i < 10 && hwnd == nullptr; ++i)
+            {
+                hwnd = GetConsoleWindow();
+                if (!hwnd)
+                    Sleep(50); // Small delay to give conhost time
+            }
         }
 
         if (hwnd)
         {
             // Ensure it appears in the taskbar when visible
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
-            // Remove WS_EX_TOOLWINDOW and ensure WS_EX_APPWINDOW is present for taskbar
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_TOOLWINDOW) | WS_EX_APPWINDOW);
 
-            // SWP_FRAMECHANGED is crucial to make the style change take effect immediately
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+            // Apply style changes before showing
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
+            // Now show the window
             ShowWindow(hwnd, SW_SHOW);
             SetForegroundWindow(hwnd);
         }
@@ -61,12 +80,8 @@ void ShowConsole(bool visible)
     {
         if (hwnd)
         {
-            // 1. Hide the window visually first
-            ShowWindow(hwnd, SW_HIDE);
-
-            // 2. Then, change its style to be a tool window to remove it from the taskbar
+           /* // First change its style to be a tool window to remove it from the taskbar
             long style = GetWindowLong(hwnd, GWL_EXSTYLE);
-            // Add WS_EX_TOOLWINDOW and remove WS_EX_APPWINDOW
             SetWindowLong(hwnd, GWL_EXSTYLE, (style & ~WS_EX_APPWINDOW) | WS_EX_TOOLWINDOW);
 
             // SWP_FRAMECHANGED is essential for the style change to take effect for the taskbar
@@ -84,7 +99,5 @@ void ShowConsole(bool visible)
                 }
             }
         }
-        // DO NOT CALL FreeConsole() here if your application is a /SUBSYSTEM:CONSOLE app.
-        // It won't destroy the console, and it can cause issues.
     }
 }
