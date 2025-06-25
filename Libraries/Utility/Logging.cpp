@@ -131,7 +131,7 @@ namespace CTrack
     {
         if (g_LogFileBaseName.empty())
         {
-            g_LogFileBaseName = GenerateLogFileName(AppID, LogExtension, true);
+            g_LogFileBaseName = GenerateLogFileName(AppID, LogExtension, false);
         }
         if (Extension != LogExtension)
         {
@@ -279,7 +279,7 @@ namespace CTrack
                 m_logFile.open(m_currentLogFilePath, std::ios_base::app); // Open in append mode
                 if (!m_logFile.is_open())
                 {
-                    PrintError("LOGGER ERROR: Could not open log file: {}");
+                    PrintError("LOGGER ERROR: Could not open log file: {}", m_currentLogFilePath);
                     m_fileOutputEnabled = false; // Disable if opening failed
                     return false;
                 }
