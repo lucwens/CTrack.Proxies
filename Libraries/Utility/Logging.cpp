@@ -131,8 +131,7 @@ namespace CTrack
     {
         if (g_LogFileBaseName.empty())
         {
-            g_LogFileBaseName = GenerateLogFileName(AppID, LogExtension, false);
-        }
+            g_LogFileBaseName = Generat 
         if (Extension != LogExtension)
         {
             std::filesystem::path original(g_LogFileBaseName);
