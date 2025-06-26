@@ -4,6 +4,7 @@
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/errorException.h"
 #include "../Libraries/Utility/orientations.h"
+#include "../Libraries/Utility/logging.h"
 #include "DriverVicon.h"
 
 #include <iostream>
@@ -83,6 +84,7 @@ CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
             bPresent    = true;
             FeedBack    = fmt::format("SDK Version {}:{}:{}:{}\r\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
                                       CameraCountResult.CameraCount);
+            LOG_DEBUG(FeedBack);
             CameraCount = CameraCountResult.CameraCount;
             for (unsigned int i = 0; i < CameraCountResult.CameraCount; i++)
             {

@@ -35,7 +35,7 @@ class HMatrix;
 #ifdef _DEBUG
 const int TIMEOUTSECS = 60;
 #else
-const int TIMEOUTSECS = 5;
+const int TIMEOUTSECS = 60;
 #endif
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -64,7 +64,7 @@ typedef std::function<void(CNode *&)> CommandResponder; // function for CNode re
 #endif
 
 // this can be used to set a hook when receiving or sending a CTCPGram for diagnostics
-typedef std::function<void(std::unique_ptr<CTCPGram> &, bool send,int port )> OnDiagnosticFunction; // function for CTrack messages
+typedef std::function<void(std::unique_ptr<CTCPGram> &, bool send, int port)> OnDiagnosticFunction; // function for CTrack messages
 
 // diagnostics on the TCP server
 extern OnDiagnosticFunction PrintSendDiagnostics;
@@ -239,7 +239,8 @@ class CCommunicationInterface : public CTrack::Subscriber
     virtual void PushReceivePackage(std::unique_ptr<CTCPGram> &); // thrd: pushes a new received package to the end of the list
     virtual void ClearBuffers();
     virtual void RemoveOldReceiveTelegrams(int iNumberToKeep); // removes old packages, keeps iNumberToKeep
-  protected:                                                   // sockets and states
+  protected:
+    std::mutex           m_infoMutex; // sockets and states
     E_COMMUNICATION_Mode m_CommunicationMode = TCP_SERVER;
     unsigned short       m_Port              = 50000; // default 50000
     unsigned short       m_PortUDP           = 50002; // default 50000
@@ -257,8 +258,9 @@ class CCommunicationInterface : public CTrack::Subscriber
 
   protected: // buffers
     std::list<std::unique_ptr<CTCPGram>> m_arSendBuffer;
+    std::mutex                           m_sendMutex;
     std::list<std::unique_ptr<CTCPGram>> m_arReceiveBuffer;
-    std::recursive_mutex                 m_Mutex; // critical section to be used with CSingleLock to protect data
+    std::mutex                           m_receiveMutex;
     ConnectResponder                     m_OnConnectFunction{};
     ConnectResponder                     m_OnDisconnectFunction{};
     OnDiagnosticFunction                 m_OnReceiveFunction{}; // function to call when receiving a telegram, for diagnostics
@@ -376,6 +378,7 @@ class CCommunicationThread : public CCommunicationInterface
     std::condition_variable &GetConnectionCV() { return m_connectionCV; }
 
   protected: // thread members
+    std::mutex                                    m_socketMutex;
     std::thread                                   m_Thread;
     std::atomic<bool>                             m_bQuit       = false;
     std::atomic<bool>                             m_bIntialized = false;

@@ -363,13 +363,13 @@ OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGra
             {
                 std::string commandString = fmt::format(" [{}] Send message {} : {}", port, message.GetID(), message.GetParams().dump());
                 PrintCommandReturn(commandString);
-                LOG_DEBUG(commandString); 
+                LOG_DEBUG(commandString);
             }
             else
             {
                 std::string commandString = fmt::format(" [{}] Received message {} : {}", port, message.GetID(), message.GetParams().dump());
                 PrintCommand(commandString);
-                LOG_DEBUG(commandString); 
+                LOG_DEBUG(commandString);
             }
         }
     }
@@ -411,20 +411,18 @@ void CCommunicationInterface::CopyFrom(CCommunicationInterface *ipFrom)
 
 void CCommunicationInterface::SendMessage(CTrack::Message &message)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    std::unique_ptr<CTCPGram>             tcpGram = std::make_unique<CTCPGram>(message);
+    std::unique_ptr<CTCPGram> tcpGram = std::make_unique<CTCPGram>(message);
     PushSendPackage(tcpGram);
 }
 
 CTrack::Subscription CCommunicationInterface::Subscribe(const std::string &messageID, CTrack::Handler handler)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
     return m_pMessageResponder->Subscribe(messageID, handler);
 }
 
 bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTCPGram)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_sendMutex);
     if (!m_arSendBuffer.empty())
     {
         ReturnTCPGram = std::move(m_arSendBuffer.front());
@@ -436,16 +434,17 @@ bool CCommunicationInterface::GetSendPackage(std::unique_ptr<CTCPGram> &ReturnTC
 
 void CCommunicationInterface::RemoveOldReceiveTelegrams(int iNumberToKeep)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+#ifdef _DEBUG
     while (m_arReceiveBuffer.size() > iNumberToKeep)
     {
         m_arReceiveBuffer.pop_front();
     }
+#endif
 }
 
 bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGram, unsigned char CodeFilter)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_receiveMutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -481,13 +480,13 @@ bool CCommunicationInterface::GetReceivePackage(std::unique_ptr<CTCPGram> &TCPGr
 
 void CCommunicationInterface::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_sendMutex);
     m_arSendBuffer.emplace_back(std::move(rTCPGram));
 }
 
 void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_receiveMutex);
 #ifdef _DEBUG
     RemoveOldReceiveTelegrams(MAX_DEBUG_TELEGRAMS);
 #endif
@@ -496,32 +495,38 @@ void CCommunicationInterface::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCP
 
 void CCommunicationInterface::ClearBuffers()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    m_arSendBuffer.clear();
-    m_arReceiveBuffer.clear();
+    {
+        std::lock_guard<std::mutex> Lock(m_sendMutex);
+        m_arSendBuffer.clear();
+    }
+    {
+
+        std::lock_guard<std::mutex> Lock(m_receiveMutex);
+        m_arReceiveBuffer.clear();
+    }
 }
 
 bool CCommunicationInterface::IsServer()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return (m_CommunicationMode == TCP_SERVER);
 }
 
 bool CCommunicationInterface::ErrorOccurred()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_bErrorOccurred;
 }
 
 std::string CCommunicationInterface::GetError()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_ErrorString;
 }
 
 void CCommunicationInterface::SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     m_bErrorOccurred  = true;
     m_ErrorString     = iMessage;
     m_ErrorSourceFile = iFileName;
@@ -530,37 +535,37 @@ void CCommunicationInterface::SetError(const std::string &iFileName, int iLineNu
 
 unsigned short CCommunicationInterface::GetPort()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_Port;
 }
 
 unsigned short CCommunicationInterface::GetPortUDP()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_PortUDP;
 }
 
 bool CCommunicationInterface::GetUDPBroadcast()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_bUDPBroadCast;
 }
 
 std::string CCommunicationInterface::GetHostName()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_HostName;
 }
 
 E_COMMUNICATION_Mode CCommunicationInterface::GetCommunicationMode()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_CommunicationMode;
 }
 
 void CCommunicationInterface::SetCommunicationMode(E_COMMUNICATION_Mode iMode)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     m_CommunicationMode = iMode;
 }
 
@@ -699,7 +704,7 @@ void CCommunicationObject::SetCommunicationThread(std::shared_ptr<CCommunication
 {
     // Use the general m_Mutex to protect modifications to members of CCommunicationInterface,
     // including m_pCommunicationThread and m_pMessageResponder.
-    std::lock_guard<std::recursive_mutex> lock(m_Mutex); // m_Mutex is from CCommunicationInterface
+    std::lock_guard<std::mutex> lock(m_infoMutex);
 
     m_pCommunicationThread = rCommunicationThread;
     if (m_ThreadName.size() > 0)
@@ -1187,7 +1192,7 @@ CCommunicationThread::CCommunicationThread()
     m_CommunicationMode = TCP_SERVER;
     m_Port              = STATEMANAGER_DEFAULT_TCP_PORT;
     m_HostName          = STATEMANAGER_DEFAULT_TCP_HOST;
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     m_IterCurrentSocket = m_arSockets.begin();
 }
 
@@ -1212,7 +1217,7 @@ bool CCommunicationThread::GetQuit()
 void CCommunicationThread::SetMessageResponderInstance(std::shared_ptr<CTrack::MessageResponder> responder, OnDiagnosticFunction &onReceiveFunction,
                                                        OnDiagnosticFunction &onSendFunction)
 {
-    std::lock_guard<std::recursive_mutex> lock(m_Mutex); // Protect assignment with CCommunicationInterface's mutex
+    std::lock_guard<std::mutex> lock(m_infoMutex); // Protect assignment with CCommunicationInterface's mutex
     if (m_pMessageResponder)
         ClearSubscriptions(); // Unsubscribe from the old responder to avoid dangling subscriptions
     m_pMessageResponder = responder;
@@ -1226,7 +1231,7 @@ void CCommunicationThread::SetMessageResponderInstance(std::shared_ptr<CTrack::M
 
 void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommunicationObject)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     m_setCommunicationObject.insert(&rCommunicationObject);
     m_Port                 = rCommunicationObject.GetPort();
     m_PortUDP              = rCommunicationObject.GetPortUDP();
@@ -1237,7 +1242,7 @@ void CCommunicationThread::CommunicationObjectAdd(CCommunicationObject &rCommuni
 void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rCommunicationObject)
 {
     { // leave these brackets, otherwise a deadlock will occur on closing
-        std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+        std::lock_guard<std::mutex> Lock(m_infoMutex);
         m_setCommunicationObject.erase(&rCommunicationObject);
     }
     if (CommunicationObjectGetNum() == 0)
@@ -1248,15 +1253,15 @@ void CCommunicationThread::CommunicationObjectRemove(CCommunicationObject &rComm
 
 size_t CCommunicationThread::CommunicationObjectGetNum()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_infoMutex);
     return m_setCommunicationObject.size();
 }
 
 void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, SOCKADDR_IN *ipSockAddress, unsigned short UDPBroadCastPort, bool UDPBroadcast,
                                      const std::string &UDPSendPort)
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    auto                                  iter = m_setCommunicationObject.begin();
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
+    auto                        iter = m_setCommunicationObject.begin();
     if (iter != m_setCommunicationObject.end())
     {
         auto pNewSocket = std::unique_ptr<CSocket>((*iter)->SocketCreate(iSocket, Mode, ipSockAddress, UDPBroadCastPort, UDPBroadcast, UDPSendPort));
@@ -1274,7 +1279,7 @@ void CCommunicationThread::SocketAdd(SOCKET iSocket, E_COMMUNICATION_Mode Mode, 
 
 CSocket *CCommunicationThread::SocketFirst()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     m_IterCurrentSocket = m_arSockets.begin();
     if (m_IterCurrentSocket != m_arSockets.end())
         return (m_IterCurrentSocket->get());
@@ -1284,7 +1289,7 @@ CSocket *CCommunicationThread::SocketFirst()
 
 CSocket *CCommunicationThread::SocketNext()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     m_IterCurrentSocket++;
     if (m_IterCurrentSocket != m_arSockets.end())
         return (m_IterCurrentSocket->get());
@@ -1294,7 +1299,7 @@ CSocket *CCommunicationThread::SocketNext()
 
 CSocket *CCommunicationThread::SocketDeleteCurrent()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     if (m_IterCurrentSocket != m_arSockets.end())
     {
         m_IterCurrentSocket->release();
@@ -1314,13 +1319,15 @@ CSocket *CCommunicationThread::SocketDeleteCurrent()
 
 void CCommunicationThread::SocketDeleteAll()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
-    for (auto &arSocket : m_arSockets)
     {
-        if (arSocket)
-            arSocket.release();
+        std::lock_guard<std::mutex> Lock(m_socketMutex);
+        for (auto &arSocket : m_arSockets)
+        {
+            if (arSocket)
+                arSocket.release();
+        }
+        m_arSockets.clear();
     }
-    m_arSockets.clear();
 
     // Notify waiting threads about the connection change
     {
@@ -1331,14 +1338,14 @@ void CCommunicationThread::SocketDeleteAll()
 
 size_t CCommunicationThread::GetNumConnections()
 {
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     return m_arSockets.size();
 }
 
 void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGram)
 {
     // copy incoming telegrams to all CCommunicationObjects
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     for (auto iter : m_setCommunicationObject)
     {
         std::unique_ptr<CTCPGram> CopyTCPGram = std::make_unique<CTCPGram>();
@@ -1350,7 +1357,7 @@ void CCommunicationThread::PushReceivePackage(std::unique_ptr<CTCPGram> &rTCPGra
 void CCommunicationThread::SetError(const std::string &iFileName, int iLineNumber, const std::string &iMessage)
 {
     // copy error to all CCommunicationObjects
-    std::lock_guard<std::recursive_mutex> Lock(m_Mutex);
+    std::lock_guard<std::mutex> Lock(m_socketMutex);
     PrintError("error occurred in {} at {} : {} ", iFileName.c_str(), iLineNumber, iMessage.c_str());
     for (auto iter : m_setCommunicationObject)
         iter->SetError(iFileName, iLineNumber, iMessage);

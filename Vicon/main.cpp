@@ -60,9 +60,7 @@ int main(int argc, char *argv[])
 
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
     TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintWarning("DISCONNNECTED : {}", numConnections); });
-#if !defined(CTRACK_UI) && !defined(_DEBUG)
     subscriptions.emplace_back(std::move(TCPServer.Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
-#endif
 
     driver->Subscribe(*TCPServer.GetMessageResponder(), TAG_COMMAND_QUIT,
                       [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
