@@ -11,11 +11,9 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/Logging.h"
-
-#ifndef _DEBUG
 #include "../../CTrack_Data/ProxyHandshake.h"
-#endif
 
+#include <msclr/gcroot.h>
 #include <conio.h>
 #include <iostream>
 #include <memory>
@@ -24,6 +22,8 @@
 int main(int argc, char *argv[])
 {
     CTrack::InitLogging("");
+    SetConsoleTabText("Template");
+    SetConsoleTabBackgroundColor(CYAN);
 
     unsigned short PortNumber(40001);
     bool           showConsole{true};
@@ -53,14 +53,36 @@ int main(int argc, char *argv[])
     }
 
     // startup server object
-    CCommunicationObject TCPServer;
-    CLeicaLMFDriver      driver;
-    // diagnostics on the TCP server
-   
+    CLeicaLMFDriver ^ driver                       = gcnew  CLeicaLMFDriver();
+    msclr::gcroot<CLeicaLMFDriver ^>  driverHandle = driver;
+    CCommunicationObject              TCPServer;
+    std::vector<CTrack::Subscription> subscriptions;
+    std::unique_ptr<CTrack::Message>  manualMessage;
+    bool                              bContinueLoop = true;
+
+    // responders & handlers
+    TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
+    TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintWarning("DISCONNNECTED : {}", numConnections); });
+
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(TAG_COMMAND_QUIT,
+                                                                                    [&bContinueLoop](const CTrack::Message &) -> CTrack::Reply
+                                                                                    {
+                                                                                        bContinueLoop = false;
+                                                                                        return nullptr;
+                                                                                    })));
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(TAG_HANDSHAKE, &ProxyHandShake::ProxyHandShake)));
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(
+        TAG_COMMAND_HARDWAREDETECT, [&driverHandle](const CTrack::Message &message) -> CTrack::Reply { return driverHandle->HardwareDetect(message); })));
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(
+        TAG_COMMAND_CONFIGDETECT, [&driverHandle](const CTrack::Message &message) -> CTrack::Reply { return driverHandle->ConfigDetect(message); })));
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(
+        TAG_COMMAND_CHECKINIT, [&driverHandle](const CTrack::Message &message) -> CTrack::Reply { return driverHandle->CheckInitialize(message); })));
+    subscriptions.emplace_back(std::move(TCPServer.GetMessageResponder()->Subscribe(
+        TAG_COMMAND_SHUTDOWN, [&driverHandle](const CTrack::Message &message) -> CTrack::Reply { return driverHandle->ShutDown(message); })));
+
+    // start server
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port " + std::to_string(PortNumber));
-
-    bool bContinueLoop = true;
 
     while (bContinueLoop)
     {
@@ -78,73 +100,46 @@ int main(int argc, char *argv[])
             {
                 switch (TCPGram->GetCode())
                 {
-                    case TCPGRAM_CODE_COMMAND:
+                    switch (TCPGram->GetCode())
                     {
-                        TCP_XML_Input = TCPGram->GetXML();
-                        if (TCP_XML_Input)
+                        case TCPGRAM_CODE_COMMAND:
                         {
-                            // CString XMLString = XML_To_String(XMLElement.get());
-                            Command = ToUpperCase(TCP_XML_Input->Value());
-                        }
-                    };
-                    break;
-                    default:
-                        PrintError("Unknown TCPgram received ");
+                            PrintError("should not receive any commands here anymore");
+                        };
+                        break;
+                        case TCPGRAM_CODE_TEST_BIG:
+                        {
+                            std::vector<char> arChar = TCPGram->GetData();
+                            PrintInfo("Received a big packet of {} long values", arChar.size());
+                        };
+                        default:
+                            PrintError("Unknown TCPgram received");
+                            break;
+                    }
                 }
             }
-
-            if (!Command.empty())
+            if (manualMessage)
             {
-                std::unique_ptr<TiXmlElement> Response;
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    PrintInfo("Quit");
-                    bContinueLoop = false;
-                }
-                if (Command == TAG_COMMAND_HARDWAREDETECT)
-                {
-                    Response = driver.HardwareDetect(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_CONFIGDETECT)
-                {
-                    Response = driver.ConfigDetect(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_CHECKINIT)
-                {
-                    std::string xmlstring = XMLToString(TCP_XML_Input);
-                    Response              = driver.CheckInitialize(TCP_XML_Input);
-                }
-                if (Command == TAG_COMMAND_SHUTDOWN)
-                {
-                    Response = driver.ShutDown();
-                }
-                if (Command == TAG_COMMAND_QUIT)
-                {
-                    PrintInfo("Quit");
-                    bContinueLoop = false;
-                }
-
-                std::string               xmlstring = XMLToString(Response);
-                std::unique_ptr<CTCPGram> TCPGRam   = std::make_unique<CTCPGram>(Response, TCPGRAM_CODE_COMMAND);
-                TCPServer.PushSendPackage(TCPGRam);
-                Command.clear();
+                TCPServer.GetMessageResponder()->RespondToMessage(*manualMessage);
+                manualMessage.reset();
             }
+
             //------------------------------------------------------------------------------------------------------------------
             /*
             Running
             */
             //------------------------------------------------------------------------------------------------------------------
-            if (driver.Run())
+            if (driver->Run())
             {
                 std::string valueString;
-                for each (double value in driver.m_arDoubles)
+                for each (double value in driver->m_arDoubles)
                 {
                     valueString += fmt::format(" {:.3f} ", value);
                 }
                 PrintInfo(valueString);
 #ifdef _MANAGED
                 std::unique_ptr<CTCPGram> TCPGRam;
-                TCPGRam.reset(new CTCPGram(driver.m_arDoubles));
+                TCPGRam.reset(new CTCPGram(driver->m_arDoubles));
                 TCPServer.PushSendPackage(TCPGRam);
 #endif
             }
@@ -160,52 +155,40 @@ int main(int argc, char *argv[])
                 switch (c)
                 {
                     case 'q':
-                        bContinueLoop = false;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_QUIT);
                         break;
                     case 'h':
-                        Command = TAG_COMMAND_HARDWAREDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
                         break;
                     case 'c':
-                        Command = TAG_COMMAND_CONFIGDETECT;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
                         break;
                     case 's':
                     {
                         double AcquisitionRate(1.0);
-                        Command = TAG_COMMAND_CHECKINIT;
-                        PrintCommand("Enter the measurement frequency");
+                        std::cout << "Enter the measurement frequency" << std::endl;
                         std::cin >> AcquisitionRate;
-                        TCP_XML_Input = std::make_unique<TiXmlElement>(TAG_COMMAND_CHECKINIT);
-                        if (TCP_XML_Input)
-                        {
-                            GetSetAttribute(TCP_XML_Input.get(), ATTRIB_CHECKINIT_MEASFREQ, AcquisitionRate, XML_WRITE);
-                        }
+                        manualMessage                                         = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
+                        manualMessage->GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = AcquisitionRate;
                     };
                     break;
                     case 't':
-                        Command = TAG_COMMAND_SHUTDOWN;
+                        manualMessage = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
                         break;
-                    case 'o':
-                    {
-                        ShowConsole(true);
-                    };
-                    break;
-                    case 'x':
-                    {
-                        ShowConsole(false);
-                    };
-                    break;
                 }
             }
         }
         catch (const std::exception &e)
         {
             PrintError("An error occurred : %s", e.what());
-            TCPServer.PushSendPackage(std::make_unique<CTCPGram>(e));
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>(e);
+            TCPServer.PushSendPackage(TCPGRam);
         }
         catch (...)
         {
             PrintError("An unknown error occurred");
-            TCPServer.PushSendPackage(std::make_unique<CTCPGram>(std::exception("An unknown error occurred")));
+            std::unique_ptr<CTCPGram> TCPGRam = std::make_unique<CTCPGram>("An unknown error occurred", TCPGRAM_CODE_ERROR);
+            TCPServer.PushSendPackage(TCPGRam);
         }
     }
     PrintInfo("Closing server");

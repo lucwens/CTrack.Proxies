@@ -18,38 +18,31 @@ CLeicaLMFDriver::~CLeicaLMFDriver()
 {
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::HardwareDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
+CTrack::Reply CLeicaLMFDriver::HardwareDetect(const CTrack::Message &message)
 {
-    std::unique_ptr<TiXmlElement> Return = std::make_unique<TiXmlElement>(TAG_COMMAND_HARDWAREDETECT);
-    std::vector<std::string>      Names, SerialNumbers, IPAddresses, Types, Comments;
+    bool          result = true;
+    CTrack::Reply reply  = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
 
-    int NumDetected = DetectTrackers(Names, SerialNumbers, IPAddresses, Types, Comments);
-#ifdef _DEBUG
-    if (NumDetected == 0)
-    {
-        Names.push_back("AT960LRSimulator");
-        SerialNumbers.push_back("123456");
-        IPAddresses.push_back("127.0.0.1");
-        Types.push_back("AT960 long range Tracker");
-        Comments.push_back("Adding simulator because no trackers were found");
-    }
-#endif
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_NAMES, Names, XML_WRITE);
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_SERIAL, SerialNumbers, XML_WRITE);
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_IPADDRESSES, IPAddresses, XML_WRITE);
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_TYPE, Types, XML_WRITE);
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_COMMENTS, Comments, XML_WRITE);
+    // Leica part of the detection
+    std::vector<std::string> names, serialNumbers, IPAddresses, types, comments;
+    int                      NumDetected                  = DetectTrackers(names, serialNumbers, IPAddresses, types, comments);
 
-    return Return;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]     = (NumDetected > 0);
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]     = serialNumbers;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_IPADDRESSES] = IPAddresses;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_TYPE]        = types;
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_COMMENTS]    = comments;
+
+    return reply;
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXmlElement> &rXMLinput)
+CTrack::Reply CLeicaLMFDriver::ConfigDetect(const CTrack::Message &message)
 {
-    std::string                   Result;
-    std::unique_ptr<TiXmlElement> ReturnXML = std::make_unique<TiXmlElement>(TAG_COMMAND_CONFIGDETECT);
-    std::string                   SerialNumber, IPAddress;
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_SERIAL, SerialNumber, XML_READ);
-    GetSetAttribute(rXMLinput.get(), ATTRIB_HARDWAREDETECT_IPADDRESS, IPAddress, XML_READ);
+    std::string   Result;
+    CTrack::Reply reply = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
+    std::string   SerialNumber, IPAddress;
+    SerialNumber  = message.GetParams().value(ATTRIB_HARDWAREDETECT_SERIAL, "");
+    IPAddress     = message.GetParams().value(ATTRIB_HARDWAREDETECT_IPADDRESS, "");
 
     bool bSuccess = ConnectTo(IPAddress);
     if (!bSuccess)
@@ -57,14 +50,13 @@ std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ConfigDetect(std::unique_ptr<TiXm
         Result = fmt::format("Failed to connect to {} at {}\nPerform a hardware detection.", SerialNumber, IPAddress);
     }
 
-    GetSetAttribute(ReturnXML.get(), ATTRIB_RESULT, Result, XML_WRITE);
-    return ReturnXML;
+    reply->GetParams()[ATTRIB_RESULT] = Result;
+    return reply;
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::CheckInitialize(std::unique_ptr<TiXmlElement> &XMLElement)
+CTrack::Reply CLeicaLMFDriver::CheckInitialize(const CTrack::Message &message)
 {
-    double MeasFreq(1.0);
-    GetSetAttribute(XMLElement.get(), ATTRIB_CHECKINIT_MEASFREQ, MeasFreq, XML_READ);
+    double measurementFrequency = message.GetParams().value(ATTRIB_CHECKINIT_MEASFREQ, 10.0);
     m_bRunning = true;
     return nullptr;
 }
@@ -91,7 +83,7 @@ bool CLeicaLMFDriver::GetValues(std::vector<double> &values)
     }
 }
 
-std::unique_ptr<TiXmlElement> CLeicaLMFDriver::ShutDown()
+CTrack::Reply CLeicaLMFDriver::ShutDown(const CTrack::Message &message)
 {
     if (m_LMFTracker)
     {

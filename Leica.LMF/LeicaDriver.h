@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Libraries/TCP/Subscriber.h"
+
 #include <tinyxml.h>
 #include <cliext/vector>
 #include <cliext/map>
@@ -29,12 +31,12 @@ ref class CLeicaLMFDriver
     ~CLeicaLMFDriver() override;
 
   public:
-    std::unique_ptr<TiXmlElement> HardwareDetect(std::unique_ptr<TiXmlElement> &);
-    std::unique_ptr<TiXmlElement> ConfigDetect(std::unique_ptr<TiXmlElement> &);
-    std::unique_ptr<TiXmlElement> CheckInitialize(std::unique_ptr<TiXmlElement> &);
+    CTrack::Reply                 HardwareDetect(const CTrack::Message &);
+    CTrack::Reply                 ConfigDetect(const CTrack::Message &);
+    CTrack::Reply                 CheckInitialize(const CTrack::Message &);
     bool                          Run();
     bool                          GetValues(std::vector<double> &values);
-    std::unique_ptr<TiXmlElement> ShutDown();
+    CTrack::Reply                 ShutDown(const CTrack::Message &message);
 
   public:
     int DetectTrackers(std::vector<std::string> &Names, std::vector<std::string> &SerialNumbers, std::vector<std::string> &IPAddresses,
