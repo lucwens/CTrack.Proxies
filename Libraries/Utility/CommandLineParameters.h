@@ -11,8 +11,8 @@ using json = nlohmann::json;
 class CommandLineParameters
 {
   private:
-    json parameters;
-    bool      initializedSuccessfullyFromJson_ = false;
+    json               parameters;
+    bool               initializedSuccessfullyFromJson_ = false;
     static std::string escapeJsonStringForCommandLine(const std::string &jsonInput);
 
   public:

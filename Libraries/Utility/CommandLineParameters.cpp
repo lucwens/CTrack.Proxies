@@ -136,7 +136,7 @@ bool CommandLineParameters::deserialize(const std::string &jsonString)
     }
     catch (const json::parse_error &e)
     {
-        PrintWarning("Error deserializing JSON string: {}" ,e.what() );
+        PrintWarning("Error deserializing JSON string: {}", e.what());
         return false;
     }
 }
@@ -186,7 +186,6 @@ const json &CommandLineParameters::getJsonObject() const
 {
     return parameters;
 }
-
 
 // Private helper function implementation
 std::string CommandLineParameters::escapeJsonStringForCommandLine(const std::string &jsonInput)

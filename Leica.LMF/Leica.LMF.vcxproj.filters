@@ -32,9 +32,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Driver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LeicaDriver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,9 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="LeicaDriver.h">

@@ -173,7 +173,6 @@
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
-    <ClCompile Include="Driver.cpp" />
     <ClCompile Include="LeicaDriver.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -202,7 +201,6 @@
     <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h" />
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
-    <ClInclude Include="Driver.h" />
     <ClInclude Include="LeicaDriver.h" />
   </ItemGroup>
   <ItemGroup>

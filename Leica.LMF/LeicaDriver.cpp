@@ -3,7 +3,10 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/StringUtilities.h"
+#include "../Libraries/Utility/Print.h"
 #include <msclr/marshal_cppstd.h>
+
+std::string simulationString("AT960LRSimulator#506432");
 
 //------------------------------------------------------------------------------------------------------------------
 /*
@@ -25,9 +28,20 @@ CTrack::Reply CLeicaLMFDriver::HardwareDetect(const CTrack::Message &message)
 
     // Leica part of the detection
     std::vector<std::string> names, serialNumbers, IPAddresses, types, comments;
-    int                      NumDetected                  = DetectTrackers(names, serialNumbers, IPAddresses, types, comments);
+    int                      NumDetected = DetectTrackers(names, serialNumbers, IPAddresses, types, comments);
+    if (NumDetected == 0)
+    {
+        // try simulation using AT960LRSimulator#506432 : this is the connection string to be used with ConnectTo
+        NumDetected = 1;
+        names.push_back("Simulator");
+        serialNumbers.push_back("506432");
+        IPAddresses.push_back("AT960LRSimulator#506432");
+        types.push_back("AT960LRSimulator");
+        comments.push_back("No trackers detected, using simulator");
+    }
 
     reply->GetParams()[ATTRIB_HARDWAREDETECT_PRESENT]     = (NumDetected > 0);
+    reply->GetParams()[ATTRIB_HARDWAREDETECT_NAMES]       = names;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_SERIALS]     = serialNumbers;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_IPADDRESSES] = IPAddresses;
     reply->GetParams()[ATTRIB_HARDWAREDETECT_TYPE]        = types;
@@ -45,7 +59,18 @@ CTrack::Reply CLeicaLMFDriver::ConfigDetect(const CTrack::Message &message)
     IPAddress     = message.GetParams().value(ATTRIB_HARDWAREDETECT_IPADDRESS, "");
 
     bool bSuccess = ConnectTo(IPAddress);
-    if (!bSuccess)
+    if (bSuccess && m_LMFTracker != nullptr)
+    {
+        if (m_LMFTracker->Targets->Count > 0)
+        {
+            PrintInfo("Available targets:");
+            for each (Target ^ target in m_LMFTracker->Targets) // 'for each' loop for collections
+            {
+                PrintInfo("{}", ToStdString(target->ToString()));
+            }
+        }
+    }
+    else
     {
         Result = fmt::format("Failed to connect to {} at {}\nPerform a hardware detection.", SerialNumber, IPAddress);
     }
@@ -57,7 +82,7 @@ CTrack::Reply CLeicaLMFDriver::ConfigDetect(const CTrack::Message &message)
 CTrack::Reply CLeicaLMFDriver::CheckInitialize(const CTrack::Message &message)
 {
     double measurementFrequency = message.GetParams().value(ATTRIB_CHECKINIT_MEASFREQ, 10.0);
-    m_bRunning = true;
+    m_bRunning                  = true;
     return nullptr;
 }
 

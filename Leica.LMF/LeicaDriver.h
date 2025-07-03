@@ -18,6 +18,8 @@ using namespace LMF::Tracker::Enums;
 using namespace LMF::Tracker::BasicTypes;
 using namespace LMF::Tracker::OVC;
 
+extern std::string simulationString;
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 CLeicaDriver

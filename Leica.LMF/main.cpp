@@ -22,7 +22,7 @@
 int main(int argc, char *argv[])
 {
     CTrack::InitLogging("");
-    SetConsoleTabText("Template");
+    SetConsoleTabText("Leica.LMF");
     SetConsoleTabBackgroundColor(CYAN);
 
     unsigned short PortNumber(40001);
