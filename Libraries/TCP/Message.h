@@ -19,7 +19,7 @@ namespace CTrack
     {
       public:
         Message() = default;
-        Message(const std::string& id);
+        Message(const std::string &id);
         Message(const std::string &id, json params);
         Message(const Message &other);
         Message &operator=(const Message &other);
@@ -29,6 +29,7 @@ namespace CTrack
         static Message     Deserialize(const std::string &jsonString);
         const std::string &GetID() const;
         void               SetID(const std::string_view &id);
+        const bool         HasParams() const;
         const json        &GetParams() const;
         json              &GetParams();
         void               SetParams(const json &params);
@@ -37,7 +38,7 @@ namespace CTrack
         void               DebugUpdate();
 
       private:
-        json data_;
+        mutable json data_;
 #ifdef _DEBUG
         std::string debugMessage_; // For debugging purposes, can be used to store a message about the content of the message
 #endif

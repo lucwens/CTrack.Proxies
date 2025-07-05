@@ -19,11 +19,36 @@
 #include <memory>
 #include <string>
 
+void leicaTestCode()
+{
+    try
+    {
+        LMF::Tracker::Connection ^ con = gcnew LMF::Tracker::Connection();
+        if (con != nullptr)
+        {
+            std::string                        IPAdres("AT960LRSimulator#506432");
+            System::String ^ ipAddress = gcnew System::String("AT960LRSimulator#506432");
+            LMF::Tracker::Tracker ^ tracker =                con->Connect(ipAddress);
+        }
+    }
+    catch (std::exception &e)
+    {
+        PrintError(e.what());
+    }
+    catch (LMF::Tracker::ErrorHandling::LmfException ^ ex)
+    {
+        System::Console::WriteLine("LMF Error getting targets: {0}", ex->Description); // [cite: 788]
+    }
+}
+
 int main(int argc, char *argv[])
 {
     CTrack::InitLogging("");
     SetConsoleTabText("Leica.LMF");
     SetConsoleTabBackgroundColor(CYAN);
+#ifdef _DEBUG
+//    leicaTestCode();
+#endif
 
     unsigned short PortNumber(40001);
     bool           showConsole{true};
@@ -59,6 +84,8 @@ int main(int argc, char *argv[])
     std::vector<CTrack::Subscription> subscriptions;
     std::unique_ptr<CTrack::Message>  manualMessage;
     bool                              bContinueLoop = true;
+    std::vector<std::string>          names({"Simulator"}), serialNumbers({"506432"}), IPAddresses({"AT960LRSimulator#506432"}), types({"AT960LRSimulator"}),
+        comments({"using simulator"});
 
     // responders & handlers
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });

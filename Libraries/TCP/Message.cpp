@@ -1,20 +1,23 @@
 #include "Message.h"
 
+constexpr const char *ParamsKey = "params";
+constexpr const char *IDKey     = "id";
+
 namespace CTrack
 {
     // Constructor with id and params
-    Message::Message(const std::string& id)
+    Message::Message(const std::string &id)
     {
-        data_["id"]     = id;
-        data_["params"] = {};
+        data_[IDKey]     = id;
+        data_[ParamsKey] = {};
         DebugUpdate();
     }
 
     // Constructor with id and params
     Message::Message(const std::string &id, json params)
     {
-        data_["id"]     = id;
-        data_["params"] = std::move(params);
+        data_[IDKey]     = id;
+        data_[ParamsKey] = std::move(params);
         DebugUpdate();
     }
 
@@ -70,13 +73,13 @@ namespace CTrack
     Message Message::Deserialize(const std::string &jsonString)
     {
         json parsed = json::parse(jsonString);
-        if (!parsed.contains("id") || !parsed["id"].is_string())
+        if (!parsed.contains(IDKey) || !parsed[IDKey].is_string())
         {
             throw std::invalid_argument("JSON missing 'id' string");
         }
-        if (!parsed.contains("params"))
+        if (!parsed.contains(ParamsKey))
         {
-            parsed["params"] = {{}};
+            parsed[ParamsKey] = {{}};
         }
         return Message(std::move(parsed), raw_json_tag);
     }
@@ -84,32 +87,55 @@ namespace CTrack
     // GetID
     const std::string &Message::GetID() const
     {
-        return data_.at("id").get_ref<const std::string &>();
+        return data_.at(IDKey).get_ref<const std::string &>();
     }
 
     // SetID
     void Message::SetID(const std::string_view &id)
     {
-        data_["id"] = id;
+        data_[IDKey] = id;
         DebugUpdate();
+    }
+
+    const bool Message::HasParams() const
+    {
+        if (!data_.contains(ParamsKey))
+            return false;
+        if (GetParams() == nullptr)
+            return false;
+        return true;
     }
 
     // GetParams (const)
     const json &Message::GetParams() const
     {
-        return data_.at("params");
+        if (data_.find(ParamsKey) == data_.end())
+        {
+            data_[ParamsKey] = json::object();
+        }
+        if (data_[ParamsKey] == nullptr)
+        {
+            data_[ParamsKey] = json::object();
+        }
+
+        return data_.at(ParamsKey);
     }
 
     // GetParams (non-const)
     json &Message::GetParams()
     {
-        return data_["params"];
+        if (data_.find(ParamsKey) == data_.end())
+        {
+            // If the key does not exist, add it with an empty JSON object
+            data_[ParamsKey] = json::object();
+        }
+        return data_[ParamsKey];
     }
 
     // SetParams
     void Message::SetParams(const json &params)
     {
-        data_["params"] = params;
+        data_[ParamsKey] = params;
         DebugUpdate();
     }
 
