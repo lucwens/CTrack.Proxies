@@ -160,7 +160,7 @@ CTCPGram::CTCPGram(const std::exception &e)
     EncodeText(XMLText, TCPGRAM_CODE_ERROR);
 }
 
-CTCPGram::CTCPGram(const CTrack::Message & message)
+CTCPGram::CTCPGram(const CTrack::Message &message)
 {
     EncodeText(message.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
@@ -233,7 +233,6 @@ std::unique_ptr<TiXmlElement> CTCPGram::GetXML()
     ReturnXML.reset(pXML);
     return ReturnXML;
 }
-
 
 bool CTCPGram::GetMessage(CTrack::Message &message)
 {

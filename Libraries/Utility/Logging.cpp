@@ -468,10 +468,10 @@ namespace CTrack
             boost::json::object sourceDetails;
             if (!stackTrace)
             {
-                sourceDetails["file"]     = std::filesystem::path(location.file_name()).filename().string();
-                sourceDetails["line"]     = location.line();
-                sourceDetails["function"] = location.function_name();
-                jsonLogEntry["sourceDetails"]    = sourceDetails;
+                sourceDetails["file"]         = std::filesystem::path(location.file_name()).filename().string();
+                sourceDetails["line"]         = location.line();
+                sourceDetails["function"]     = location.function_name();
+                jsonLogEntry["sourceDetails"] = sourceDetails;
             }
             else
             {
@@ -495,7 +495,6 @@ namespace CTrack
             {
                 sourceDetails["exception_type"] = *exceptionType;
             }
-
 
             try
             {

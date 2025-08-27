@@ -198,4 +198,4 @@ class COrientationManager
 inline COrientationManager *GetOrientationManager()
 {
     return COrientationManager::GetInstance();
-}; 
+};

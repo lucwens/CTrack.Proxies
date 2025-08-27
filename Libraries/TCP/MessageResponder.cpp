@@ -1,6 +1,5 @@
 #include "MessageResponder.h"
 
-
 #ifdef CTRACK
 #include "Print.h"
 #else
@@ -62,7 +61,7 @@ namespace CTrack
                 std::future<Message> messageFuture = request.GetReplyFuture();
                 assert(messageFuture.wait_for(std::chrono::seconds(0)) != std::future_status::timeout);
                 auto replyMessage = messageFuture.get(); // Store the result in a local variable
-                SendTrackRequest(replyMessage, handler);      // Pass the local variable to SendRequest
+                SendTrackRequest(replyMessage, handler); // Pass the local variable to SendRequest
             }
             requests_.erase(it);
         }

@@ -26,7 +26,6 @@ CBaseUnits
 */
 //------------------------------------------------------------------------------------------------------------------
 
-
 CBaseUnits::CBaseUnits()
 {
     // POSITION
@@ -64,7 +63,7 @@ int CBaseUnits::GetUnitChoice(const std::string &iBaseUnit)
 
 bool CBaseUnits::SetUnitChoice(const std::string &iBaseUnit, int Choice)
 {
-    bool  bChanged   = false;
+    bool bChanged   = false;
     auto iterChoice = m_mapConversionChoice.find(iBaseUnit);
     if (iterChoice != m_mapConversionChoice.end())
     {
@@ -115,7 +114,7 @@ int CBaseUnits::GetNumDecimals(const std::string &iBaseUnit, int DefaultNumDecim
 
 bool CBaseUnits::SetNumDecimals(const std::string &iBaseUnit, int NumDecimals, int ConversionIndex)
 {
-    bool  bChanged = false;
+    bool bChanged = false;
     auto itermap  = m_mapConversions.find(iBaseUnit);
     if (itermap != m_mapConversions.end())
     {
@@ -133,7 +132,7 @@ bool CBaseUnits::SetNumDecimals(const std::string &iBaseUnit, int NumDecimals, i
 std::string CBaseUnits::GetUnit(const std::string &iBaseUnit)
 {
     std::string ReturnString(iBaseUnit);
-    auto       itermap = m_mapConversions.find(iBaseUnit);
+    auto        itermap = m_mapConversions.find(iBaseUnit);
     if (itermap != m_mapConversions.end())
     {
         int Choice = GetUnitChoice(iBaseUnit);

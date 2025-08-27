@@ -909,16 +909,14 @@ COrientationManager *COrientationManager::GetInstance()
 
 COrientationManager::COrientationManager()
 {
-    m_mapOrientation = {
-        {ORIENTATION_ROLLPITCHYAW, new COrientationRollPitchYaw()},
-        {ORIENTATION_STEERCAMBERSPIN, new COrientationSteerCamberSpin()},
-        {ORIENTATION_SKREW, new COrientationSkrew()},
-        {ORIENTATION_KUKAABC, new COrientationKukaABC()},
-        {ORIENTATION_QUATERNION, new COrientationQuaternion()},
-        {ORIENTATION_ZVECTOR, new COrientationZVector()},
-        {ORIENTATION_4X4, new COrientation4x4()}, 
-        {ORIENTATION_3X3, new COrientation3x3()}  
-    };
+    m_mapOrientation = {{ORIENTATION_ROLLPITCHYAW, new COrientationRollPitchYaw()},
+                        {ORIENTATION_STEERCAMBERSPIN, new COrientationSteerCamberSpin()},
+                        {ORIENTATION_SKREW, new COrientationSkrew()},
+                        {ORIENTATION_KUKAABC, new COrientationKukaABC()},
+                        {ORIENTATION_QUATERNION, new COrientationQuaternion()},
+                        {ORIENTATION_ZVECTOR, new COrientationZVector()},
+                        {ORIENTATION_4X4, new COrientation4x4()},
+                        {ORIENTATION_3X3, new COrientation3x3()}};
 }
 
 COrientationManager::~COrientationManager()

@@ -24,7 +24,7 @@ namespace CTrack
         this->handler = std::move(handler);
     }
 
-    Handler&& Request::TakeHandler() 
+    Handler &&Request::TakeHandler()
     {
         return std::move(handler);
     }
