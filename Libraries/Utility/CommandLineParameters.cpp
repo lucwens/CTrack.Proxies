@@ -16,10 +16,6 @@ CommandLineParameters::CommandLineParameters(int argc, char *argv[])
         {
             initializedSuccessfullyFromJson_ = true;
         }
-        else
-        {
-            PrintWarning("CommandLineParameters: Command-line input is not a valid JSON string.");
-        }
     }
 }
 
@@ -136,7 +132,6 @@ bool CommandLineParameters::deserialize(const std::string &jsonString)
     }
     catch (const json::parse_error &e)
     {
-        PrintWarning("Error deserializing JSON string: {}", e.what());
         return false;
     }
 }
