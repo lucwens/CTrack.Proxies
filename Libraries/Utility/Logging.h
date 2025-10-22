@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/json.hpp>
+#include <nlohmann/json.hpp>
 #include <chrono>
 #include <cstdint> // For std::uint_least32_t
 #include <filesystem>

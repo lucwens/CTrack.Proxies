@@ -460,12 +460,12 @@ namespace CTrack
         // File Output (JSON)
         if (m_fileOutputEnabled && logFileOpen())
         {
-            boost::json::object jsonLogEntry;
+            nlohmann::json jsonLogEntry;
             jsonLogEntry["timestamp"] = timestampStr;
             jsonLogEntry["level"]     = std::string(SeverityToString(level));
-            jsonLogEntry["message"]   = std::string(primaryMessage); // Convert string_view to string for Boost.JSON
+            jsonLogEntry["message"]   = std::string(primaryMessage); // Convert string_view to string for nlohmann::json
 
-            boost::json::object sourceDetails;
+            nlohmann::json sourceDetails;
             if (!stackTrace)
             {
                 sourceDetails["file"]         = std::filesystem::path(location.file_name()).filename().string();
@@ -475,10 +475,10 @@ namespace CTrack
             }
             else
             {
-                boost::json::array stackTraceArray;
+                nlohmann::json stackTraceArray = nlohmann::json::array();
                 for (const auto &trace : *stackTrace)
                 {
-                    stackTraceArray.push_back(boost::json::value(trace));
+                    stackTraceArray.push_back(trace);
                 }
                 sourceDetails["stack_trace"] = stackTraceArray;
             }
@@ -499,7 +499,7 @@ namespace CTrack
             try
             {
                 // Output NDJSON (each JSON object on a new line)
-                m_logFile << boost::json::serialize(jsonLogEntry) << std::endl;
+                m_logFile << jsonLogEntry.dump() << std::endl;
             }
             catch (const std::exception &e)
             {
