@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{def92487-9f98-48ed-9585-ae7922b656f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{786b2f4c-9dc7-4fec-9685-b8bb3e71274c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TCP">
+      <UniqueIdentifier>{708cdbc3-651e-4afb-a193-0173a38cb907}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TCP\Message">
+      <UniqueIdentifier>{e03754c7-8fa9-419c-8816-99cfb2d72b91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Utility">
+      <UniqueIdentifier>{d0894cf2-77b0-4d2d-8fb4-ed41302130db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML">
+      <UniqueIdentifier>{fc7ad93c-ba80-4e9b-b80e-3c8802f29f78}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LeicaDriver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Message.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Request.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\FileReader.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Logging.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkError.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\os.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Print.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\XML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LeicaDriver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Message.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\MessageResponder.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Request.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscriber.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscription.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\errorException.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\FileReader.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Logging.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkError.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\os.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Print.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\baseUnits.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Orientations.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\XML.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Program Files (x86)\Leica Metrology Foundation - Tracker SDK\LMFDocumentation.chm">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="..\..\..\..\..\Program Files (x86)\Leica Metrology Foundation - Tracker SDK\LMF Tracker User Guide.pdf">
+      <Filter>Documentation</Filter>
+    </None>
+  </ItemGroup>
+</Project>

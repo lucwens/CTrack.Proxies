@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{14836a83-5afc-4661-b00a-88ca64f18762}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{bc62a1e0-b5e9-492f-bd1c-b9e17f172650}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TCP">
+      <UniqueIdentifier>{9e0b43b5-5072-4e20-9641-8a9c04bd7007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\TCP\Message">
+      <UniqueIdentifier>{88fed90d-a4f2-449b-9853-54588561e557}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Utility">
+      <UniqueIdentifier>{36c1bf7d-b5db-45dc-a076-79761ce727a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\XML">
+      <UniqueIdentifier>{d46bb8ed-f0d7-4b41-a7c6-856db78b5b7f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DriverVicon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp">
+      <Filter>Libraries\TCP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Message.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Request.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\FileReader.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Logging.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkError.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\os.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Print.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\XML\XML.cpp">
+      <Filter>Libraries\XML</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DriverVicon.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPCommunication.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
+      <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Message.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\MessageResponder.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Request.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscriber.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\TCP\Subscription.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\errorException.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\FileReader.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Logging.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkError.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\os.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Print.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\baseUnits.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Orientations.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_AttributeValues.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Base64.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\XML\XML.h">
+      <Filter>Libraries\XML</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="D:\Dropbox\C-Tech\Devices\Vicon\DOC\Vicon Tracker User Guide.pdf">
+      <Filter>Documentation</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="ViconDataStreamSDK_CPP.lib">
+      <Filter>Source Files</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
