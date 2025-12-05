@@ -78,7 +78,7 @@ namespace CTrack
             LOG_ERROR_MSG("Message::Deserialize - Empty JSON string received");
             throw std::invalid_argument("Cannot parse empty JSON string");
         }
-        
+
         json parsed;
         try
         {
@@ -86,13 +86,12 @@ namespace CTrack
         }
         catch (const json::parse_error &e)
         {
-            std::string errorMsg = "JSON parse error at position " + std::to_string(e.byte) + ": " + e.what() + 
-                                   " (Input: " + jsonString.substr(0, std::min(size_t(100), jsonString.size())) + 
-                                   (jsonString.size() > 100 ? "..." : "") + ")";
+            std::string errorMsg = "JSON parse error at position " + std::to_string(e.byte) + ": " + e.what() +
+                                   " (Input: " + jsonString.substr(0, std::min(size_t(100), jsonString.size())) + (jsonString.size() > 100 ? "..." : "") + ")";
             LOG_ERROR_MSG("Message::Deserialize - " + errorMsg);
             throw std::invalid_argument(errorMsg);
         }
-        
+
         if (!parsed.contains(IDKey) || !parsed[IDKey].is_string())
         {
             throw std::invalid_argument("JSON missing 'id' string");
