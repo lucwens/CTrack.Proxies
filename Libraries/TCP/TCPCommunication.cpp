@@ -753,6 +753,7 @@ bool CCommunicationObject::WaitConnection(DWORD timeoutMs)
             return false;
         }
     }
+    return false;
 }
 
 void CCommunicationObject::PushSendPackage(std::unique_ptr<CTCPGram> &rTCPGram)

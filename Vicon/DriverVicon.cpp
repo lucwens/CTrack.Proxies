@@ -8,12 +8,19 @@
 #include "DriverVicon.h"
 
 #include <iostream>
-#include < thread>
+#include <thread>
+
+#ifdef TRACY_ENABLE
+#include <tracy/Tracy.hpp>
+#endif
 
 constexpr int DELAY_MS = 10;
 
 bool DriverVicon::Connect()
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::Connect", 0x4488FF); // Blue
+#endif
     m_Client.Connect("localhost");
     bool bConnected = m_Client.IsConnected().Connected;
     if (!bConnected)
@@ -58,11 +65,17 @@ bool DriverVicon::Connect()
 
 void DriverVicon::Disconnect()
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::Disconnect", 0xFF4444); // Red
+#endif
     m_Client.Disconnect();
 }
 
 CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::HardwareDetect", 0x44FF44); // Green
+#endif
     bool                                          bPresent    = false;
     CTrack::Reply                                 reply       = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     unsigned int                                  CameraCount = 0;
@@ -81,9 +94,9 @@ CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
         auto CameraCountResult = m_Client.GetCameraCount();
         if (CameraCountResult.Result == VICONSDK::Result::Success)
         {
-            bPresent    = true;
-            FeedBack    = fmt::format("SDK Version {}:{}:{}:{}\r\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
-                                      CameraCountResult.CameraCount);
+            bPresent = true;
+            FeedBack = fmt::format("SDK Version {}:{}:{}:{}\r\nDetected {} cameras", Version.Major, Version.Minor, Version.Point, Version.Revision,
+                                   CameraCountResult.CameraCount);
             LOG_DEBUG(FeedBack);
             CameraCount = CameraCountResult.CameraCount;
             for (unsigned int i = 0; i < CameraCountResult.CameraCount; i++)
@@ -144,6 +157,9 @@ CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
 
 CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::ConfigDetect", 0xFFAA00); // Orange
+#endif
     CTrack::Reply reply  = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
     auto         &params = reply->GetParams();
 
@@ -191,6 +207,9 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 
 CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::CheckInitialize", 0x00FFFF); // Cyan
+#endif
     bool          Result = true;
     std::string   Feedback;
     CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
@@ -223,6 +242,9 @@ bool DriverVicon::Run()
 {
     if (m_bRunning)
     {
+#ifdef TRACY_ENABLE
+        ZoneScopedNC("Vicon::Run", 0xFF00FF); // Magenta
+#endif
         auto FrameResult = m_Client.GetFrame();
         if (FrameResult.Result == VICONSDK::Result::Success)
         {
@@ -295,6 +317,9 @@ bool DriverVicon::Run()
 
 bool DriverVicon::GetValues(std::vector<double> &values)
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::GetValues", 0x8888FF); // Light Blue
+#endif
     if (m_bRunning)
     {
         values = m_arValues;
@@ -305,6 +330,9 @@ bool DriverVicon::GetValues(std::vector<double> &values)
 
 CTrack::Reply DriverVicon::ShutDown(const CTrack::Message &message)
 {
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("Vicon::ShutDown", 0xFF8800); // Dark Orange
+#endif
     bool Result = true;
     m_bRunning  = false;
 

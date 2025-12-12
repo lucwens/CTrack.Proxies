@@ -11,6 +11,7 @@
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
+#include "StressTest.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
 
 #include <conio.h>
@@ -49,6 +50,8 @@ int main(int argc, char *argv[])
         PrintInfo("c : configuration detect");
         PrintInfo("s : start track");
         PrintInfo("t : stop track");
+        PrintInfo("z : start stress test");
+        PrintInfo("y : stop stress test");
     }
 
     // startup server object
@@ -57,6 +60,9 @@ int main(int argc, char *argv[])
     std::vector<CTrack::Subscription> subscriptions;
     std::unique_ptr<CTrack::Message>  manualMessage;
     bool                              bContinueLoop = true;
+
+    // Stress test object - initialized after message responder is set up
+    std::unique_ptr<StressTest>       stressTest;
 
     TCPServer.SetOnConnectFunction([](SOCKET, size_t numConnections) { PrintInfo("connected : {}", numConnections); });
     TCPServer.SetOnDisconnectFunction([](SOCKET, size_t numConnections) { PrintWarning("DISCONNNECTED : {}", numConnections); });
@@ -77,6 +83,9 @@ int main(int argc, char *argv[])
 
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);
+
+    // Initialize stress test after message responder is available
+    stressTest = std::make_unique<StressTest>(driver.get(), TCPServer.GetMessageResponder());
 
 
     while (bContinueLoop)
@@ -173,6 +182,30 @@ int main(int argc, char *argv[])
                         ShowConsole(false);
                     };
                     break;
+                    case 'z':
+                    {
+                        if (stressTest && !stressTest->IsRunning())
+                        {
+                            stressTest->Start();
+                        }
+                        else if (stressTest && stressTest->IsRunning())
+                        {
+                            PrintWarning("Stress test already running - press 'y' to stop");
+                        }
+                    };
+                    break;
+                    case 'y':
+                    {
+                        if (stressTest && stressTest->IsRunning())
+                        {
+                            stressTest->Stop();
+                        }
+                        else
+                        {
+                            PrintWarning("Stress test is not running");
+                        }
+                    };
+                    break;
                 }
             }
         }
@@ -189,6 +222,14 @@ int main(int argc, char *argv[])
             TCPServer.PushSendPackage(TCPGRam);
         }
     }
+    // Stop stress test if running
+    if (stressTest && stressTest->IsRunning())
+    {
+        PrintInfo("Stopping stress test before shutdown...");
+        stressTest->Stop();
+    }
+    stressTest.reset();
+
     PrintInfo("Closing server");
     TCPServer.Close();
     return 0;
