@@ -24,6 +24,10 @@ class DriverVicon;
  * This class performs random sequences of actions (hardware detect, config detect,
  * start, stop) to test the robustness of the Vicon connection. All actions are
  * logged to a dedicated log file, and the test automatically stops on errors.
+ *
+ * When tracking is started, a random measurement duration (10-120 seconds) is selected.
+ * Tracking will continue for at least this duration before stopping is allowed,
+ * ensuring meaningful measurement periods for stability testing.
  */
 class StressTest
 {
@@ -60,6 +64,7 @@ class StressTest
     std::string GetStatusString() const;
     int         GetIterationCount() const;
     int         GetErrorCount() const;
+    bool        IsTracking() const;  // Returns true if stress test is currently in a tracking session
 
   private:
     // Test execution
@@ -99,7 +104,9 @@ class StressTest
     std::atomic<int>       m_SuccessCount{0};
 
     // Tracking state for stress test logic
-    bool m_bCurrentlyTracking{false};
+    std::atomic<bool>                         m_bCurrentlyTracking{false};
+    std::chrono::steady_clock::time_point     m_TrackingStartTime;
+    int                                       m_RequiredMeasurementSeconds{0};
 
     // Thread management
     std::thread m_TestThread;
@@ -115,6 +122,7 @@ class StressTest
     std::uniform_int_distribution<int>    m_WaitShortDistribution{5, 30};
     std::uniform_int_distribution<int>    m_WaitMediumDistribution{30, 120};
     std::uniform_int_distribution<int>    m_WaitLongDistribution{120, 300};
+    std::uniform_int_distribution<int>    m_MeasurementDurationDistribution{10, 120};  // 10 seconds to 2 minutes
 
     // Test start time
     std::chrono::steady_clock::time_point m_StartTime;

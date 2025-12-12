@@ -70,3 +70,41 @@ void PrintTimeStamp()
 {
     std::cout << CTrack::GetTimeStampString() << " ";
 }
+
+void PrintStatusTopRight(const std::string &status)
+{
+    std::lock_guard<std::mutex> lock(printMutex);
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole == INVALID_HANDLE_VALUE)
+        return;
+
+    // Get current cursor position and console info
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
+        return;
+
+    // Save current cursor position
+    COORD savedPos = csbi.dwCursorPosition;
+
+    // Calculate position for top-right corner
+    // Leave some padding from the right edge
+    int statusLength = static_cast<int>(status.length());
+    int xPos         = csbi.dwSize.X - statusLength - 1;
+    if (xPos < 0)
+        xPos = 0;
+
+    // Move cursor to top-right (row 0)
+    COORD topRight = {static_cast<SHORT>(xPos), 0};
+    SetConsoleCursorPosition(hConsole, topRight);
+
+    // Print with cyan color using ANSI codes
+    EnableAnsiColors();
+    fmt::print("\x1b[38;2;0;255;255m{}\x1b[0m", status);
+
+    // Restore cursor position
+    SetConsoleCursorPosition(hConsole, savedPos);
+
+    // Flush to ensure immediate display
+    std::cout.flush();
+}

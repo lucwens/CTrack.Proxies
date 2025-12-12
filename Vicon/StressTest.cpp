@@ -42,6 +42,7 @@ void StressTest::Start()
     LogInfo("=== STRESS TEST STARTED ===");
     LogInfo(fmt::format("Purpose: Test Vicon communication stability"));
     LogInfo(fmt::format("Actions: Hardware Detect, Config Detect, Start Tracking, Stop Tracking, Wait periods"));
+    LogInfo(fmt::format("Measurement duration: 10-120 seconds (randomly selected per tracking session)"));
 
     m_State      = TestState::Running;
     m_TestThread = std::thread(&StressTest::TestLoop, this);
@@ -122,6 +123,11 @@ int StressTest::GetIterationCount() const
 int StressTest::GetErrorCount() const
 {
     return m_ErrorCount;
+}
+
+bool StressTest::IsTracking() const
+{
+    return m_bCurrentlyTracking.load();
 }
 
 void StressTest::TestLoop()
@@ -228,7 +234,36 @@ StressTest::TestAction StressTest::SelectRandomAction()
     // Map random number to action, with state-aware logic
     if (m_bCurrentlyTracking)
     {
-        // When tracking: prefer wait operations or stop
+        // Check if we've tracked for the required measurement duration
+        auto now            = std::chrono::steady_clock::now();
+        auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - m_TrackingStartTime).count();
+        bool canStop        = elapsedSeconds >= m_RequiredMeasurementSeconds;
+
+        if (!canStop)
+        {
+            // Haven't tracked long enough - only allow wait operations
+            int remainingSeconds = m_RequiredMeasurementSeconds - static_cast<int>(elapsedSeconds);
+            LogInfo(fmt::format("Measurement in progress - {} seconds remaining before stop allowed", remainingSeconds));
+
+            // Only return wait actions, weighted towards shorter waits to check more frequently
+            switch (actionIndex % 4)
+            {
+                case 0:
+                case 1:
+                    return TestAction::WaitShort;
+                case 2:
+                    return TestAction::WaitMedium;
+                case 3:
+                    return TestAction::WaitLong;
+                default:
+                    return TestAction::WaitShort;
+            }
+        }
+
+        // We've tracked long enough - now we can stop
+        LogInfo(fmt::format("Measurement period complete ({} seconds elapsed) - stop is now allowed", elapsedSeconds));
+
+        // When tracking and can stop: prefer stopping to end measurement period
         switch (actionIndex)
         {
             case 0:
@@ -448,8 +483,10 @@ bool StressTest::DoStartTracking()
 
         if (result)
         {
-            m_bCurrentlyTracking = true;
-            LogInfo("Tracking started successfully at 50 Hz");
+            m_bCurrentlyTracking           = true;
+            m_TrackingStartTime            = std::chrono::steady_clock::now();
+            m_RequiredMeasurementSeconds   = m_MeasurementDurationDistribution(m_RandomEngine);
+            LogInfo(fmt::format("Tracking started successfully at 50 Hz - will track for {} seconds before allowing stop", m_RequiredMeasurementSeconds));
             return true;
         }
         else
@@ -550,25 +587,52 @@ void StressTest::DoWait(int minSeconds, int maxSeconds)
     LogInfo(fmt::format("Waiting for {} seconds...", waitSeconds));
     PrintInfo(fmt::format("STRESS TEST: Waiting {} seconds", waitSeconds));
 
-    // Wait in small increments to allow for stop requests
-    int elapsed = 0;
-    while (elapsed < waitSeconds && !m_bStopRequested)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        elapsed++;
+    // Log tracking state for debugging
+    bool isTracking = m_bCurrentlyTracking.load();
+    bool driverRunning = m_pDriver->IsRunning();
+    LogInfo(fmt::format("DoWait state: m_bCurrentlyTracking={}, driver->IsRunning()={}", isTracking, driverRunning));
 
-        // If we're tracking, periodically check that we're still getting data
-        if (m_bCurrentlyTracking && elapsed % 10 == 0)
+    // Wait in small increments to allow for stop requests
+    int elapsedSeconds = 0;
+    while (elapsedSeconds < waitSeconds && !m_bStopRequested)
+    {
+        // If tracking, call Run() frequently to process frames and update display
+        if (m_bCurrentlyTracking && m_pDriver->IsRunning())
         {
-            // Call Run() to check connection health
-            if (!m_pDriver->Run())
+#ifdef TRACY_ENABLE
+            ZoneScopedNC("StressTest::FrameProcessing", 0x00FFFF);  // Cyan - matches tracking color
+#endif
+            // Poll for ~1 second, calling Run() at ~50Hz to keep up with frame rate
+            int framesProcessed = 0;
+            for (int i = 0; i < 50 && !m_bStopRequested; i++)
             {
-                LogWarning("Driver Run() returned false during wait - connection may have dropped");
+#ifdef TRACY_ENABLE
+                ZoneScopedNC("StressTest::Frame", 0x00AAAA);  // Darker cyan for individual frames
+#endif
+                if (!m_pDriver->Run())
+                {
+                    LogWarning("Driver Run() returned false during wait - connection may have dropped");
+                    break;
+                }
+                framesProcessed++;
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+#ifdef TRACY_ENABLE
+            TracyPlot("Frames/sec", static_cast<int64_t>(framesProcessed));
+#endif
+            if (elapsedSeconds % 10 == 0)  // Log every 10 seconds to avoid spam
+            {
+                LogInfo(fmt::format("Processed {} Run() calls in last second", framesProcessed));
             }
         }
+        else
+        {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        elapsedSeconds++;
     }
 
-    LogInfo(fmt::format("Wait completed ({} seconds)", elapsed));
+    LogInfo(fmt::format("Wait completed ({} seconds)", elapsedSeconds));
 }
 
 void StressTest::InitLogFile()

@@ -102,6 +102,12 @@
     <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="StressTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
@@ -179,12 +185,12 @@
     <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="StressTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf">
-      <Filter>Documentation</Filter>
-    </None>
-    <None Include="D:\Dropbox\C-Tech\Devices\Vicon\DOC\Vicon Tracker User Guide.pdf">
+    <None Include="TracyProfiling.md">
       <Filter>Documentation</Filter>
     </None>
   </ItemGroup>

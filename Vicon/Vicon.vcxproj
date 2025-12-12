@@ -317,8 +317,7 @@
     <ClInclude Include="StressTest.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\Program Files\Vicon\DataStream SDK\Documentation\Vicon DataStream SDK Manual.pdf" />
-    <None Include="D:\Dropbox\C-Tech\Devices\Vicon\DOC\Vicon Tracker User Guide.pdf" />
+    <None Include="TracyProfiling.md" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib" />

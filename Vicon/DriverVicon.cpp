@@ -220,9 +220,11 @@ CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
     m_arMatrix3DNames        = message.GetParams().value(ATTRIB_CHECKINIT_3DNAMES, std::vector<std::string>{});
     m_arMatrix3DChannelIndex = message.GetParams().value(ATTRIB_CHECKINIT_3DINDICES, std::vector<int>{});
 
-    m_bRunning               = true;
-    m_LastFrameNumber        = 0;
-    m_InitialFrameNumber     = 0;
+    // Reset frame tracking state (but don't set m_bRunning yet to avoid race condition)
+    m_LastFrameNumber    = 0;
+    m_InitialFrameNumber = 0;
+    m_LastFPSFrameNumber = 0;
+    m_CurrentFPS         = 0.0;
 
     if (!Connect())
     {
@@ -231,7 +233,10 @@ CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
         m_bRunning = false;
     }
     else
+    {
         m_arValues.resize(m_arChannelNames.size(), 0);
+        m_bRunning = true;  // Only set after successful connect to avoid race condition
+    }
 
     reply->GetParams()[ATTRIB_RESULT]          = Result;
     reply->GetParams()[ATTRIB_RESULT_FEEDBACK] = Feedback;
@@ -256,13 +261,36 @@ bool DriverVicon::Run()
                 m_LastFrameNumber = currentFrameNumber.FrameNumber;
                 if (m_InitialFrameNumber == 0)
                 {
-                    m_InitialFrameNumber = m_LastFrameNumber;
+                    m_InitialFrameNumber = m_LastFrameNumber.load();
                 }
 
                 VICONSDK::Output_GetFrameRate Rate         = m_Client.GetFrameRate();
                 VICONSDK::Output_GetTimecode  timecode     = m_Client.GetTimecode();
                 double                        RelativeTime = (m_LastFrameNumber - m_InitialFrameNumber) / Rate.FrameRateHz;
-                m_arValues.push_back(m_LastFrameNumber);
+
+                // Calculate actual FPS based on frame count and elapsed time
+                auto now = std::chrono::steady_clock::now();
+                if (m_LastFPSFrameNumber == 0)
+                {
+                    // Initialize FPS tracking
+                    m_LastFPSUpdateTime  = now;
+                    m_LastFPSFrameNumber = m_LastFrameNumber.load();
+                }
+                else
+                {
+                    auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastFPSUpdateTime).count();
+                    if (elapsedMs >= 1000) // Update FPS every second
+                    {
+                        unsigned int framesDelta = m_LastFrameNumber - m_LastFPSFrameNumber;
+                        m_CurrentFPS             = framesDelta * 1000.0 / elapsedMs;
+                        m_LastFPSUpdateTime      = now;
+                        m_LastFPSFrameNumber     = m_LastFrameNumber.load();
+                    }
+                }
+
+                // Display frame number and FPS in top right corner of console
+                PrintStatusTopRight(fmt::format("Frame: {}  FPS: {:.1f}", m_LastFrameNumber.load(), m_CurrentFPS.load()));
+                m_arValues.push_back(m_LastFrameNumber.load());
                 m_arValues.push_back(RelativeTime);
 
                 // get 6DOF data

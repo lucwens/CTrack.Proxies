@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     if (parameters.isInitializedFromJson())
     {
         PortNumber  = parameters.getInt(TCPPORT, 40001);
-        showConsole = parameters.getBool(SHOWCONSOLE, false);
+        showConsole = parameters.getBool(SHOWCONSOLE, true);
     }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
 
@@ -130,7 +130,9 @@ int main(int argc, char *argv[])
             Running
             */
             //------------------------------------------------------------------------------------------------------------------
-            if (driver->Run())
+            // Skip driver->Run() if stress test is handling tracking to avoid race conditions
+            bool stressTestTracking = stressTest && stressTest->IsRunning() && stressTest->IsTracking();
+            if (!stressTestTracking && driver->Run())
             {
                 std::string         ValueString, FullLine;
                 std::vector<double> arValues;

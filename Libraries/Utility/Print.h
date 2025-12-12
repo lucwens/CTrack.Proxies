@@ -26,6 +26,7 @@ void SetConsoleTabText(const char *newTitle);
 void SetConsoleTabBackgroundColor(int Color);
 void EnableAnsiColors();
 void PrintTimeStamp();
+void PrintStatusTopRight(const std::string &status);
 
 template <typename... Args> void PrintColor(int r, int g, int b, const std::string &format, Args &&...args)
 {
