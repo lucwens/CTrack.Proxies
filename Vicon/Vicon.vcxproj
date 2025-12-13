@@ -318,6 +318,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="TracyProfiling.md" />
+    <None Include="ViconTest.md" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib" />

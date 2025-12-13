@@ -193,6 +193,9 @@
     <None Include="TracyProfiling.md">
       <Filter>Documentation</Filter>
     </None>
+    <None Include="ViconTest.md">
+      <Filter>Documentation</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib">
