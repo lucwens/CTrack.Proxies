@@ -1,6 +1,6 @@
 
 #include "LeicaDriver.h"
-#include "../Libraries/StressTest/StressTest.h"
+#include "../Libraries/Testing/StressTest.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
 #include "../Libraries/Utility/errorException.h"

@@ -148,12 +148,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\tracy\public\TracyClient.cpp" />
     <ClCompile Include="..\Libraries\TCP\Message.cpp" />
     <ClCompile Include="..\Libraries\TCP\MessageResponder.cpp" />
     <ClCompile Include="..\Libraries\TCP\Request.cpp" />
     <ClCompile Include="..\Libraries\TCP\Subscription.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp" />
     <ClCompile Include="..\Libraries\TCP\TCPTelegram.cpp" />
+    <ClCompile Include="..\Libraries\Testing\StressTest.cpp" />
     <ClCompile Include="..\Libraries\Utility\baseUnits.cpp" />
     <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -173,14 +175,12 @@
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
-    <ClCompile Include="..\Libraries\StressTest\StressTest.cpp" />
     <ClCompile Include="LeicaDriver.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
     <ClInclude Include="..\Libraries\Driver\IDriver.h" />
-    <ClInclude Include="..\Libraries\StressTest\StressTest.h" />
     <ClInclude Include="..\Libraries\TCP\Message.h" />
     <ClInclude Include="..\Libraries\TCP\MessageResponder.h" />
     <ClInclude Include="..\Libraries\TCP\Request.h" />
@@ -188,6 +188,7 @@
     <ClInclude Include="..\Libraries\TCP\Subscription.h" />
     <ClInclude Include="..\Libraries\TCP\TCPCommunication.h" />
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h" />
+    <ClInclude Include="..\Libraries\Testing\StressTest.h" />
     <ClInclude Include="..\Libraries\Utility\baseUnits.h" />
     <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h" />
     <ClInclude Include="..\Libraries\Utility\errorException.h" />

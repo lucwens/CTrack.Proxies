@@ -13,22 +13,25 @@
       <UniqueIdentifier>{def92487-9f98-48ed-9585-ae7922b656f7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries">
-      <UniqueIdentifier>{786b2f4c-9dc7-4fec-9685-b8bb3e71274c}</UniqueIdentifier>
+      <UniqueIdentifier>{c7cbe46f-92c6-4ca9-9b58-4a3b75d34832}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\TCP">
-      <UniqueIdentifier>{708cdbc3-651e-4afb-a193-0173a38cb907}</UniqueIdentifier>
+      <UniqueIdentifier>{cf281b96-f20c-4389-b161-e1edf93c9972}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\TCP\Message">
-      <UniqueIdentifier>{e03754c7-8fa9-419c-8816-99cfb2d72b91}</UniqueIdentifier>
+      <UniqueIdentifier>{8cd28975-a35a-434f-a8ba-60d304a1b680}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\Utility">
-      <UniqueIdentifier>{d0894cf2-77b0-4d2d-8fb4-ed41302130db}</UniqueIdentifier>
+      <UniqueIdentifier>{e6661fa3-9179-42d3-bffa-9ec9ee57b565}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\XML">
-      <UniqueIdentifier>{fc7ad93c-ba80-4e9b-b80e-3c8802f29f78}</UniqueIdentifier>
+      <UniqueIdentifier>{83ac36cb-56ca-473d-9bcb-a32c43b3f2c5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Libraries\Driver">
-      <UniqueIdentifier>{682c8ca5-826f-460e-8ba9-f60c81a27079}</UniqueIdentifier>
+      <UniqueIdentifier>{9964d086-1a83-453e-8e83-6aed49b1d688}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries\Testing">
+      <UniqueIdentifier>{536b63c0-74be-4148-83d5-5a903ebfca1d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +59,12 @@
     <ClCompile Include="..\Libraries\TCP\Subscription.cpp">
       <Filter>Libraries\TCP\Message</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
     <ClCompile Include="..\Libraries\Utility\FileReader.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
@@ -68,6 +77,9 @@
     <ClCompile Include="..\Libraries\Utility\NetworkErrorTable.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
+      <Filter>Libraries\Utility</Filter>
+    </ClCompile>
     <ClCompile Include="..\Libraries\Utility\os.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
@@ -75,12 +87,6 @@
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\StringUtilities.cpp">
-      <Filter>Libraries\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\Utility\baseUnits.cpp">
-      <Filter>Libraries\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Libraries\Utility\Orientations.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
     <ClCompile Include="..\Libraries\XML\DumpTinyXML.cpp">
@@ -95,17 +101,14 @@
     <ClCompile Include="..\Libraries\XML\XML.cpp">
       <Filter>Libraries\XML</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
-      <Filter>Libraries\Utility</Filter>
+    <ClCompile Include="..\Libraries\Testing\StressTest.cpp">
+      <Filter>Libraries\Testing</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\StressTest\StressTest.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
+      <Filter>Libraries\Testing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="LeicaDriver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -114,6 +117,9 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\TCP\TCPTelegram.h">
       <Filter>Libraries\TCP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\TCP\Message.h">
       <Filter>Libraries\TCP\Message</Filter>
@@ -130,6 +136,12 @@
     <ClInclude Include="..\Libraries\TCP\Subscription.h">
       <Filter>Libraries\TCP\Message</Filter>
     </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\baseUnits.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="..\Libraries\Utility\errorException.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
@@ -145,6 +157,9 @@
     <ClInclude Include="..\Libraries\Utility\NetworkErrorTable.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\Libraries\Utility\Orientations.h">
+      <Filter>Libraries\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="..\Libraries\Utility\os.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
@@ -152,12 +167,6 @@
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\StringUtilities.h">
-      <Filter>Libraries\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\Utility\baseUnits.h">
-      <Filter>Libraries\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\Utility\Orientations.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\XML\DumpTinyXML.h">
@@ -175,12 +184,11 @@
     <ClInclude Include="..\Libraries\XML\XML.h">
       <Filter>Libraries\XML</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
-      <Filter>Libraries\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Libraries\StressTest\StressTest.h" />
     <ClInclude Include="..\Libraries\Driver\IDriver.h">
       <Filter>Libraries\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Testing\StressTest.h">
+      <Filter>Libraries\Testing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
