@@ -108,12 +108,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>..\..\tracy\public;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>..\..\bin64\$(Configuration)\Proxy\$(ProjectName)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>..\..\tracy\public;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profiler|Win32'">
@@ -164,7 +164,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;TRACY_ON_DEMAND;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -186,7 +186,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;TRACY_ENABLE;TRACY_ON_DEMAND;%(PreprocessorDefinitions);WIN32</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalOptions> /utf-8 %(AdditionalOptions)</AdditionalOptions>
@@ -283,13 +283,12 @@
     </ClCompile>
     <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
+    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
     <ClInclude Include="..\Libraries\TCP\Message.h" />
     <ClInclude Include="..\Libraries\TCP\MessageResponder.h" />
     <ClInclude Include="..\Libraries\TCP\Request.h" />
@@ -315,10 +314,6 @@
     <ClInclude Include="..\Libraries\XML\XML.h" />
     <ClInclude Include="DriverVicon.h" />
     <ClInclude Include="StressTest.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TracyProfiling.md" />
-    <None Include="ViconTest.md" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib" />

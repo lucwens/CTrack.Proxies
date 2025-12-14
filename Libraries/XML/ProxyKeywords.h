@@ -197,3 +197,4 @@ COMMANDLINE PARAMETERS
 constexpr const char *SERIAL                          = "serial";
 constexpr const char *SHOWCONSOLE                     = "showconsole";
 constexpr const char *TCPPORT                         = "tcpport";
+constexpr const char *PROFILING                       = "profiling";

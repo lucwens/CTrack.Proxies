@@ -27,6 +27,9 @@
     <Filter Include="Libraries\XML">
       <UniqueIdentifier>{fc7ad93c-ba80-4e9b-b80e-3c8802f29f78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\Driver">
+      <UniqueIdentifier>{682c8ca5-826f-460e-8ba9-f60c81a27079}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -94,6 +97,9 @@
     </ClCompile>
     <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
       <Filter>Libraries\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\StressTest\StressTest.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +177,10 @@
     </ClInclude>
     <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
       <Filter>Libraries\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\StressTest\StressTest.h" />
+    <ClInclude Include="..\Libraries\Driver\IDriver.h">
+      <Filter>Libraries\Driver</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

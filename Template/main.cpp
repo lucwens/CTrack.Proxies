@@ -1,4 +1,5 @@
 #include "Driver.h"
+#include "../Libraries/StressTest/StressTest.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
 #include "../Libraries/Utility/errorException.h"
@@ -9,6 +10,7 @@
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/Utility/CommandLineParameters.h"
+#include "../Libraries/Utility/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
@@ -29,6 +31,7 @@ int main(int argc, char *argv[])
     // command line parameters
     unsigned short PortNumber(40001);
     bool           showConsole{true};
+    bool           profiling{false};
 
     CommandLineParameters parameters(argc, argv);
 
@@ -36,8 +39,12 @@ int main(int argc, char *argv[])
     {
         PortNumber  = parameters.getInt(TCPPORT, 40001);
         showConsole = parameters.getBool(SHOWCONSOLE, false);
+        profiling   = parameters.getBool(PROFILING, false);
     }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
+
+    // Set global profiling flag - controls Tracy profiling in all components
+    CTrack::SetProfilingEnabled(profiling);
 
     ShowConsole(showConsole);
     if (showConsole)
@@ -53,6 +60,18 @@ int main(int argc, char *argv[])
         PrintInfo("i : print info");
         PrintInfo("l : report last coordinates");
         PrintInfo("b : send big TCP package");
+        PrintInfo("z : start stress test");
+        PrintInfo("y : stop stress test");
+#ifdef TRACY_ENABLE
+        if (CTrack::IsProfilingEnabled())
+        {
+            PrintInfo("Tracy profiling ENABLED - connect Tracy profiler to capture data");
+        }
+        else
+        {
+            PrintInfo("Tracy profiling DISABLED (use profiling=true in settings to enable)");
+        }
+#endif
     }
 
     // startup server object
@@ -60,6 +79,7 @@ int main(int argc, char *argv[])
     CCommunicationObject              TCPServer;
     std::vector<CTrack::Subscription> subscriptions;
     std::unique_ptr<CTrack::Message>  manualMessage;
+    std::unique_ptr<StressTest>       stressTest;
     bool                              bContinueLoop = true;
 
     // responders & handlers
@@ -82,8 +102,12 @@ int main(int argc, char *argv[])
     TCPServer.Open(TCP_SERVER, PortNumber);
     PrintInfo("Server started on port {}", PortNumber);
 
+    // Initialize stress test
+    stressTest = std::make_unique<StressTest>(driver.get(), TCPServer.GetMessageResponder());
+
     while (bContinueLoop)
     {
+        CTRACK_FRAME_MARK();
         try
         {
             // auto                      v = FileReader::ReadNumbersFromFile("C:\\CTrack-Software\\Testing\\AMT with headers.txt");
@@ -124,7 +148,9 @@ int main(int argc, char *argv[])
             Running
             */
             //------------------------------------------------------------------------------------------------------------------
-            if (driver->Run())
+            // Skip driver->Run() if stress test is handling tracking
+            bool stressTestTracking = stressTest && stressTest->IsRunning() && stressTest->IsTracking();
+            if (!stressTestTracking && driver->Run())
             {
                 //                 std::string ValueString, FullLine;
                 //                 for (auto &value : driver->m_arDoubles)
@@ -209,6 +235,30 @@ int main(int argc, char *argv[])
                         ShowConsole(false);
                     };
                     break;
+                    case 'z':
+                    {
+                        if (stressTest && !stressTest->IsRunning())
+                        {
+                            stressTest->Start();
+                        }
+                        else if (stressTest && stressTest->IsRunning())
+                        {
+                            PrintWarning("Stress test already running - press 'y' to stop");
+                        }
+                    };
+                    break;
+                    case 'y':
+                    {
+                        if (stressTest && stressTest->IsRunning())
+                        {
+                            stressTest->Stop();
+                        }
+                        else
+                        {
+                            PrintWarning("Stress test is not running");
+                        }
+                    };
+                    break;
                 }
             }
         }
@@ -225,6 +275,14 @@ int main(int argc, char *argv[])
             TCPServer.PushSendPackage(TCPGRam);
         }
     }
+    // Stop stress test if running before shutdown
+    if (stressTest && stressTest->IsRunning())
+    {
+        PrintInfo("Stopping stress test before shutdown...");
+        stressTest->Stop();
+    }
+    stressTest.reset();
+
     PrintInfo("Closing server");
     TCPServer.Close();
     return 0;

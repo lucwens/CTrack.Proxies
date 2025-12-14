@@ -173,11 +173,14 @@
     <ClCompile Include="..\Libraries\XML\TinyXML_AttributeValues.cpp" />
     <ClCompile Include="..\Libraries\XML\TinyXML_Extra.cpp" />
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
+    <ClCompile Include="..\Libraries\StressTest\StressTest.cpp" />
     <ClCompile Include="LeicaDriver.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h" />
+    <ClInclude Include="..\Libraries\Driver\IDriver.h" />
+    <ClInclude Include="..\Libraries\StressTest\StressTest.h" />
     <ClInclude Include="..\Libraries\TCP\Message.h" />
     <ClInclude Include="..\Libraries\TCP\MessageResponder.h" />
     <ClInclude Include="..\Libraries\TCP\Request.h" />

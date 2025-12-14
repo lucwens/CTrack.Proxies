@@ -1,13 +1,16 @@
 #include "StressTest.h"
-#include "../Libraries/Utility/Print.h"
-#include "../Libraries/Utility/Logging.h"
-#include "../Libraries/Utility/ProfilingControl.h"
-#include "../Libraries/XML/ProxyKeywords.h"
+#include "../Utility/Print.h"
+#include "../Utility/Logging.h"
+#include "../XML/ProxyKeywords.h"
 
 #include <filesystem>
 #include <fmt/core.h>
 #include <iomanip>
 #include <sstream>
+
+#ifdef TRACY_ENABLE
+#include <tracy/Tracy.hpp>
+#endif
 
 StressTest::StressTest(CTrack::IDriver* driver, std::shared_ptr<CTrack::MessageResponder> responder)
     : m_pDriver(driver)
@@ -399,7 +402,9 @@ std::string StressTest::ActionToString(TestAction action) const
 
 bool StressTest::DoHardwareDetect()
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::HardwareDetect", 0x44FF44);  // Green
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::HardwareDetect", 0x44FF44);  // Green
+#endif
     LogInfo("Executing Hardware Detect...");
     PrintInfo(fmt::format("STRESS TEST [{}]: Hardware Detect", m_DeviceName));
 
@@ -424,7 +429,9 @@ bool StressTest::DoHardwareDetect()
 
 bool StressTest::DoConfigDetect()
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::ConfigDetect", 0xFFAA00);  // Orange
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::ConfigDetect", 0xFFAA00);  // Orange
+#endif
     LogInfo("Executing Config Detect...");
     PrintInfo(fmt::format("STRESS TEST [{}]: Config Detect", m_DeviceName));
 
@@ -448,7 +455,9 @@ bool StressTest::DoConfigDetect()
 
 bool StressTest::DoStartTracking()
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::StartTracking", 0x00FFFF);  // Cyan
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::StartTracking", 0x00FFFF);  // Cyan
+#endif
     if (m_bCurrentlyTracking)
     {
         LogWarning("Already tracking - skipping start");
@@ -482,7 +491,9 @@ bool StressTest::DoStartTracking()
 
 bool StressTest::DoStopTracking()
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::StopTracking", 0xFF4444);  // Red
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::StopTracking", 0xFF4444);  // Red
+#endif
     if (!m_bCurrentlyTracking)
     {
         LogWarning("Not tracking - skipping stop");
@@ -510,7 +521,9 @@ bool StressTest::DoStopTracking()
 
 bool StressTest::DoShutdown()
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::Shutdown", 0xFF8800);  // Dark Orange
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::Shutdown", 0xFF8800);  // Dark Orange
+#endif
     LogInfo("Executing Final Shutdown...");
     PrintInfo(fmt::format("STRESS TEST [{}]: Final Shutdown", m_DeviceName));
 
@@ -537,7 +550,9 @@ bool StressTest::DoShutdown()
 
 void StressTest::DoWait(int minSeconds, int maxSeconds)
 {
-    CTRACK_ZONE_SCOPED_NC("StressTest::Wait", 0x888888);  // Gray
+#ifdef TRACY_ENABLE
+    ZoneScopedNC("StressTest::Wait", 0x888888);  // Gray
+#endif
     std::uniform_int_distribution<int> waitDist(minSeconds, maxSeconds);
     int                                waitSeconds = waitDist(m_RandomEngine);
 
@@ -559,12 +574,16 @@ void StressTest::DoWait(int minSeconds, int maxSeconds)
         // If tracking, call Run() frequently to process frames and update display
         if (m_bCurrentlyTracking && m_pDriver->IsRunning())
         {
-            CTRACK_ZONE_SCOPED_NC("StressTest::FrameProcessing", 0x00FFFF);  // Cyan - matches tracking color
+#ifdef TRACY_ENABLE
+            ZoneScopedNC("StressTest::FrameProcessing", 0x00FFFF);  // Cyan - matches tracking color
+#endif
             // Poll for ~1 second at device-specific rate
             int framesProcessed = 0;
             for (int i = 0; i < framesPerSecond && !m_bStopRequested; i++)
             {
-                CTRACK_ZONE_SCOPED_NC("StressTest::Frame", 0x00AAAA);  // Darker cyan for individual frames
+#ifdef TRACY_ENABLE
+                ZoneScopedNC("StressTest::Frame", 0x00AAAA);  // Darker cyan for individual frames
+#endif
                 if (!m_pDriver->Run())
                 {
                     LogWarning(fmt::format("{}: Run() returned false during wait - connection may have dropped", m_DeviceName));
@@ -573,7 +592,9 @@ void StressTest::DoWait(int minSeconds, int maxSeconds)
                 framesProcessed++;
                 std::this_thread::sleep_for(std::chrono::milliseconds(m_PollingIntervalMs));
             }
-            CTRACK_PLOT("Frames/sec", static_cast<int64_t>(framesProcessed));
+#ifdef TRACY_ENABLE
+            TracyPlot("Frames/sec", static_cast<int64_t>(framesProcessed));
+#endif
             if (elapsedSeconds % 10 == 0)  // Log every 10 seconds to avoid spam
             {
                 LogInfo(fmt::format("Processed {} Run() calls in last second (FPS: {:.1f})",
@@ -669,7 +690,9 @@ void StressTest::LogInfo(const std::string &message)
 {
     LogMessage("INFO", message);
     LOG_INFO(fmt::format("STRESS_TEST: {}", message));
-    CTRACK_MESSAGE_C(message.c_str(), message.size(), 0x44FF44);  // Green for info
+#ifdef TRACY_ENABLE
+    TracyMessageC(message.c_str(), message.size(), 0x44FF44);  // Green for info
+#endif
 }
 
 void StressTest::LogWarning(const std::string &message)
@@ -677,7 +700,9 @@ void StressTest::LogWarning(const std::string &message)
     LogMessage("WARNING", message);
     PrintWarning(fmt::format("STRESS_TEST: {}", message));
     LOG_WARNING(fmt::format("STRESS_TEST: {}", message));
-    CTRACK_MESSAGE_C(message.c_str(), message.size(), 0xFFFF00);  // Yellow for warning
+#ifdef TRACY_ENABLE
+    TracyMessageC(message.c_str(), message.size(), 0xFFFF00);  // Yellow for warning
+#endif
 }
 
 void StressTest::LogError(const std::string &message)
@@ -685,7 +710,9 @@ void StressTest::LogError(const std::string &message)
     LogMessage("ERROR", message);
     PrintError(fmt::format("STRESS_TEST: {}", message));
     LOG_ERROR_MSG(fmt::format("STRESS_TEST: {}", message));
-    CTRACK_MESSAGE_C(message.c_str(), message.size(), 0xFF4444);  // Red for error
+#ifdef TRACY_ENABLE
+    TracyMessageC(message.c_str(), message.size(), 0xFF4444);  // Red for error
+#endif
 }
 
 void StressTest::LogAction(TestAction action, bool success, const std::string &details)
@@ -693,12 +720,14 @@ void StressTest::LogAction(TestAction action, bool success, const std::string &d
     std::string status   = success ? "SUCCESS" : "FAILED";
     std::string logEntry = fmt::format("Action: {} | Status: {} | {}", ActionToString(action), status, details);
     LogMessage(success ? "INFO" : "ERROR", logEntry);
+#ifdef TRACY_ENABLE
     if (success)
     {
-        CTRACK_MESSAGE_C(logEntry.c_str(), logEntry.size(), 0x44FF44);  // Green for success
+        TracyMessageC(logEntry.c_str(), logEntry.size(), 0x44FF44);  // Green for success
     }
     else
     {
-        CTRACK_MESSAGE_C(logEntry.c_str(), logEntry.size(), 0xFF4444);  // Red for failure
+        TracyMessageC(logEntry.c_str(), logEntry.size(), 0xFF4444);  // Red for failure
     }
+#endif
 }

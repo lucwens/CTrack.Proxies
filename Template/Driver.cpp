@@ -5,12 +5,15 @@
 #include "../Libraries/utility/FileReader.h"
 #include "../Libraries/utility/Print.h"
 #include "../Libraries/Utility/errorException.h"
+#include "../Libraries/Utility/ProfilingControl.h"
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <fmt/core.h>
 
 CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
 {
+    CTRACK_ZONE_SCOPED_NC("Template::HardwareDetect", 0x4488FF);
     bool                                          result            = true;
     CTrack::Reply                                 reply             = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     bool                                          present           = true;
@@ -51,6 +54,7 @@ CTrack::Reply Driver::HardwareDetect(const CTrack::Message &message)
 
 CTrack::Reply Driver::ConfigDetect(const CTrack::Message &message)
 {
+    CTRACK_ZONE_SCOPED_NC("Template::ConfigDetect", 0x44FF88);
     bool          Result                                    = true;
     CTrack::Reply reply                                     = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
 
@@ -112,6 +116,7 @@ int Driver::FindChannelTypeIndex(const int Value)
 
 CTrack::Reply Driver::CheckInitialize(const CTrack::Message &message)
 {
+    CTRACK_ZONE_SCOPED_NC("Template::CheckInitialize", 0xFF8844);
     bool          Result = true;
     std::string   ResultFeedback;
     CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
@@ -170,6 +175,7 @@ CTrack::Reply Driver::CheckInitialize(const CTrack::Message &message)
 
 bool Driver::Run()
 {
+    CTRACK_ZONE_SCOPED_NC("Template::Run", 0x88FF44);
     if (m_bRunning)
     {
         m_arDoubles[0] += m_TimeStep;
@@ -201,6 +207,26 @@ bool Driver::Run()
         {
             m_matrixDataCurrentRow = m_matrixData.begin();
         }
+
+        // Update frame number and FPS
+        m_FrameNumber++;
+        auto now = std::chrono::steady_clock::now();
+        if (m_LastFPSFrameNumber == 0)
+        {
+            m_LastFPSUpdateTime  = now;
+            m_LastFPSFrameNumber = m_FrameNumber;
+        }
+        else
+        {
+            auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastFPSUpdateTime).count();
+            if (elapsedMs >= 1000)
+            {
+                uint32_t framesDelta = m_FrameNumber - m_LastFPSFrameNumber;
+                m_CurrentFPS         = framesDelta * 1000.0 / elapsedMs;
+                m_LastFPSUpdateTime  = now;
+                m_LastFPSFrameNumber = m_FrameNumber;
+            }
+        }
     }
     return m_bRunning;
 }
@@ -217,10 +243,157 @@ bool Driver::GetValues(std::vector<double> &values)
 
 CTrack::Reply Driver::ShutDown(const CTrack::Message &message)
 {
+    CTRACK_ZONE_SCOPED_NC("Template::ShutDown", 0xFF4444);
     bool          Result              = true;
     CTrack::Reply reply               = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
 
     m_bRunning                        = false;
     reply->GetParams()[ATTRIB_RESULT] = Result;
     return reply;
+}
+
+//-----------------------------------------------------------------------------
+// IDriver Interface Implementation
+//-----------------------------------------------------------------------------
+
+bool Driver::HardwareDetect(std::string& feedback)
+{
+    // Create a dummy message and call the message-based version
+    CTrack::Message message(TAG_COMMAND_HARDWAREDETECT);
+    CTrack::Reply   reply = HardwareDetect(message);
+
+    if (reply)
+    {
+        bool present = reply->GetParams().value(ATTRIB_HARDWAREDETECT_PRESENT, false);
+        feedback     = reply->GetParams().value(ATTRIB_HARDWAREDETECT_FEEDBACK, std::string("No feedback"));
+
+        if (!present)
+        {
+            m_LastError = feedback;
+        }
+        return present;
+    }
+
+    feedback    = "Hardware detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool Driver::ConfigDetect(std::string& feedback)
+{
+    // Create a dummy message and call the message-based version
+    CTrack::Message message(TAG_COMMAND_CONFIGDETECT);
+    CTrack::Reply   reply = ConfigDetect(message);
+
+    if (reply)
+    {
+        auto& params = reply->GetParams();
+
+        // Build feedback string from detected configuration
+        std::string configInfo;
+
+        if (params.contains(ATTRIB_CONFIG_3DMARKERS))
+        {
+            auto markers = params[ATTRIB_CONFIG_3DMARKERS].get<std::vector<std::string>>();
+            configInfo   = fmt::format("{} 3D markers", markers.size());
+        }
+
+        if (params.contains(ATTRIB_6DOF))
+        {
+            int subjectCount = 0;
+            for (auto& [key, value] : params[ATTRIB_6DOF].items())
+            {
+                subjectCount++;
+            }
+            if (!configInfo.empty())
+            {
+                configInfo += ", ";
+            }
+            configInfo += fmt::format("{} 6DOF objects", subjectCount);
+        }
+
+        if (params.contains(ATTRIB_PROBES))
+        {
+            int probeCount = 0;
+            for (auto& [key, value] : params[ATTRIB_PROBES].items())
+            {
+                probeCount++;
+            }
+            if (!configInfo.empty())
+            {
+                configInfo += ", ";
+            }
+            configInfo += fmt::format("{} probes", probeCount);
+        }
+
+        feedback = configInfo.empty() ? "No configuration detected" : configInfo;
+        return true;
+    }
+
+    feedback    = "Config detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool Driver::Initialize(double frequencyHz)
+{
+    // For simulation, we need a simulation file - create minimal initialization
+    m_MeasurementFrequencyHz = frequencyHz;
+    m_TimeStep               = 1.0 / m_MeasurementFrequencyHz;
+    m_FrameNumber            = 0;
+    m_CurrentFPS             = 0.0;
+    m_LastFPSFrameNumber     = 0;
+
+    // If no simulation data is loaded, create minimal data for stress testing
+    if (m_matrixData.empty())
+    {
+        // Create a simple 3-channel simulated data set
+        m_channelNames = {"Time", "X", "Y", "Z"};
+        m_channelTypes = {0, 1, 1, 1};  // Time + 3D position
+        m_arDoubles.resize(m_channelNames.size(), 0.0);
+
+        // Create simple circular motion simulation data
+        m_matrixData.clear();
+        for (int i = 0; i < 100; i++)
+        {
+            double angle = 2.0 * 3.14159265 * i / 100.0;
+            std::vector<double> row = {
+                static_cast<double>(i) / frequencyHz,
+                100.0 * std::cos(angle),
+                100.0 * std::sin(angle),
+                0.0
+            };
+            m_matrixData.push_back(row);
+        }
+        m_matrixDataCurrentRow = m_matrixData.begin();
+    }
+
+    m_bRunning   = true;
+    m_bConnected = true;
+    return true;
+}
+
+bool Driver::Shutdown()
+{
+    m_bRunning = false;
+    return true;
+}
+
+bool Driver::HasCapability(const std::string& capability) const
+{
+    // Template/Simulation driver supports basic capabilities
+    return (capability == "6DOF" ||
+            capability == "Markers" ||
+            capability == "Probes" ||
+            capability == "Simulation");
+}
+
+int Driver::GetRecommendedPollingIntervalMs() const
+{
+    // Return interval based on configured frequency
+    if (m_MeasurementFrequencyHz > 0)
+    {
+        return static_cast<int>(1000.0 / m_MeasurementFrequencyHz);
+    }
+    return 100; // Default 10Hz for simulation
 }

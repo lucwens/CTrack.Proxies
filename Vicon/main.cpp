@@ -8,6 +8,7 @@
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/Utility/CommandLineParameters.h"
+#include "../Libraries/Utility/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
@@ -31,6 +32,7 @@ int main(int argc, char *argv[])
     // command line parameters
     unsigned short PortNumber(40001);
     bool           showConsole{true};
+    bool           profiling{false};
 
     CommandLineParameters parameters(argc, argv);
 
@@ -38,8 +40,12 @@ int main(int argc, char *argv[])
     {
         PortNumber  = parameters.getInt(TCPPORT, 40001);
         showConsole = parameters.getBool(SHOWCONSOLE, true);
+        profiling   = parameters.getBool(PROFILING, false);
     }
     PortNumber = FindAvailableTCPPortNumber(PortNumber);
+
+    // Set global profiling flag - controls Tracy profiling in all components
+    CTrack::SetProfilingEnabled(profiling);
 
     ShowConsole(showConsole);
     if (showConsole)
@@ -52,6 +58,16 @@ int main(int argc, char *argv[])
         PrintInfo("t : stop track");
         PrintInfo("z : start stress test");
         PrintInfo("y : stop stress test");
+#ifdef TRACY_ENABLE
+        if (CTrack::IsProfilingEnabled())
+        {
+            PrintInfo("Tracy profiling ENABLED - connect Tracy profiler to capture data");
+        }
+        else
+        {
+            PrintInfo("Tracy profiling DISABLED (use profiling=true in settings to enable)");
+        }
+#endif
     }
 
     // startup server object
@@ -90,6 +106,7 @@ int main(int argc, char *argv[])
 
     while (bContinueLoop)
     {
+        CTRACK_FRAME_MARK();
         try
         {
 

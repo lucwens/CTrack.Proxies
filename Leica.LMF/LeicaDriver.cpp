@@ -5,6 +5,7 @@
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/Utility/Print.h"
 #include <msclr/marshal_cppstd.h>
+#include <vcclr.h>
 
 std::string simulationSerial("506432");
 std::string simulationIP("AT960LRSimulator#506432");
@@ -18,7 +19,228 @@ using namespace LMF::Tracker::BasicTypes;           // For Value types like Bool
 
 //------------------------------------------------------------------------------------------------------------------
 /*
-CLeicaDriver
+LeicaDriver - Native wrapper implementing IDriver interface
+*/
+//------------------------------------------------------------------------------------------------------------------
+
+LeicaDriver::LeicaDriver()
+{
+    m_pManagedDriver = gcnew CLeicaLMFDriver();
+}
+
+LeicaDriver::~LeicaDriver()
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        delete static_cast<CLeicaLMFDriver^>(m_pManagedDriver);
+        m_pManagedDriver = nullptr;
+    }
+}
+
+bool LeicaDriver::Connect()
+{
+    m_bConnected = true;
+    return true;
+}
+
+void LeicaDriver::Disconnect()
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        CTrack::Message message(TAG_COMMAND_SHUTDOWN);
+        static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->ShutDown(message);
+    }
+    m_bConnected = false;
+    m_bRunning   = false;
+}
+
+bool LeicaDriver::HardwareDetect(std::string& feedback)
+{
+    CTrack::Message message(TAG_COMMAND_HARDWAREDETECT);
+    CTrack::Reply   reply = HardwareDetect(message);
+
+    if (reply)
+    {
+        bool present = reply->GetParams().value(ATTRIB_HARDWAREDETECT_PRESENT, false);
+
+        // Build feedback from detected trackers
+        auto names = reply->GetParams().value(ATTRIB_HARDWAREDETECT_NAMES, std::vector<std::string>{});
+        auto types = reply->GetParams().value(ATTRIB_HARDWAREDETECT_TYPE, std::vector<std::string>{});
+
+        if (!names.empty())
+        {
+            feedback = fmt::format("Found {} tracker(s): ", names.size());
+            for (size_t i = 0; i < names.size(); i++)
+            {
+                if (i > 0) feedback += ", ";
+                feedback += names[i];
+                if (i < types.size()) feedback += " (" + types[i] + ")";
+            }
+        }
+        else
+        {
+            feedback = present ? "Tracker detected" : "No trackers found";
+        }
+
+        if (!present)
+        {
+            m_LastError = feedback;
+        }
+        return present;
+    }
+
+    feedback    = "Hardware detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool LeicaDriver::ConfigDetect(std::string& feedback)
+{
+    CTrack::Message message(TAG_COMMAND_CONFIGDETECT);
+    CTrack::Reply   reply = ConfigDetect(message);
+
+    if (reply)
+    {
+        std::string result = reply->GetParams().value(ATTRIB_RESULT, std::string(""));
+        if (!result.empty())
+        {
+            feedback = result;
+            return false; // Result contains error message
+        }
+        feedback = "Configuration detected";
+        return true;
+    }
+
+    feedback    = "Config detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool LeicaDriver::Initialize(double frequencyHz)
+{
+    m_MeasurementFrequencyHz = frequencyHz;
+    m_FrameNumber            = 0;
+    m_CurrentFPS             = 0.0;
+    m_LastFPSFrameNumber     = 0;
+
+    CTrack::Message message(TAG_COMMAND_CHECKINIT);
+    message.GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = frequencyHz;
+
+    CTrack::Reply reply = CheckInitialize(message);
+
+    m_bRunning   = true;
+    m_bConnected = true;
+    return true;
+}
+
+bool LeicaDriver::Run()
+{
+    if (m_bRunning && static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        bool result = static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->Run();
+
+        if (result)
+        {
+            // Update frame number and FPS
+            m_FrameNumber++;
+            auto now = std::chrono::steady_clock::now();
+            if (m_LastFPSFrameNumber == 0)
+            {
+                m_LastFPSUpdateTime  = now;
+                m_LastFPSFrameNumber = m_FrameNumber;
+            }
+            else
+            {
+                auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_LastFPSUpdateTime).count();
+                if (elapsedMs >= 1000)
+                {
+                    uint32_t framesDelta = m_FrameNumber - m_LastFPSFrameNumber;
+                    m_CurrentFPS         = framesDelta * 1000.0 / elapsedMs;
+                    m_LastFPSUpdateTime  = now;
+                    m_LastFPSFrameNumber = m_FrameNumber;
+                }
+            }
+        }
+        return result;
+    }
+    return m_bRunning;
+}
+
+bool LeicaDriver::GetValues(std::vector<double>& values)
+{
+    if (m_bRunning && static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        return static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->GetValues(values);
+    }
+    return false;
+}
+
+bool LeicaDriver::Shutdown()
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        CTrack::Message message(TAG_COMMAND_SHUTDOWN);
+        static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->ShutDown(message);
+    }
+    m_bRunning = false;
+    return true;
+}
+
+bool LeicaDriver::HasCapability(const std::string& capability) const
+{
+    // Leica laser trackers support these capabilities
+    return (capability == "LaserTracker" ||
+            capability == "ADM" ||
+            capability == "IFM" ||
+            capability == "Reflectors" ||
+            capability == "Probes");
+}
+
+std::string LeicaDriver::GetDeviceInfo() const
+{
+    return "Leica LMF SDK Laser Tracker";
+}
+
+CTrack::Reply LeicaDriver::HardwareDetect(const CTrack::Message& message)
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        return static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->HardwareDetect(message);
+    }
+    return nullptr;
+}
+
+CTrack::Reply LeicaDriver::ConfigDetect(const CTrack::Message& message)
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        return static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->ConfigDetect(message);
+    }
+    return nullptr;
+}
+
+CTrack::Reply LeicaDriver::CheckInitialize(const CTrack::Message& message)
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        return static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->CheckInitialize(message);
+    }
+    return nullptr;
+}
+
+CTrack::Reply LeicaDriver::ShutDown(const CTrack::Message& message)
+{
+    if (static_cast<CLeicaLMFDriver^>(m_pManagedDriver) != nullptr)
+    {
+        return static_cast<CLeicaLMFDriver^>(m_pManagedDriver)->ShutDown(message);
+    }
+    m_bRunning = false;
+    return nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------
+/*
+CLeicaLMFDriver - Managed class implementation
 */
 //------------------------------------------------------------------------------------------------------------------
 CLeicaLMFDriver::CLeicaLMFDriver()

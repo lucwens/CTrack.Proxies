@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Documentation">
-      <UniqueIdentifier>{14836a83-5afc-4661-b00a-88ca64f18762}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Libraries">
       <UniqueIdentifier>{bc62a1e0-b5e9-492f-bd1c-b9e17f172650}</UniqueIdentifier>
     </Filter>
@@ -31,11 +28,14 @@
     <Filter Include="Libraries\XML">
       <UniqueIdentifier>{d46bb8ed-f0d7-4b41-a7c6-856db78b5b7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\Driver">
+      <UniqueIdentifier>{148a3828-dc0b-4c7c-be88-1995767efbaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{aae816f2-1e86-45a3-9203-4e51cd48f6ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -108,11 +108,11 @@
     <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="DriverVicon.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -188,18 +188,16 @@
     <ClInclude Include="StressTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TracyProfiling.md">
-      <Filter>Documentation</Filter>
-    </None>
-    <None Include="ViconTest.md">
-      <Filter>Documentation</Filter>
-    </None>
+    <ClInclude Include="..\Libraries\Driver\IDriver.h">
+      <Filter>Libraries\Driver</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
+      <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib">
-      <Filter>Source Files</Filter>
+      <Filter>SDK</Filter>
     </Library>
   </ItemGroup>
 </Project>

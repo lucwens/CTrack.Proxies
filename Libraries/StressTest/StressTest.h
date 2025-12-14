@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Libraries/Driver/IDriver.h"
-#include "../Libraries/TCP/Message.h"
-#include "../Libraries/TCP/MessageResponder.h"
+#include "../Driver/IDriver.h"
+#include "../TCP/Message.h"
+#include "../TCP/MessageResponder.h"
 
 #include <atomic>
 #include <chrono>

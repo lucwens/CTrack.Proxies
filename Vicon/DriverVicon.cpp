@@ -1,5 +1,6 @@
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/StringUtilities.h"
+#include "../Libraries/Utility/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/errorException.h"
@@ -10,23 +11,25 @@
 #include <iostream>
 #include <thread>
 
-#ifdef TRACY_ENABLE
-#include <tracy/Tracy.hpp>
-#endif
-
 constexpr int DELAY_MS = 10;
 
 bool DriverVicon::Connect()
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::Connect", 0x4488FF); // Blue
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::Connect", 0x4488FF); // Blue
     m_Client.Connect("localhost");
     bool bConnected = m_Client.IsConnected().Connected;
     if (!bConnected)
     {
-        PrintError("Failed to connect to Vicon DataStream");
+        m_LastError = "Failed to connect to Vicon DataStream";
+        PrintError(m_LastError);
+        m_bConnected = false;
+        return false;
     }
+
+    // Store SDK version
+    auto Version  = m_Client.GetVersion();
+    m_SDKVersion  = fmt::format("{}.{}.{}.{}", Version.Major, Version.Minor, Version.Point, Version.Revision);
+
     m_Client.EnableDebugData();
     m_Client.EnableCameraCalibrationData();
     m_Client.EnableCentroidData();
@@ -58,24 +61,24 @@ bool DriverVicon::Connect()
     }
     else
     {
-        bConnected = false;
+        bConnected   = false;
+        m_LastError  = "Failed to get initial frames from Vicon DataStream";
     }
+
+    m_bConnected = bConnected;
     return bConnected;
 }
 
 void DriverVicon::Disconnect()
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::Disconnect", 0xFF4444); // Red
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::Disconnect", 0xFF4444); // Red
     m_Client.Disconnect();
+    m_bConnected = false;
 }
 
 CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::HardwareDetect", 0x44FF44); // Green
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::HardwareDetect", 0x44FF44); // Green
     bool                                          bPresent    = false;
     CTrack::Reply                                 reply       = std::make_unique<CTrack::Message>(TAG_COMMAND_HARDWAREDETECT);
     unsigned int                                  CameraCount = 0;
@@ -157,9 +160,7 @@ CTrack::Reply DriverVicon::HardwareDetect(const CTrack::Message &message)
 
 CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::ConfigDetect", 0xFFAA00); // Orange
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::ConfigDetect", 0xFFAA00); // Orange
     CTrack::Reply reply  = std::make_unique<CTrack::Message>(TAG_COMMAND_CONFIGDETECT);
     auto         &params = reply->GetParams();
 
@@ -207,9 +208,7 @@ CTrack::Reply DriverVicon::ConfigDetect(const CTrack::Message &message)
 
 CTrack::Reply DriverVicon::CheckInitialize(const CTrack::Message &message)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::CheckInitialize", 0x00FFFF); // Cyan
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::CheckInitialize", 0x00FFFF); // Cyan
     bool          Result = true;
     std::string   Feedback;
     CTrack::Reply reply      = std::make_unique<CTrack::Message>(TAG_COMMAND_CHECKINIT);
@@ -247,9 +246,7 @@ bool DriverVicon::Run()
 {
     if (m_bRunning)
     {
-#ifdef TRACY_ENABLE
-        ZoneScopedNC("Vicon::Run", 0xFF00FF); // Magenta
-#endif
+        CTRACK_ZONE_SCOPED_NC("Vicon::Run", 0xFF00FF); // Magenta
         auto FrameResult = m_Client.GetFrame();
         if (FrameResult.Result == VICONSDK::Result::Success)
         {
@@ -345,9 +342,7 @@ bool DriverVicon::Run()
 
 bool DriverVicon::GetValues(std::vector<double> &values)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::GetValues", 0x8888FF); // Light Blue
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::GetValues", 0x8888FF); // Light Blue
     if (m_bRunning)
     {
         values = m_arValues;
@@ -358,9 +353,7 @@ bool DriverVicon::GetValues(std::vector<double> &values)
 
 CTrack::Reply DriverVicon::ShutDown(const CTrack::Message &message)
 {
-#ifdef TRACY_ENABLE
-    ZoneScopedNC("Vicon::ShutDown", 0xFF8800); // Dark Orange
-#endif
+    CTRACK_ZONE_SCOPED_NC("Vicon::ShutDown", 0xFF8800); // Dark Orange
     bool Result = true;
     m_bRunning  = false;
 
@@ -369,4 +362,127 @@ CTrack::Reply DriverVicon::ShutDown(const CTrack::Message &message)
     CTrack::Reply reply               = std::make_unique<CTrack::Message>(TAG_COMMAND_SHUTDOWN);
     reply->GetParams()[ATTRIB_RESULT] = Result;
     return reply;
+}
+
+//-----------------------------------------------------------------------------
+// IDriver Interface Implementation
+//-----------------------------------------------------------------------------
+
+bool DriverVicon::HardwareDetect(std::string& feedback)
+{
+    // Create a dummy message and call the message-based version
+    CTrack::Message message(TAG_COMMAND_HARDWAREDETECT);
+    CTrack::Reply   reply = HardwareDetect(message);
+
+    if (reply)
+    {
+        bool present = reply->GetParams().value(ATTRIB_HARDWAREDETECT_PRESENT, false);
+        feedback     = reply->GetParams().value(ATTRIB_HARDWAREDETECT_FEEDBACK, std::string("No feedback"));
+
+        if (!present)
+        {
+            m_LastError = feedback;
+        }
+        return present;
+    }
+
+    feedback    = "Hardware detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool DriverVicon::ConfigDetect(std::string& feedback)
+{
+    // Create a dummy message and call the message-based version
+    CTrack::Message message(TAG_COMMAND_CONFIGDETECT);
+    CTrack::Reply   reply = ConfigDetect(message);
+
+    if (reply)
+    {
+        auto& params = reply->GetParams();
+
+        // Build feedback string from detected configuration
+        std::string configInfo;
+
+        if (params.contains(ATTRIB_CONFIG_3DMARKERS))
+        {
+            auto markers = params[ATTRIB_CONFIG_3DMARKERS].get<std::vector<std::string>>();
+            configInfo   = fmt::format("{} unlabeled markers", markers.size());
+        }
+
+        if (params.contains(ATTRIB_6DOF))
+        {
+            int subjectCount = 0;
+            for (auto& [key, value] : params[ATTRIB_6DOF].items())
+            {
+                subjectCount++;
+            }
+            if (!configInfo.empty())
+            {
+                configInfo += ", ";
+            }
+            configInfo += fmt::format("{} 6DOF subjects", subjectCount);
+        }
+
+        feedback = configInfo.empty() ? "No configuration detected" : configInfo;
+        return true;
+    }
+
+    feedback    = "Config detect returned null reply";
+    m_LastError = feedback;
+    return false;
+}
+
+bool DriverVicon::Initialize(double frequencyHz)
+{
+    // Create a message with the frequency and call CheckInitialize
+    CTrack::Message message(TAG_COMMAND_CHECKINIT);
+    message.GetParams()[ATTRIB_CHECKINIT_MEASFREQ] = frequencyHz;
+
+    CTrack::Reply reply = CheckInitialize(message);
+
+    if (reply)
+    {
+        bool result = reply->GetParams().value(ATTRIB_RESULT, false);
+        if (!result)
+        {
+            m_LastError = reply->GetParams().value(ATTRIB_RESULT_FEEDBACK, std::string("Initialization failed"));
+        }
+        return result;
+    }
+
+    m_LastError = "Initialize returned null reply";
+    return false;
+}
+
+bool DriverVicon::Shutdown()
+{
+    // Create a dummy message and call ShutDown
+    CTrack::Message message(TAG_COMMAND_SHUTDOWN);
+    CTrack::Reply   reply = ShutDown(message);
+
+    if (reply)
+    {
+        return reply->GetParams().value(ATTRIB_RESULT, false);
+    }
+
+    return true; // Shutdown is not critical even if it fails
+}
+
+bool DriverVicon::HasCapability(const std::string& capability) const
+{
+    // Vicon supports 6DOF rigid bodies, labeled and unlabeled markers
+    return (capability == "6DOF" ||
+            capability == "Markers" ||
+            capability == "UnlabeledMarkers" ||
+            capability == "LabeledMarkers");
+}
+
+std::string DriverVicon::GetDeviceInfo() const
+{
+    if (!m_SDKVersion.empty())
+    {
+        return fmt::format("Vicon DataStream SDK {}", m_SDKVersion);
+    }
+    return "Vicon DataStream";
 }
