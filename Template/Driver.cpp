@@ -5,7 +5,7 @@
 #include "../Libraries/utility/FileReader.h"
 #include "../Libraries/utility/Print.h"
 #include "../Libraries/Utility/errorException.h"
-#include "../Libraries/Utility/ProfilingControl.h"
+#include "../Libraries/Testing/ProfilingControl.h"
 #include <cmath>
 #include <thread>
 #include <chrono>

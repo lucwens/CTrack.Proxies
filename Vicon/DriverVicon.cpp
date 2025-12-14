@@ -1,6 +1,6 @@
 #include "../Libraries/Utility/Print.h"
 #include "../Libraries/Utility/StringUtilities.h"
-#include "../Libraries/Utility/ProfilingControl.h"
+#include "../Libraries/Testing/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/errorException.h"

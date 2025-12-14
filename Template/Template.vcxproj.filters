@@ -34,6 +34,9 @@
     <Filter Include="Libraries\Driver">
       <UniqueIdentifier>{84fefaff-e76a-47e7-a692-899243912d21}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\Testing">
+      <UniqueIdentifier>{7c9d8e2f-4a5b-4c6d-8e9f-1a2b3c4d5e6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Libraries\TCP\TCPCommunication.cpp">
@@ -102,8 +105,8 @@
     <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\StressTest\StressTest.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\Libraries\Testing\StressTest.cpp">
+      <Filter>Libraries\Testing</Filter>
     </ClCompile>
     <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
       <Filter>Source Files</Filter>
@@ -185,8 +188,8 @@
     <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\Libraries\StressTest\StressTest.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\Libraries\Testing\StressTest.h">
+      <Filter>Libraries\Testing</Filter>
     </ClInclude>
     <ClInclude Include="..\Libraries\Driver\IDriver.h">
       <Filter>Libraries\Driver</Filter>

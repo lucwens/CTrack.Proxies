@@ -8,11 +8,11 @@
 #include "../Libraries/Utility/filereader.h"
 #include "../Libraries/Utility/StringUtilities.h"
 #include "../Libraries/Utility/CommandLineParameters.h"
-#include "../Libraries/Utility/ProfilingControl.h"
+#include "../Libraries/Testing/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "DriverVicon.h"
-#include "StressTest.h"
+#include "../Libraries/Testing/StressTest.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
 
 #include <conio.h>

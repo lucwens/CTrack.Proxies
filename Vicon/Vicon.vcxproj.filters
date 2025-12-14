@@ -34,6 +34,9 @@
     <Filter Include="SDK">
       <UniqueIdentifier>{aae816f2-1e86-45a3-9203-4e51cd48f6ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Libraries\Testing">
+      <UniqueIdentifier>{9f1a29e4-9dcb-4061-9d7e-928e5d534e8b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -102,14 +105,14 @@
     <ClCompile Include="..\Libraries\Utility\CommandLineParameters.cpp">
       <Filter>Libraries\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="StressTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
       <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\Testing\StressTest.cpp">
+      <Filter>Libraries\Testing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tracy\public\TracyClient.cpp">
+      <Filter>Libraries\Testing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -185,14 +188,14 @@
     <ClInclude Include="..\Libraries\Utility\CommandLineParameters.h">
       <Filter>Libraries\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="StressTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Libraries\Driver\IDriver.h">
       <Filter>Libraries\Driver</Filter>
     </ClInclude>
     <ClInclude Include="..\..\CTrack_Data\ProxyHandshake.h">
       <Filter>Libraries\TCP\Message</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Libraries\Testing\StressTest.h">
+      <Filter>Libraries\Testing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

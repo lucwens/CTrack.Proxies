@@ -275,7 +275,7 @@
     <ClCompile Include="..\Libraries\XML\XML.cpp" />
     <ClCompile Include="DriverVicon.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="StressTest.cpp" />
+    <ClCompile Include="..\Libraries\Testing\StressTest.cpp" />
     <ClCompile Include="ViconDataStreamSDK_CPPTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profiler|x64'">true</ExcludedFromBuild>
@@ -313,7 +313,7 @@
     <ClInclude Include="..\Libraries\XML\TinyXML_Extra.h" />
     <ClInclude Include="..\Libraries\XML\XML.h" />
     <ClInclude Include="DriverVicon.h" />
-    <ClInclude Include="StressTest.h" />
+    <ClInclude Include="..\Libraries\Testing\StressTest.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="ViconDataStreamSDK_CPP.lib" />
