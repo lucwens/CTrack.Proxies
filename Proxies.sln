@@ -1,0 +1,59 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36804.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vicon", "Vicon\Vicon.vcxproj", "{8E72414D-679F-4673-B56D-42134C43BA3C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Leica.LMF", "Leica.LMF\Leica.LMF.vcxproj", "{5178780F-93CE-429A-8911-A23A54D79F03}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template", "Template\Template.vcxproj", "{BB997B2B-B059-41EC-AF63-4E9C5623667D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		Doc\Create new Proxy.md = Doc\Create new Proxy.md
+		Doc\Proxy Fundamentals.md = Doc\Proxy Fundamentals.md
+		Doc\Stress and profiling.md = Doc\Stress and profiling.md
+		Doc\Tracy Color Codes.md = Doc\Tracy Color Codes.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Debug|x64.ActiveCfg = Debug|x64
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Debug|x64.Build.0 = Debug|x64
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Debug|x86.ActiveCfg = Debug|Win32
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Debug|x86.Build.0 = Debug|Win32
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Release|x64.ActiveCfg = Release|x64
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Release|x64.Build.0 = Release|x64
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Release|x86.ActiveCfg = Release|Win32
+		{8E72414D-679F-4673-B56D-42134C43BA3C}.Release|x86.Build.0 = Release|Win32
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Debug|x64.ActiveCfg = Debug|x64
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Debug|x64.Build.0 = Debug|x64
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Debug|x86.ActiveCfg = Debug|Win32
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Debug|x86.Build.0 = Debug|Win32
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Release|x64.ActiveCfg = Release|x64
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Release|x64.Build.0 = Release|x64
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Release|x86.ActiveCfg = Release|Win32
+		{5178780F-93CE-429A-8911-A23A54D79F03}.Release|x86.Build.0 = Release|Win32
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Debug|x64.ActiveCfg = Debug|x64
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Debug|x64.Build.0 = Debug|x64
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Debug|x86.ActiveCfg = Debug|Win32
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Debug|x86.Build.0 = Debug|Win32
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Release|x64.ActiveCfg = Release|x64
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Release|x64.Build.0 = Release|x64
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Release|x86.ActiveCfg = Release|Win32
+		{BB997B2B-B059-41EC-AF63-4E9C5623667D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9D626207-27E0-40F3-8CE0-DC0732DD7ECC}
+	EndGlobalSection
+EndGlobal
