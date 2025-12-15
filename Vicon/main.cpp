@@ -11,9 +11,10 @@
 #include "../Libraries/Testing/ProfilingControl.h"
 #include "../Libraries/XML/ProxyKeywords.h"
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
-#include "DriverVicon.h"
 #include "../Libraries/Testing/StressTest.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
+
+#include "DriverVicon.h"
 
 #include <conio.h>
 #include <iostream>
@@ -23,7 +24,7 @@
 
 int main(int argc, char *argv[])
 {
-    CTrack::InitLogging("");
+    CTrack::InitLogging();
     SetConsoleTabText("Vicon");
     SetConsoleTabBackgroundColor(MAGENTA);
 

@@ -1,5 +1,3 @@
-
-#include "LeicaDriver.h"
 #include "../Libraries/Testing/StressTest.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
@@ -13,6 +11,8 @@
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../Libraries/Utility/Logging.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
+
+#include "LeicaDriver.h"
 
 #include <msclr/gcroot.h>
 #include <conio.h>
@@ -44,7 +44,7 @@ void leicaTestCode()
 
 int main(int argc, char *argv[])
 {
-    CTrack::InitLogging("");
+    CTrack::InitLogging();
     SetConsoleTabText("Leica.LMF");
     SetConsoleTabBackgroundColor(CYAN);
 #ifdef _DEBUG

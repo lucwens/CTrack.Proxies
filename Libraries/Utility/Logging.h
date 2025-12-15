@@ -29,7 +29,7 @@
 
 namespace CTrack
 {
-    void        InitLogging(const std::string AppID);
+    void        InitLogging(const std::string AppID = "");
     std::string GetTimeStampString(int NumDecimals = 3, char TimeSeparator = ':', bool IncludeDuration = true);
     std::string GetLogFileName(const std::string Extension, const std::string mode = "UI");
 

@@ -1,4 +1,3 @@
-#include "Driver.h"
 #include "../Libraries/Testing/StressTest.h"
 #include "../Libraries/TCP/TCPCommunication.h"
 #include "../Libraries/TCP/TCPTelegram.h"
@@ -15,6 +14,8 @@
 #include "../Libraries/XML/TinyXML_AttributeValues.h"
 #include "../../CTrack_Data/ProxyHandshake.h"
 
+#include "Driver.h"
+
 #include <conio.h>
 #include <iostream>
 #include <memory>
@@ -23,7 +24,7 @@
 
 int main(int argc, char *argv[])
 {
-    CTrack::InitLogging("");
+    CTrack::InitLogging();
     SetConsoleTabText("Template");
     SetConsoleTabBackgroundColor(GREEN);
 
