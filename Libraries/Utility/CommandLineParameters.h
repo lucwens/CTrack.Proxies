@@ -1,9 +1,13 @@
+#pragma once
 
 #include "Print.h"
 #include <string>
 #include <vector>
 #include <optional>
-#include <nlohmann/json.hpp> // Assuming nlohmann/json.hpp is available
+// Undefine Julia macros that interfere with nlohmann json
+#undef strtoull
+#undef strtoll
+#include <nlohmann/json.hpp>
 
 // Alias for convenience
 using json = nlohmann::json;

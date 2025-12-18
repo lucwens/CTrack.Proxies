@@ -2,6 +2,7 @@
 #ifdef CTRACK
 #include "stdafx.h"
 #include "DeviceOutputTCP.h"
+#include "EngineProxy.h"
 #include "../version.h"
 #else
 #include "../../../version.h"
@@ -298,8 +299,8 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     //
     // create an XML for the channels and units
     std::unique_ptr<TiXmlElement> pXML           = std::make_unique<TiXmlElement>(TAG_CONFIGURATION);
-    double                        MeasFreq       = StateManager.GetMeasurementFrequency();
-    CConfiguration               *pConfiguration = StateManager.GetConfiguration();
+    double                        MeasFreq       = EngineProxy.GetMeasurementFrequency();
+    CConfiguration               *pConfiguration = EngineProxy.GetConfiguration();
     std::string                   ConfigName     = pConfiguration->GetName();
     std::string                   VersionString  = fmt::format("{}_{}", GIT_TAG, GIT_HASH);
     GetSetAttribute(pXML.get(), ATTRIB_MEAS_FREQ, MeasFreq, /*Read*/ false);
@@ -349,7 +350,7 @@ CTCPGram::CTCPGram(CState *pState)
     TextString.clear();
     if (pState->TypeEquals(typeid(CStateError)))
     {
-        TextString = std::string(StateManager.GetErrorMessage());
+        TextString = std::string(EngineProxy.GetErrorMessage());
         StatusCode = STATUS_CODE_ERROR;
     }
     else if (pState->TypeEquals(typeid(CStateBuffering)))

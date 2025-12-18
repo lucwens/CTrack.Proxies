@@ -5,6 +5,7 @@
 #include "../Proxies/Libraries/TCP/TCPCommunication.h"
 #include "ProcessRoutines.h"
 #include "Print.h"
+#include "Interrupt.h"
 
 #include <Icmpapi.h>
 #include <Ws2tcpip.h>

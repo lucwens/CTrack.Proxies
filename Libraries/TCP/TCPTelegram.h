@@ -39,7 +39,11 @@ each type of data you want to send, the constructor is responsible for convertin
 // and data has been exported to //       // disk
 
 // Codes for tcpgrams
-constexpr unsigned char TCPGRAM_CODE_DOUBLES       = 0;         // array of doubles
+// Primary codes (new architecture)
+constexpr unsigned char TCPGRAM_CODE_DATA          = 0;         // Live measurement data (array of doubles)
+constexpr unsigned char TCPGRAM_CODE_MESSAGE       = 8;         // JSON-based structured message
+
+// Legacy codes (deprecated - will be migrated to TCPGRAM_CODE_MESSAGE)
 constexpr unsigned char TCPGRAM_CODE_COMMAND       = 1;         // xml containing command
 constexpr unsigned char TCPGRAM_CODE_STATUS        = 2;         // xml containing status
 constexpr unsigned char TCPGRAM_CODE_CONFIGURATION = 3;         // xml containing a configuration
@@ -47,10 +51,14 @@ constexpr unsigned char TCPGRAM_CODE_STRING        = 4;         // string
 constexpr unsigned char TCPGRAM_CODE_EVENT         = 5;         // contains an event, can be a warning
 constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6;         // interrupt
 constexpr unsigned char TCPGRAM_CODE_ERROR         = 7;         // contains an error
-constexpr unsigned char TCPGRAM_CODE_MESSAGE       = 8;         //
+
+// Utility codes
 constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
 constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
 constexpr unsigned char TCPGRAM_CODE_ALL           = UCHAR_MAX; // used in receive to indicate all messages
+
+// Backward compatibility alias (deprecated)
+constexpr unsigned char TCPGRAM_CODE_DOUBLES       = TCPGRAM_CODE_DATA;
 
 constexpr int ALL_DESTINATIONS                     = 0;
 

@@ -1,5 +1,8 @@
 #pragma once
 
+// Undefine Julia macros that interfere with nlohmann json
+#undef strtoull
+#undef strtoll
 #include <nlohmann/json.hpp>
 #include <chrono>
 #include <cstdint> // For std::uint_least32_t
