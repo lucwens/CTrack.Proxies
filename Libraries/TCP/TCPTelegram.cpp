@@ -37,6 +37,8 @@ CTCPGram::CTCPGram(std::vector<char> &dataBuffer)
 
 CTCPGram::CTCPGram(char *pBytes, size_t PackageSize, unsigned char Code)
 {
+    // Note: Legacy code conversion not applied here as this is typically used for raw binary data
+    // If needed, callers should use CTrack::Message directly for structured messages
     m_MessageHeader.SetPayloadSize(PackageSize);
     m_MessageHeader.SetCode(Code);
     m_Data.resize(PackageSize);
@@ -114,9 +116,44 @@ bool CTCPGram::GetDoubleQue(std::deque<double> &queDoubles)
     return true;
 }
 
+// Helper to check if a code is a legacy code that should be converted to JSON
+static bool IsLegacyCode(unsigned char code)
+{
+    return code >= TCPGRAM_CODE_COMMAND && code <= TCPGRAM_CODE_ERROR;
+}
+
+// Helper to get JSON message ID for legacy codes
+static const char *GetMessageIdForLegacyCode(unsigned char code)
+{
+    switch (code)
+    {
+        case TCPGRAM_CODE_COMMAND:       return MSG_ENGINE_COMMAND;
+        case TCPGRAM_CODE_STATUS:        return MSG_ENGINE_STATE;
+        case TCPGRAM_CODE_CONFIGURATION: return MSG_ENGINE_CONFIG;
+        case TCPGRAM_CODE_STRING:        return MSG_ENGINE_LOG;
+        case TCPGRAM_CODE_EVENT:         return MSG_ENGINE_EVENT;
+        case TCPGRAM_CODE_INTERRUPT:     return MSG_ENGINE_INTERRUPT;
+        case TCPGRAM_CODE_ERROR:         return MSG_ENGINE_ERROR;
+        default:                         return nullptr;
+    }
+}
+
 CTCPGram::CTCPGram(TiXmlElement &rCommand, unsigned char Code)
 {
     std::string XMLText = XMLToString(&rCommand);
+
+    // Convert legacy codes to JSON message format
+    if (IsLegacyCode(Code))
+    {
+        const char *msgId = GetMessageIdForLegacyCode(Code);
+        if (msgId)
+        {
+            CTrack::Message msg(msgId);
+            msg.GetParams()[PARAM_XML] = XMLText;
+            EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
+            return;
+        }
+    }
     EncodeText(XMLText, Code);
 }
 
@@ -127,6 +164,19 @@ CTCPGram::CTCPGram(std::vector<double> &arDoubles)
 
 CTCPGram::CTCPGram(const std::vector<char> &arBytes, unsigned char Code)
 {
+    // Convert legacy codes to JSON message format
+    if (IsLegacyCode(Code))
+    {
+        const char *msgId = GetMessageIdForLegacyCode(Code);
+        if (msgId)
+        {
+            std::string content(arBytes.begin(), arBytes.end());
+            CTrack::Message msg(msgId);
+            msg.GetParams()[PARAM_XML] = content;
+            EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
+            return;
+        }
+    }
     size_t PackageSize = arBytes.size();
     m_MessageHeader.SetPayloadSize(PackageSize);
     m_MessageHeader.SetCode(Code);
@@ -136,11 +186,40 @@ CTCPGram::CTCPGram(const std::vector<char> &arBytes, unsigned char Code)
 
 CTCPGram::CTCPGram(const std::string &string, unsigned char Code)
 {
+    // Convert legacy codes to JSON message format
+    if (IsLegacyCode(Code))
+    {
+        const char *msgId = GetMessageIdForLegacyCode(Code);
+        if (msgId)
+        {
+            CTrack::Message msg(msgId);
+            // For error/log codes, use message param; for others use xml param
+            if (Code == TCPGRAM_CODE_ERROR || Code == TCPGRAM_CODE_STRING)
+                msg.GetParams()[PARAM_LOG_MESSAGE] = string;
+            else
+                msg.GetParams()[PARAM_XML] = string;
+            EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
+            return;
+        }
+    }
     EncodeText(string, Code);
 }
 
 CTCPGram::CTCPGram(std::vector<char> &&arBytes, unsigned char Code)
 {
+    // Convert legacy codes to JSON message format
+    if (IsLegacyCode(Code))
+    {
+        const char *msgId = GetMessageIdForLegacyCode(Code);
+        if (msgId)
+        {
+            std::string content(arBytes.begin(), arBytes.end());
+            CTrack::Message msg(msgId);
+            msg.GetParams()[PARAM_XML] = content;
+            EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
+            return;
+        }
+    }
     size_t PackageSize = arBytes.size();
     m_MessageHeader.SetPayloadSize(PackageSize);
     m_MessageHeader.SetCode(Code);
@@ -152,6 +231,19 @@ CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
     std::string XMLText;
     if (rCommand)
         XMLText = XMLToString((rCommand.get()));
+
+    // Convert legacy codes to JSON message format
+    if (IsLegacyCode(Code))
+    {
+        const char *msgId = GetMessageIdForLegacyCode(Code);
+        if (msgId)
+        {
+            CTrack::Message msg(msgId);
+            msg.GetParams()[PARAM_XML] = XMLText;
+            EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
+            return;
+        }
+    }
     EncodeText(XMLText, Code);
 }
 
