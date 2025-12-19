@@ -9,6 +9,7 @@
 #endif
 
 #include "TCPTelegram.h"
+#include "Message.h"
 #include "../XML/TinyXML_AttributeValues.h"
 #include "../Utility/Print.h"
 #include "../Utility/StringUtilities.h"
@@ -156,9 +157,10 @@ CTCPGram::CTCPGram(std::unique_ptr<TiXmlElement> &rCommand, unsigned char Code)
 
 CTCPGram::CTCPGram(const std::exception &e)
 {
-    std::unique_ptr<TiXmlElement> xml     = std::make_unique<TiXmlElement>(TAG_ERROR);
-    std::string                   XMLText = e.what();
-    EncodeText(XMLText, TCPGRAM_CODE_ERROR);
+    // Convert to JSON message format (engine.error)
+    CTrack::Message msg(MSG_ENGINE_ERROR);
+    msg.GetParams()[PARAM_LOG_MESSAGE] = e.what();
+    EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
 CTCPGram::CTCPGram(const CTrack::Message &message)
@@ -296,8 +298,8 @@ bool CTCPGram::GetMm(Mm &rMatrix)
 
 CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
 {
-    //
-    // create an XML for the channels and units
+    // Convert to JSON message format (engine.config) with embedded XML for channels
+    // Build XML for channel configuration
     std::unique_ptr<TiXmlElement> pXML           = std::make_unique<TiXmlElement>(TAG_CONFIGURATION);
     double                        MeasFreq       = EngineProxy.GetMeasurementFrequency();
     CConfiguration               *pConfiguration = EngineProxy.GetConfiguration();
@@ -329,54 +331,62 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
         }
     }
 
-    std::string XMLText = XML_To_String(pXML.get());
-    EncodeText(XMLText, TCPGRAM_CODE_CONFIGURATION);
+    // Create JSON message with XML payload
+    std::string     XMLText = XML_To_String(pXML.get());
+    CTrack::Message msg(MSG_ENGINE_CONFIG);
+    msg.GetParams()["action"]          = "channels";
+    msg.GetParams()["configName"]      = ConfigName;
+    msg.GetParams()["measurementFreq"] = MeasFreq;
+    msg.GetParams()["version"]         = VersionString;
+    msg.GetParams()[PARAM_XML]         = XMLText;
+    EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
 CTCPGram::CTCPGram(std::string &CommandReturn)
 {
-    EncodeText(std::string(CommandReturn), TCPGRAM_CODE_COMMAND);
+    // Convert to JSON message format (engine.log for command responses)
+    CTrack::Message msg(MSG_ENGINE_LOG);
+    msg.GetParams()[PARAM_LOG_LEVEL]   = "info";
+    msg.GetParams()[PARAM_LOG_MESSAGE] = CommandReturn;
+    EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
-
-const int STATUS_CODE_IDLE    = 0;
-const int STATUS_CODE_RUNNING = 1;
-const int STATUS_CODE_LOGGING = 2;
-const int STATUS_CODE_ERROR   = 3;
 
 CTCPGram::CTCPGram(CState *pState)
 {
-    std::string TextString;
-    char        StatusCode = STATUS_CODE_IDLE;
-    TextString.clear();
+    // Convert to JSON message format (engine.state)
+    CTrack::Message msg(MSG_ENGINE_STATE);
+    auto           &params = msg.GetParams();
+
+    params[PARAM_STATE_NAME] = std::string(CT2A(pState->GetClassName()));
+
+    // Include state-specific data
     if (pState->TypeEquals(typeid(CStateError)))
     {
-        TextString = std::string(EngineProxy.GetErrorMessage());
-        StatusCode = STATUS_CODE_ERROR;
+        params["errorMessage"] = std::string(CT2A(EngineProxy.GetErrorMessage()));
     }
     else if (pState->TypeEquals(typeid(CStateBuffering)))
     {
         CStateBuffering *pStateBuffering = dynamic_cast<CStateBuffering *>(pState);
         if (pStateBuffering)
         {
-            TextString = fmt::format("{}\\{};{};{}", std::string(pStateBuffering->m_BufProjectName), std::string(pStateBuffering->m_BufTestName),
-                                     pStateBuffering->m_BufRunTime, pStateBuffering->m_BufTotal);
+            params["projectName"] = std::string(CT2A(pStateBuffering->m_BufProjectName));
+            params["testName"]    = std::string(CT2A(pStateBuffering->m_BufTestName));
+            params["runTime"]     = pStateBuffering->m_BufRunTime;
+            params["totalFrames"] = static_cast<int>(pStateBuffering->m_BufTotal);
         }
-        StatusCode = STATUS_CODE_LOGGING;
     }
-    else if (pState->TypeEquals(typeid(CStateRunning)))
-        StatusCode = STATUS_CODE_RUNNING;
 
-    TextString.insert(TextString.begin(), StatusCode);
-
-    SetCode(TCPGRAM_CODE_STATUS);
-    SetPayloadSize(TextString.size());
-    m_Data.swap(*reinterpret_cast<std::vector<char> *>(&TextString));
+    EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
 CTCPGram::CTCPGram(const std::string &iProjectName, const std::string &iTestName)
 {
-    std::string ExtraMessage = fmt::format("POST_PROCESS_FINISH({},{})", iProjectName, iTestName);
-    EncodeText(ExtraMessage, TCPGRAM_CODE_EVENT);
+    // Convert to JSON message format (engine.event)
+    CTrack::Message msg(MSG_ENGINE_EVENT);
+    msg.GetParams()[PARAM_EVENT_TYPE]  = "postprocess.finished";
+    msg.GetParams()["projectName"]     = iProjectName;
+    msg.GetParams()["testName"]        = iTestName;
+    EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
 bool CTCPGram::GetCommand(std::string &rString)
