@@ -188,6 +188,44 @@ constexpr char const *TAG_COMMAND_COMPENSATESTART     = "COMPENSATE_START";
 constexpr char const *TAG_COMMAND_PROBECALIBRATESTART = "PROBE_CALIBRATE_START";
 constexpr char const *ATTRIB_SIM_FILEPATH             = "filepath";
 
+//==============================================================================
+// Engine TCP Message IDs (JSON messages via TCPGRAM_CODE_MESSAGE)
+//==============================================================================
+// These message IDs are used with the JSON-based TCPGRAM_CODE_MESSAGE protocol.
+// For CNode-derived objects, serialize to XML and embed in JSON params as:
+//   { "id": "engine.command", "params": { "nodeType": "...", "xml": "..." } }
+//==============================================================================
+
+// Command/Node messages (replaces TCPGRAM_CODE_COMMAND)
+constexpr char const *MSG_ENGINE_COMMAND     = "engine.command";     // CNode command with embedded XML
+constexpr char const *MSG_ENGINE_CONFIG      = "engine.config";      // Configuration deployment
+
+// State messages (replaces TCPGRAM_CODE_STATUS)
+constexpr char const *MSG_ENGINE_STATE       = "engine.state";       // State change notification
+
+// Log/feedback messages (replaces TCPGRAM_CODE_STRING, TCPGRAM_CODE_EVENT)
+constexpr char const *MSG_ENGINE_LOG         = "engine.log";         // Log messages with level
+constexpr char const *MSG_ENGINE_EVENT       = "engine.event";       // Event notifications
+
+// Control messages (replaces TCPGRAM_CODE_INTERRUPT)
+constexpr char const *MSG_ENGINE_INTERRUPT   = "engine.interrupt";   // Interrupt current operation
+
+// Error messages (replaces TCPGRAM_CODE_ERROR)
+constexpr char const *MSG_ENGINE_ERROR       = "engine.error";       // Error with file/line/message
+
+// JSON param keys for engine messages
+constexpr char const *PARAM_NODE_TYPE        = "nodeType";           // CNode class name
+constexpr char const *PARAM_XML              = "xml";                // Serialized XML content
+constexpr char const *PARAM_STATE_NAME       = "stateName";          // State class name
+constexpr char const *PARAM_STATE_DATA       = "stateData";          // Optional state-specific data
+constexpr char const *PARAM_LOG_LEVEL        = "level";              // debug, info, warning, error
+constexpr char const *PARAM_LOG_MESSAGE      = "message";            // Log/error message text
+constexpr char const *PARAM_ERROR_FILE       = "file";               // Source file for error
+constexpr char const *PARAM_ERROR_LINE       = "line";               // Line number for error
+constexpr char const *PARAM_EVENT_TYPE       = "eventType";          // Event type identifier
+constexpr char const *PARAM_EVENT_DATA       = "data";               // Event-specific data
+constexpr char const *PARAM_REASON           = "reason";             // Interrupt reason
+
 //------------------------------------------------------------------------------------------------------------------
 /*
 COMMANDLINE PARAMETERS

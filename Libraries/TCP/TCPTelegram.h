@@ -38,27 +38,46 @@ each type of data you want to send, the constructor is responsible for convertin
 // #define TCP_TYPE_EVENT         5 // string with feedback on the type of event that happened, an event occurs for example when the postprocess has finished
 // and data has been exported to //       // disk
 
-// Codes for tcpgrams
-// Primary codes (new architecture)
-constexpr unsigned char TCPGRAM_CODE_DATA          = 0;         // Live measurement data (array of doubles)
-constexpr unsigned char TCPGRAM_CODE_MESSAGE       = 8;         // JSON-based structured message
+//==============================================================================
+// TCP Message Codes
+//==============================================================================
+// The protocol uses only 2 message types:
+// - TCPGRAM_CODE_DOUBLES (0): High-frequency binary measurement data
+// - TCPGRAM_CODE_MESSAGE (8): JSON-based structured messages for everything else
+//
+// For CNode-derived objects, serialize to XML then embed as JSON payload:
+//   { "id": "engine.command", "params": { "nodeType": "CConfiguration", "xml": "<Configuration>...</Configuration>" } }
+//==============================================================================
 
-// Legacy codes (deprecated - will be migrated to TCPGRAM_CODE_MESSAGE)
-constexpr unsigned char TCPGRAM_CODE_COMMAND       = 1;         // xml containing command
-constexpr unsigned char TCPGRAM_CODE_STATUS        = 2;         // xml containing status
-constexpr unsigned char TCPGRAM_CODE_CONFIGURATION = 3;         // xml containing a configuration
-constexpr unsigned char TCPGRAM_CODE_STRING        = 4;         // string
-constexpr unsigned char TCPGRAM_CODE_EVENT         = 5;         // contains an event, can be a warning
-constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6;         // interrupt
-constexpr unsigned char TCPGRAM_CODE_ERROR         = 7;         // contains an error
+// Primary codes (consolidated architecture)
+constexpr unsigned char TCPGRAM_CODE_DOUBLES = 0; // Binary live measurement data (high-frequency doubles array)
+constexpr unsigned char TCPGRAM_CODE_MESSAGE = 8; // JSON-based structured message (all control/status/commands)
+
+// Backward compatibility alias
+constexpr unsigned char TCPGRAM_CODE_DATA = TCPGRAM_CODE_DOUBLES;
+
+// Legacy codes - DEPRECATED: Use TCPGRAM_CODE_MESSAGE with appropriate message ID instead
+// These will be removed in a future version. Migration guide:
+//   TCPGRAM_CODE_COMMAND       -> TCPGRAM_CODE_MESSAGE with id="engine.command"
+//   TCPGRAM_CODE_STATUS        -> TCPGRAM_CODE_MESSAGE with id="engine.state"
+//   TCPGRAM_CODE_CONFIGURATION -> TCPGRAM_CODE_MESSAGE with id="engine.config"
+//   TCPGRAM_CODE_STRING        -> TCPGRAM_CODE_MESSAGE with id="engine.log"
+//   TCPGRAM_CODE_EVENT         -> TCPGRAM_CODE_MESSAGE with id="engine.event"
+//   TCPGRAM_CODE_INTERRUPT     -> TCPGRAM_CODE_MESSAGE with id="engine.interrupt"
+//   TCPGRAM_CODE_ERROR         -> TCPGRAM_CODE_MESSAGE with id="engine.error"
+// NOTE: [[deprecated]] attributes removed temporarily while device proxies are migrated
+constexpr unsigned char TCPGRAM_CODE_COMMAND       = 1; // DEPRECATED - use engine.command
+constexpr unsigned char TCPGRAM_CODE_STATUS        = 2; // DEPRECATED - use engine.state
+constexpr unsigned char TCPGRAM_CODE_CONFIGURATION = 3; // DEPRECATED - use engine.config
+constexpr unsigned char TCPGRAM_CODE_STRING        = 4; // DEPRECATED - use engine.log
+constexpr unsigned char TCPGRAM_CODE_EVENT         = 5; // DEPRECATED - use engine.event
+constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6; // DEPRECATED - use engine.interrupt
+constexpr unsigned char TCPGRAM_CODE_ERROR         = 7; // DEPRECATED - use engine.error
 
 // Utility codes
-constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
-constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
-constexpr unsigned char TCPGRAM_CODE_ALL           = UCHAR_MAX; // used in receive to indicate all messages
-
-// Backward compatibility alias (deprecated)
-constexpr unsigned char TCPGRAM_CODE_DOUBLES       = TCPGRAM_CODE_DATA;
+constexpr unsigned char TCPGRAM_CODE_TEST_BIG = 10;        // test message with big payload
+constexpr unsigned char TCPGRAM_CODE_INVALID  = 100;       // invalid return
+constexpr unsigned char TCPGRAM_CODE_ALL      = UCHAR_MAX; // used in receive to indicate all messages
 
 constexpr int ALL_DESTINATIONS                     = 0;
 
