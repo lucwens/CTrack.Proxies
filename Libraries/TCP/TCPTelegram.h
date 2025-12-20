@@ -42,7 +42,7 @@ each type of data you want to send, the constructor is responsible for convertin
 // TCP Message Codes
 //==============================================================================
 // The protocol uses only 2 message types:
-// - TCPGRAM_CODE_DOUBLES (0): High-frequency binary measurement data
+// - TCPGRAM_CODE_DATA (0): High-frequency binary measurement data
 // - TCPGRAM_CODE_MESSAGE (8): JSON-based structured messages for everything else
 //
 // For CNode-derived objects, serialize to XML then embed as JSON payload:
@@ -50,11 +50,8 @@ each type of data you want to send, the constructor is responsible for convertin
 //==============================================================================
 
 // Primary codes (consolidated architecture)
-constexpr unsigned char TCPGRAM_CODE_DOUBLES = 0; // Binary live measurement data (high-frequency doubles array)
+constexpr unsigned char TCPGRAM_CODE_DATA = 0; // Binary live measurement data (high-frequency doubles array)
 constexpr unsigned char TCPGRAM_CODE_MESSAGE = 8; // JSON-based structured message (all control/status/commands)
-
-// Backward compatibility alias
-constexpr unsigned char TCPGRAM_CODE_DATA = TCPGRAM_CODE_DOUBLES;
 
 // Legacy codes - DEPRECATED: Use TCPGRAM_CODE_MESSAGE with appropriate message ID instead
 // These will be removed in a future version. Migration guide:

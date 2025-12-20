@@ -60,7 +60,7 @@ void CTCPGram::EncodeDoubleArray(std::vector<double> &iDoubleArray)
     std::uint16_t NumChannels = iDoubleArray.size();
     size_t        PackageSize = sizeof(double) * NumChannels + sizeof(std::uint16_t);
     m_MessageHeader.SetPayloadSize(PackageSize);
-    m_MessageHeader.SetCode(TCPGRAM_CODE_DOUBLES);
+    m_MessageHeader.SetCode(TCPGRAM_CODE_DATA);
     m_Data.resize(PackageSize);
     memcpy(m_Data.data(), &NumChannels, sizeof(std::uint16_t));
     memcpy(m_Data.data() + sizeof(std::uint16_t), iDoubleArray.data(), sizeof(double) * NumChannels);
@@ -73,7 +73,7 @@ CTCPGram::CTCPGram(cliext::vector<double> arDoubles)
     size_t NumChannels = arDoubles.size();
     size_t PackageSize = sizeof(double) * NumChannels + sizeof(std::uint16_t);
     m_MessageHeader.SetPayloadSize(PackageSize);
-    m_MessageHeader.SetCode(TCPGRAM_CODE_DOUBLES);
+    m_MessageHeader.SetCode(TCPGRAM_CODE_DATA);
     m_Data.resize(PackageSize);
 
     memcpy(m_Data.data(), &NumChannels, sizeof(std::uint16_t));
@@ -89,7 +89,7 @@ bool CTCPGram::GetDoubleArray(std::vector<double> &arDoubles)
 {
     unsigned char Code = GetCode();
 
-    if (Code != TCPGRAM_CODE_DOUBLES)
+    if (Code != TCPGRAM_CODE_DATA)
         return false;
     arDoubles.clear();
 
