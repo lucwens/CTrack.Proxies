@@ -223,6 +223,7 @@ class CCommunicationInterface : public CTrack::Subscriber
 
   public:
     void                                       SendMessage(CTrack::Message &);
+    void                                       SendMessage(CTrack::Message &, SOCKET destination);
     std::shared_ptr<CTrack::MessageResponder>  GetMessageResponder() const { return m_pMessageResponder; };
     std::shared_ptr<CTrack::MessageResponder> &GetMessageResponder() { return m_pMessageResponder; };
     [[nodiscard]] CTrack::Subscription         Subscribe(const std::string &id, CTrack::Handler);

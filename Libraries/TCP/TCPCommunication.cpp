@@ -416,6 +416,13 @@ void CCommunicationInterface::SendMessage(CTrack::Message &message)
     PushSendPackage(tcpGram);
 }
 
+void CCommunicationInterface::SendMessage(CTrack::Message &message, SOCKET destination)
+{
+    std::unique_ptr<CTCPGram> tcpGram = std::make_unique<CTCPGram>(message);
+    tcpGram->SetDestination(destination);
+    PushSendPackage(tcpGram);
+}
+
 CTrack::Subscription CCommunicationInterface::Subscribe(const std::string &messageID, CTrack::Handler handler)
 {
     return m_pMessageResponder->Subscribe(messageID, handler);
