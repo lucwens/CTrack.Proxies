@@ -213,6 +213,9 @@ constexpr char const *MSG_ENGINE_INTERRUPT   = "engine.interrupt";   // Interrup
 // Error messages (replaces TCPGRAM_CODE_ERROR)
 constexpr char const *MSG_ENGINE_ERROR       = "engine.error";       // Error with file/line/message
 
+// License messages (new JSON format - replaces CLicense node)
+constexpr char const *MSG_ENGINE_LICENSE     = "engine.license";     // License status and data
+
 // JSON param keys for engine messages
 constexpr char const *PARAM_NODE_TYPE        = "nodeType";           // CNode class name
 constexpr char const *PARAM_XML              = "xml";                // Serialized XML content
