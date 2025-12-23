@@ -678,4 +678,16 @@ namespace CTrack
     //    CLogging::getInstance().initialize(mode, versionString);
     // }
 
+    // --- Helper functions for PrintError/PrintWarning to log to file ---
+    // These are called from Print.h macros to ensure errors/warnings are logged
+    void LogErrorFromPrint(const std::string &message, const char *file, int line)
+    {
+        CLogging::getInstance().log(LogSeverity::LOG_ERROR, message, source_location_polyfill(file, "", line));
+    }
+
+    void LogWarningFromPrint(const std::string &message, const char *file, int line)
+    {
+        CLogging::getInstance().log(LogSeverity::LOG_WARNING, message, source_location_polyfill(file, "", line));
+    }
+
 } // namespace CTrack

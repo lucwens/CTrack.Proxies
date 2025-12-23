@@ -6,6 +6,13 @@
 #include <string>
 #include <windows.h>
 
+// Forward declare logging to avoid circular includes
+namespace CTrack
+{
+    void LogErrorFromPrint(const std::string &message, const char *file, int line);
+    void LogWarningFromPrint(const std::string &message, const char *file, int line);
+}
+
 // Global mutex for thread-safe printing
 extern std::mutex printMutex;
 
@@ -135,17 +142,27 @@ template <typename... Args> void PrintMessage(const std::string &format, Args &&
     PrintColor(MessageType::Message, format, std::forward<Args>(args)...);
 }
 
-// PrintWarning function - warnings (orange)
-template <typename... Args> void PrintWarning(const std::string &format, Args... args)
+// PrintWarning implementation - warnings (orange) - logs to file
+template <typename... Args> void PrintWarningImpl(const char *file, int line, const std::string &format, Args... args)
 {
-    PrintColor(MessageType::Warning, format, std::forward<Args>(args)...);
+    std::string message = fmt::format(format, std::forward<Args>(args)...);
+    PrintColor(MessageType::Warning, message);
+    CTrack::LogWarningFromPrint(message, file, line);
 }
 
-// PrintError function - errors (red)
-template <typename... Args> void PrintError(const std::string &format, Args... args)
+// PrintWarning macro to capture source location
+#define PrintWarning(...) PrintWarningImpl(__FILE__, __LINE__, __VA_ARGS__)
+
+// PrintError implementation - errors (red) - logs to file
+template <typename... Args> void PrintErrorImpl(const char *file, int line, const std::string &format, Args... args)
 {
-    PrintColor(MessageType::Error, format, std::forward<Args>(args)...);
+    std::string message = fmt::format(format, std::forward<Args>(args)...);
+    PrintColor(MessageType::Error, message);
+    CTrack::LogErrorFromPrint(message, file, line);
 }
+
+// PrintError macro to capture source location
+#define PrintError(...) PrintErrorImpl(__FILE__, __LINE__, __VA_ARGS__)
 
 // PrintCommand function - commands sent (blue)
 template <typename... Args> void PrintCommand(const std::string &format, Args... args)

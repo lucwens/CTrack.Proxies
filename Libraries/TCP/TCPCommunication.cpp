@@ -6,6 +6,7 @@
 #include "ProcessRoutines.h"
 #include "Print.h"
 #include "Interrupt.h"
+#include "EngineMessages.h"
 
 #include <Icmpapi.h>
 #include <Ws2tcpip.h>
@@ -360,6 +361,8 @@ OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGra
         CTrack::Message message;
         if (TCPGram->GetMessage(message))
         {
+            if (message.GetID() == EngineMsg::State)
+            return;
             if (send)
             {
                 std::string commandString = fmt::format(" [{}] Send message {} : {}", port, message.GetID(), message.GetParams().dump());

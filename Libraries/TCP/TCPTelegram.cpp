@@ -430,7 +430,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     msg.GetParams()["configName"]      = ConfigName;
     msg.GetParams()["measurementFreq"] = MeasFreq;
     msg.GetParams()["version"]         = VersionString;
-    msg.GetParams()[PARAM_XML]         = XMLText;
+    msg.GetParams()[PARAM_XML]  = XMLText;
     EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
@@ -475,9 +475,9 @@ CTCPGram::CTCPGram(const std::string &iProjectName, const std::string &iTestName
 {
     // Convert to JSON message format (engine.event)
     CTrack::Message msg(MSG_ENGINE_EVENT);
-    msg.GetParams()[PARAM_EVENT_TYPE]  = "postprocess.finished";
-    msg.GetParams()["projectName"]     = iProjectName;
-    msg.GetParams()["testName"]        = iTestName;
+    msg.GetParams()[PARAM_EVENT_TYPE] = "postprocess.finished";
+    msg.GetParams()["projectName"]          = iProjectName;
+    msg.GetParams()["testName"]             = iTestName;
     EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
