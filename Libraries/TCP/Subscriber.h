@@ -16,7 +16,7 @@ namespace CTrack
     class Subscriber
     {
       public:
-        Subscriber()          = default;
+        Subscriber() = default;
         virtual ~Subscriber() { ClearSubscriptions(); };
 
         void Subscribe(MessageResponder &messageResponder, const std::string &messageID, Handler handler)

@@ -127,14 +127,22 @@ static const char *GetMessageIdForLegacyCode(unsigned char code)
 {
     switch (code)
     {
-        case TCPGRAM_CODE_COMMAND:       return MSG_ENGINE_COMMAND;
-        case TCPGRAM_CODE_STATUS:        return MSG_ENGINE_STATE;
-        case TCPGRAM_CODE_CONFIGURATION: return MSG_ENGINE_CONFIG;
-        case TCPGRAM_CODE_STRING:        return MSG_ENGINE_LOG;
-        case TCPGRAM_CODE_EVENT:         return MSG_ENGINE_EVENT;
-        case TCPGRAM_CODE_INTERRUPT:     return MSG_ENGINE_INTERRUPT;
-        case TCPGRAM_CODE_ERROR:         return MSG_ENGINE_ERROR;
-        default:                         return nullptr;
+        case TCPGRAM_CODE_COMMAND:
+            return MSG_ENGINE_COMMAND;
+        case TCPGRAM_CODE_STATUS:
+            return MSG_ENGINE_STATE;
+        case TCPGRAM_CODE_CONFIGURATION:
+            return MSG_ENGINE_CONFIG;
+        case TCPGRAM_CODE_STRING:
+            return MSG_ENGINE_LOG;
+        case TCPGRAM_CODE_EVENT:
+            return MSG_ENGINE_EVENT;
+        case TCPGRAM_CODE_INTERRUPT:
+            return MSG_ENGINE_INTERRUPT;
+        case TCPGRAM_CODE_ERROR:
+            return MSG_ENGINE_ERROR;
+        default:
+            return nullptr;
     }
 }
 
@@ -170,7 +178,7 @@ CTCPGram::CTCPGram(const std::vector<char> &arBytes, unsigned char Code)
         const char *msgId = GetMessageIdForLegacyCode(Code);
         if (msgId)
         {
-            std::string content(arBytes.begin(), arBytes.end());
+            std::string     content(arBytes.begin(), arBytes.end());
             CTrack::Message msg(msgId);
             msg.GetParams()[PARAM_XML] = content;
             EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
@@ -213,7 +221,7 @@ CTCPGram::CTCPGram(std::vector<char> &&arBytes, unsigned char Code)
         const char *msgId = GetMessageIdForLegacyCode(Code);
         if (msgId)
         {
-            std::string content(arBytes.begin(), arBytes.end());
+            std::string     content(arBytes.begin(), arBytes.end());
             CTrack::Message msg(msgId);
             msg.GetParams()[PARAM_XML] = content;
             EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
@@ -430,7 +438,7 @@ CTCPGram::CTCPGram(HMatrix &rhInput, SOCKET iDestination)
     msg.GetParams()["configName"]      = ConfigName;
     msg.GetParams()["measurementFreq"] = MeasFreq;
     msg.GetParams()["version"]         = VersionString;
-    msg.GetParams()[PARAM_XML]  = XMLText;
+    msg.GetParams()[PARAM_XML]         = XMLText;
     EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 
@@ -447,7 +455,7 @@ CTCPGram::CTCPGram(CState *pState)
 {
     // Convert to JSON message format (engine.state)
     CTrack::Message msg(MSG_ENGINE_STATE);
-    auto           &params = msg.GetParams();
+    auto           &params   = msg.GetParams();
 
     params[PARAM_STATE_NAME] = std::string(CT2A(pState->GetClassName()));
 
@@ -476,8 +484,8 @@ CTCPGram::CTCPGram(const std::string &iProjectName, const std::string &iTestName
     // Convert to JSON message format (engine.event)
     CTrack::Message msg(MSG_ENGINE_EVENT);
     msg.GetParams()[PARAM_EVENT_TYPE] = "postprocess.finished";
-    msg.GetParams()["projectName"]          = iProjectName;
-    msg.GetParams()["testName"]             = iTestName;
+    msg.GetParams()["projectName"]    = iProjectName;
+    msg.GetParams()["testName"]       = iTestName;
     EncodeText(msg.Serialize(), TCPGRAM_CODE_MESSAGE);
 }
 

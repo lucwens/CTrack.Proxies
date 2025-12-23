@@ -50,8 +50,8 @@ each type of data you want to send, the constructor is responsible for convertin
 //==============================================================================
 
 // Primary codes (consolidated architecture)
-constexpr unsigned char TCPGRAM_CODE_DATA = 0; // Binary live measurement data (high-frequency doubles array)
-constexpr unsigned char TCPGRAM_CODE_MESSAGE = 8; // JSON-based structured message (all control/status/commands)
+constexpr unsigned char TCPGRAM_CODE_DATA          = 0; // Binary live measurement data (high-frequency doubles array)
+constexpr unsigned char TCPGRAM_CODE_MESSAGE       = 8; // JSON-based structured message (all control/status/commands)
 
 // Legacy codes - DEPRECATED: Use TCPGRAM_CODE_MESSAGE with appropriate message ID instead
 // These will be removed in a future version. Migration guide:
@@ -72,9 +72,9 @@ constexpr unsigned char TCPGRAM_CODE_INTERRUPT     = 6; // DEPRECATED - use engi
 constexpr unsigned char TCPGRAM_CODE_ERROR         = 7; // DEPRECATED - use engine.error
 
 // Utility codes
-constexpr unsigned char TCPGRAM_CODE_TEST_BIG = 10;        // test message with big payload
-constexpr unsigned char TCPGRAM_CODE_INVALID  = 100;       // invalid return
-constexpr unsigned char TCPGRAM_CODE_ALL      = UCHAR_MAX; // used in receive to indicate all messages
+constexpr unsigned char TCPGRAM_CODE_TEST_BIG      = 10;        // test message with big payload
+constexpr unsigned char TCPGRAM_CODE_INVALID       = 100;       // invalid return
+constexpr unsigned char TCPGRAM_CODE_ALL           = UCHAR_MAX; // used in receive to indicate all messages
 
 constexpr int ALL_DESTINATIONS                     = 0;
 

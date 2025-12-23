@@ -11,7 +11,7 @@ namespace CTrack
 {
     void LogErrorFromPrint(const std::string &message, const char *file, int line);
     void LogWarningFromPrint(const std::string &message, const char *file, int line);
-}
+} // namespace CTrack
 
 // Global mutex for thread-safe printing
 extern std::mutex printMutex;
@@ -28,13 +28,13 @@ const int BLACK   = 0;
 // Message type enumeration for colored console output
 enum class MessageType
 {
-    Info,           // Green - informational messages
-    Message,        // Gray - general messages
-    Warning,        // Orange - warnings
-    Error,          // Red - errors
-    Command,        // Blue - commands sent
-    CommandReturn,  // Light Blue - command responses
-    Debug           // Magenta - debug information
+    Info,          // Green - informational messages
+    Message,       // Gray - general messages
+    Warning,       // Orange - warnings
+    Error,         // Red - errors
+    Command,       // Blue - commands sent
+    CommandReturn, // Light Blue - command responses
+    Debug          // Magenta - debug information
 };
 
 // Color lookup structure

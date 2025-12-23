@@ -362,7 +362,7 @@ OnDiagnosticFunction PrintSendDiagnostics = [](std::unique_ptr<CTCPGram> &TCPGra
         if (TCPGram->GetMessage(message))
         {
             if (message.GetID() == EngineMsg::State)
-            return;
+                return;
             if (send)
             {
                 std::string commandString = fmt::format(" [{}] Send message {} : {}", port, message.GetID(), message.GetParams().dump());

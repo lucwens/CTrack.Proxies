@@ -85,7 +85,7 @@ void PrintStatusTopRight(const std::string &status)
         return;
 
     // Save current cursor position
-    COORD savedPos = csbi.dwCursorPosition;
+    COORD savedPos   = csbi.dwCursorPosition;
 
     // Calculate position for top-right corner
     // Leave some padding from the right edge
